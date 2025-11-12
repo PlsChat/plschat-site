@@ -1,0 +1,9 @@
+Place your compiled binaries here:
+- app.bin (your firmware image)
+- bootloader.bin
+- partitions.bin
+
+Offsets are defined in manifest.json:
+- bootloader.bin @ 0x0000
+- partitions.bin @ 0x8000 (32768)
+- app.bin        @ 0x10000 (65536)

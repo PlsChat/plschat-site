@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PLSChat — Off‑grid, private mesh messaging</title>
+  <style>
+    :root{--pad:clamp(16px,3vw,32px)}*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;background:#0b0b10;color:#e9edf1}
+    header{padding:var(--pad);display:flex;justify-content:space-between;align-items:center}
+    .logo{font-weight:700;letter-spacing:.3px}
+    .btn{display:inline-block;padding:12px 18px;border-radius:12px;border:1px solid #2b2f3a;text-decoration:none;color:#e9edf1}
+    .btn.primary{background:#3b82f6;border-color:#3b82f6}
+    .hero{padding:calc(var(--pad)*2) var(--pad);max-width:980px;margin:0 auto}
+    .hero h1{font-size:clamp(28px,4vw,48px);line-height:1.1;margin:.2em 0}
+    .hero p{opacity:.85;max-width:70ch}
+    .cta{margin-top:24px;display:flex;gap:12px;flex-wrap:wrap}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:36px}
+    .card{background:#11131a;border:1px solid #202533;border-radius:16px;padding:18px}
+    footer{opacity:.6;padding:var(--pad);text-align:center}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">PLSChat</div>
+    <nav>
+      <a class="btn" href="#how">How it works</a>
+      <a class="btn" href="https://github.com/yourname/plschat-site">GitHub</a>
+      <a class="btn primary" href="/flasher/">Web Flasher</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Off-grid, decentralized, private messaging.</h1>
+    <p>PLSChat is a LoRa mesh chat network with optional GSM/Wi‑Fi relays and tokenized incentives on PulseChain. Stay connected when the internet isn’t.</p>
+    <div class="cta">
+      <a class="btn primary" href="/flasher/">Flash your Heltec</a>
+      <a class="btn" href="#how">Read how it works</a>
+    </div>
+
+    <div class="grid" id="how">
+      <div class="card"><h3>Mesh by default</h3><p>Heltec nodes relay messages via LoRa using a simple flood mesh with TTL and duplicate suppression.</p></div>
+      <div class="card"><h3>Privacy-first</h3><p>Lightweight crypto today; future integration with privacy payments on PulseChain.</p></div>
+      <div class="card"><h3>One‑click install</h3><p>Use our web flasher to get on the network in minutes — no drivers or CLI required.</p></div>
+    </div>
+  </section>
+
+  <footer>© <span id="y"></span> PLSChat / MeshCore</footer>
+  <script>document.getElementById('y').textContent=new Date().getFullYear()</script>
+</body>
+</html>
