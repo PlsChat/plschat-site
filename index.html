@@ -5,33 +5,67 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PLSChat - Decentralized LoRa Mesh</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; background: #0d1117; color: #c9d1d9; }
-    h1 { color: #58a6ff; }
-    .btn { padding: 12px 24px; margin: 10px 5px; text-decoration: none; border-radius: 6px; font-weight: bold; }
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 0; 
+      padding: 40px; 
+      background: #0d1117; 
+      color: #c9d1d9; 
+      text-align: center;
+    }
+    h1 { color: #58a6ff; font-size: 3em; margin-bottom: 10px; }
+    h2 { color: #8b949e; }
+    .container { max-width: 900px; margin: 0 auto; }
+    .btn { 
+      display: inline-block; 
+      padding: 16px 32px; 
+      margin: 15px 10px; 
+      text-decoration: none; 
+      border-radius: 8px; 
+      font-weight: bold; 
+      font-size: 1.1em;
+    }
     .primary { background: #238636; color: white; }
-    .secondary { background: #30363d; color: white; }
+    .primary:hover { background: #2ea44f; }
+    .flasher { 
+      background: #22d3ee; 
+      color: #0f172a; 
+      font-size: 1.3em; 
+      padding: 20px 40px;
+    }
+    .flasher:hover { background: #67e8f9; }
+    ul { text-align: left; max-width: 600px; margin: 30px auto; }
+    li { margin: 12px 0; }
   </style>
 </head>
 <body>
-  <h1>PLSChat</h1>
-  <h2>Decentralized LoRa Mesh Communication</h2>
-  <p><strong>Persistent Group Chat • Room Servers • Fully Off-Grid</strong></p>
-  <p>Secure. Private. No internet required.<br>
-     Powered by the <strong>PLSC</strong> utility token.</p>
+  <div class="container">
+    <h1>PLSChat</h1>
+    <h2>Decentralized LoRa Mesh Communication</h2>
+    <p><strong>Persistent Group Chat • Room Servers • Fully Off-Grid</strong></p>
+    <p>Secure. Private. No internet required.<br>
+       Powered by the <strong>PLSC</strong> utility token on PulseChain.</p>
 
-  <a href="https://www.plschat.net" class="btn primary">Official Website</a>
-  <a href="/flasher" class="btn secondary">Open Web Flasher</a>
+    <div style="margin: 40px 0;">
+      <a href="/flasher/" class="btn flasher">
+        🚀 Open Web Flasher
+      </a>
+    </div>
 
-  <hr>
-  <h3>Key Features</h3>
-  <ul>
-    <li>✅ Persistent Room Servers (messages stored for offline users)</li>
-    <li>✅ Store & Forward messaging</li>
-    <li>✅ End-to-End Encryption</li>
-    <li>✅ Works with T-Deck, LilyGo, Heltec, RAK, etc.</li>
-    <li>✅ Premium features unlocked with PLSC</li>
-  </ul>
+    <a href="https://www.plschat.net" class="btn primary">Official Website</a>
 
-  <p><em>Made for off-grid communities, events, and emergency use.</em></p>
+    <hr style="margin: 50px auto; max-width: 600px;">
+    
+    <h3>Key Features</h3>
+    <ul>
+      <li>✅ Persistent Room Servers (messages saved for offline users)</li>
+      <li>✅ Store & Forward messaging</li>
+      <li>✅ End-to-End Encryption (Diffie-Hellman)</li>
+      <li>✅ Works with Heltec V4, T-Deck, LilyGo, RAK, etc.</li>
+      <li>✅ Premium firmware & features unlocked with PLSC</li>
+    </ul>
+
+    <p><em>Built for off-grid communities, events, emergencies, and remote areas.</em></p>
+  </div>
 </body>
 </html>
