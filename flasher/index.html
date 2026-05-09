@@ -6,22 +6,30 @@
   <title>PLSChat Web Flasher</title>
   <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 40px; background: #0f172a; color: #e2e8f0; }
-    h1 { color: #22d3ee; }
+    body { 
+      font-family: Arial, sans-serif; 
+      text-align: center; 
+      padding: 40px; 
+      background: #0f172a; 
+      color: #e2e8f0; 
+    }
+    h1 { color: #22d3ee; margin-bottom: 10px; }
+    p { max-width: 600px; margin: 20px auto; }
     .container { max-width: 800px; margin: 0 auto; }
-    esp-web-install-button { margin: 30px; }
+    esp-web-install-button { margin: 30px auto; display: block; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>PLSChat Web Flasher</h1>
-    <p>Flash firmware to your Heltec V4 or other ESP32 LoRa boards directly from your browser.</p>
+    <p>Flash firmware directly to your Heltec V4 or other ESP32 LoRa boards from your browser.<br>
+       <strong>No software install needed.</strong></p>
 
     <esp-web-install-button
       manifest="manifest.json">
     </esp-web-install-button>
 
-    <p><strong>Instructions:</strong> Hold the <strong>BOOT button</strong> while clicking <strong>Connect</strong>.</p>
+    <p><strong>Important:</strong> Hold the <strong>BOOT button</strong> (small button next to USB-C) while clicking <strong>Connect</strong>.</p>
   </div>
 </body>
 </html>
