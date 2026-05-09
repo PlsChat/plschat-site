@@ -1,9 +1,8 @@
-Place your compiled binaries here:
-- app.bin (your firmware image)
-- bootloader.bin
-- partitions.bin
+PLSChat Firmware Files Go Here
 
-Offsets are defined in manifest.json:
-- bootloader.bin @ 0x0000
-- partitions.bin @ 0x8000 (32768)
-- app.bin        @ 0x10000 (65536)
+Recommended naming:
+- plschat-firmware-v1.0.bin          → Main client firmware
+- plschat-room-server-v1.0.bin       → Dedicated Room Server firmware
+- plschat-repeater-v1.0.bin          → Repeater firmware
+
+Once you add the actual .bin files, update manifest.json accordingly.
