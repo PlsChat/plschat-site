@@ -8,34 +8,34 @@
     body { 
       font-family: Arial, sans-serif; 
       margin: 0; 
-      padding: 40px; 
+      padding: 60px 20px; 
       background: #0d1117; 
       color: #c9d1d9; 
       text-align: center;
+      line-height: 1.6;
     }
-    h1 { color: #58a6ff; font-size: 3em; margin-bottom: 10px; }
-    h2 { color: #8b949e; }
-    .container { max-width: 900px; margin: 0 auto; }
+    h1 { color: #58a6ff; font-size: 3.2em; margin-bottom: 8px; }
+    h2 { color: #8b949e; margin-bottom: 30px; }
+    .container { max-width: 800px; margin: 0 auto; }
     .btn { 
       display: inline-block; 
-      padding: 16px 32px; 
-      margin: 15px 10px; 
+      padding: 18px 36px; 
+      margin: 15px; 
       text-decoration: none; 
-      border-radius: 8px; 
+      border-radius: 10px; 
       font-weight: bold; 
-      font-size: 1.1em;
+      font-size: 1.25em;
+      transition: all 0.2s;
     }
-    .primary { background: #238636; color: white; }
-    .primary:hover { background: #2ea44f; }
-    .flasher { 
+    .flasher-btn { 
       background: #22d3ee; 
       color: #0f172a; 
-      font-size: 1.3em; 
-      padding: 20px 40px;
     }
-    .flasher:hover { background: #67e8f9; }
-    ul { text-align: left; max-width: 600px; margin: 30px auto; }
-    li { margin: 12px 0; }
+    .flasher-btn:hover { background: #67e8f9; transform: scale(1.05); }
+    .primary { background: #238636; color: white; }
+    .primary:hover { background: #2ea44f; }
+    ul { text-align: left; display: inline-block; margin: 40px auto; }
+    li { margin: 14px 0; font-size: 1.1em; }
   </style>
 </head>
 <body>
@@ -43,29 +43,32 @@
     <h1>PLSChat</h1>
     <h2>Decentralized LoRa Mesh Communication</h2>
     <p><strong>Persistent Group Chat • Room Servers • Fully Off-Grid</strong></p>
-    <p>Secure. Private. No internet required.<br>
-       Powered by the <strong>PLSC</strong> utility token on PulseChain.</p>
+    
+    <p style="font-size: 1.2em; max-width: 600px; margin: 30px auto;">
+      Secure. Private. No internet required.<br>
+      Powered by the <strong>PLSC</strong> utility token.
+    </p>
 
-    <div style="margin: 40px 0;">
-      <a href="/flasher/" class="btn flasher">
-        🚀 Open Web Flasher
-      </a>
-    </div>
+    <a href="/flasher/" class="btn flasher-btn">
+      🚀 Open Web Flasher
+    </a>
 
-    <a href="https://www.plschat.net" class="btn primary">Official Website</a>
+    <a href="https://www.plschat.net" class="btn primary">
+      🌐 Official Website
+    </a>
 
-    <hr style="margin: 50px auto; max-width: 600px;">
+    <hr style="margin: 60px auto; max-width: 500px; border-color: #30363d;">
     
     <h3>Key Features</h3>
     <ul>
       <li>✅ Persistent Room Servers (messages saved for offline users)</li>
       <li>✅ Store & Forward messaging</li>
-      <li>✅ End-to-End Encryption (Diffie-Hellman)</li>
-      <li>✅ Works with Heltec V4, T-Deck, LilyGo, RAK, etc.</li>
-      <li>✅ Premium firmware & features unlocked with PLSC</li>
+      <li>✅ End-to-End Encryption</li>
+      <li>✅ Compatible with Heltec V4, T-Deck, LilyGo, etc.</li>
+      <li>✅ Premium features unlocked with PLSC tokens</li>
     </ul>
 
-    <p><em>Built for off-grid communities, events, emergencies, and remote areas.</em></p>
+    <p><em>Built for off-grid communities, events, emergencies & remote areas.</em></p>
   </div>
 </body>
 </html>
