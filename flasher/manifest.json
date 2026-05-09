@@ -6,13 +6,34 @@
       "chipFamily": "ESP32",
       "parts": [
         {
-          "path": "pls-chat-firmware.bin",
-          "offset": 0
+          "path": "plschat-firmware-v1.0.bin",
+          "offset": 0,
+          "name": "PLSChat Main Firmware"
+        }
+      ]
+    },
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "plschat-room-server-v1.0.bin",
+          "offset": 0,
+          "name": "PLSChat Room Server"
+        }
+      ]
+    },
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "plschat-repeater-v1.0.bin",
+          "offset": 0,
+          "name": "PLSChat Repeater"
         }
       ]
     }
   ],
   "homepage": "https://www.plschat.net",
-  "description": "PLSChat - Decentralized LoRa Mesh with Persistent Room Servers",
-  "notes": "Powered by PLSC • For Heltec, LilyGo, T-Deck and other ESP32 LoRa boards"
+  "description": "PLSChat - Decentralized LoRa Mesh Network with Persistent Room Servers",
+  "notes": "Powered by PLSC • Choose the correct firmware for your device type"
 }
