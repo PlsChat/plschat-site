@@ -1,39 +1,19 @@
 {
   "name": "PLSChat Firmware",
   "version": "1.0.0",
+  "new_install_prompt_erase": true,
   "builds": [
     {
-      "chipFamily": "ESP32",
+      "chipFamily": "ESP32-S3",
       "parts": [
-        {
-          "path": "plschat-firmware-v1.0.bin",
-          "offset": 0,
-          "name": "PLSChat Main Firmware"
-        }
+        { "path": "firmware/plschat-firmware-v1.0.bin", "offset": 0 }
       ]
     },
     {
-      "chipFamily": "ESP32",
+      "chipFamily": "ESP32-S3",
       "parts": [
-        {
-          "path": "plschat-room-server-v1.0.bin",
-          "offset": 0,
-          "name": "PLSChat Room Server"
-        }
-      ]
-    },
-    {
-      "chipFamily": "ESP32",
-      "parts": [
-        {
-          "path": "plschat-repeater-v1.0.bin",
-          "offset": 0,
-          "name": "PLSChat Repeater"
-        }
+        { "path": "firmware/plschat-room-server-v1.0.bin", "offset": 0 }
       ]
     }
-  ],
-  "homepage": "https://www.plschat.net",
-  "description": "PLSChat - Decentralized LoRa Mesh Network with Persistent Room Servers",
-  "notes": "Powered by PLSC • Choose the correct firmware for your device type"
+  ]
 }
