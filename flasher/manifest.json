@@ -1,23 +1,18 @@
 {
-  "name": "PLSChat Mesh",
-  "version": "0.1.0",
+  "name": "PLSChat Firmware",
+  "version": "1.0.0",
   "builds": [
     {
-      "chipFamily": "ESP32-S3",
+      "chipFamily": "ESP32",
       "parts": [
         {
-          "path": "bootloader.bin",
+          "path": "pls-chat-firmware.bin",
           "offset": 0
-        },
-        {
-          "path": "partitions.bin",
-          "offset": 32768
-        },
-        {
-          "path": "app.bin",
-          "offset": 65536
         }
       ]
     }
-  ]
+  ],
+  "homepage": "https://www.plschat.net",
+  "description": "PLSChat - Decentralized LoRa Mesh with Persistent Room Servers",
+  "notes": "Powered by PLSC • For Heltec, LilyGo, T-Deck and other ESP32 LoRa boards"
 }
