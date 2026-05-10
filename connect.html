@@ -3,69 +3,104 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PLSChat - Connect Device</title>
+  <title>PLSChat - Device Connector</title>
   <style>
     body { font-family: Arial, sans-serif; background: #0d1117; color: #c9d1d9; text-align: center; padding: 40px; }
-    button { padding: 15px 30px; font-size: 1.2em; background: #238636; color: white; border: none; border-radius: 8px; cursor: pointer; }
-    button:hover { background: #2ea44f; }
-    .status { margin: 20px auto; padding: 15px; background: #161b22; border-radius: 8px; max-width: 600px; text-align: left; }
+    h1 { color: #58a6ff; }
+    button { 
+      padding: 14px 28px; 
+      font-size: 1.1em; 
+      margin: 10px; 
+      border: none; 
+      border-radius: 8px; 
+      cursor: pointer; 
+    }
+    .connect { background: #238636; color: white; }
+    .buy { background: #f0b429; color: black; font-weight: bold; }
+    .claim { background: #22d3ee; color: black; font-weight: bold; }
+    .status { margin: 20px auto; padding: 20px; background: #161b22; border-radius: 8px; max-width: 700px; text-align: left; display: none; }
+    .error { color: #f85149; background: #3a1f1f; padding: 15px; border-radius: 6px; }
   </style>
 </head>
 <body>
-  <h1>PLSChat Device Connector</h1>
+  <h1>Your Gateway to a Community-Centric Decentralised Communication Platform</h1>
+  <h2>PLSChat Device Connector</h2>
   <p>Plug in your Heltec V4 and click the button below</p>
   
-  <button onclick="connectDevice()">🔌 Connect Device</button>
+  <button class="connect" onclick="connectDevice()">🔌 Connect Device</button>
+  <button class="buy" onclick="buyLicense()">💰 Buy License</button>
+  <button class="claim" onclick="claimRewards()">🏦 Claim Rewards</button>
 
-  <div id="output" class="status" style="display:none;"></div>
+  <div id="output" class="status"></div>
 
   <script>
+    let currentPort = null;
+    let currentMAC = "";
+
     async function connectDevice() {
       const output = document.getElementById('output');
       output.style.display = 'block';
-      output.innerHTML = '<p>Connecting...</p>';
+      output.innerHTML = '<p>Connecting to device...</p>';
 
       try {
-        const port = await navigator.serial.requestPort();
-        await port.open({ baudRate: 115200 });
+        currentPort = await navigator.serial.requestPort();
+        await currentPort.open({ baudRate: 115200 });
 
-        const reader = port.readable.getReader();
+        const reader = currentPort.readable.getReader();
         let buffer = '';
 
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
-
           buffer += new TextDecoder().decode(value);
 
-          // Look for our status block
           if (buffer.includes('=== END_STATUS ===')) {
             const statusBlock = buffer.substring(
               buffer.lastIndexOf('=== PLSCHAT_STATUS ==='),
               buffer.lastIndexOf('=== END_STATUS ===') + 18
             );
 
-            output.innerHTML = `
-              <h2>✅ Device Detected</h2>
-              <pre>${statusBlock}</pre>
-              <p><strong>MAC Address:</strong> <span id="mac"></span></p>
-              <p><strong>License:</strong> <span id="licensed"></span></p>
-              <p><strong>Claimable Rewards:</strong> <span id="claimable"></span> PLSC</p>
-            `;
-
-            // Parse MAC and Claimable
             const macMatch = statusBlock.match(/MAC:(.+)/);
             const claimMatch = statusBlock.match(/CLAIMABLE:([\d.]+)/);
             const licensedMatch = statusBlock.match(/LICENSED:(.+)/);
 
-            if (macMatch) document.getElementById('mac').textContent = macMatch[1].trim();
-            if (claimMatch) document.getElementById('claimable').textContent = claimMatch[1].trim();
-            if (licensedMatch) document.getElementById('licensed').textContent = licensedMatch[1].trim();
+            currentMAC = macMatch ? macMatch[1].trim() : "Unknown";
+
+            output.innerHTML = `
+              <h2>✅ Device Connected Successfully</h2>
+              <pre>${statusBlock}</pre>
+              <p><strong>MAC Address:</strong> ${currentMAC}</p>
+              <p><strong>License Status:</strong> ${licensedMatch ? licensedMatch[1].trim() : 'Unknown'}</p>
+              <p><strong>Claimable Rewards:</strong> ${claimMatch ? claimMatch[1].trim() : '0'} PLSC</p>
+            `;
           }
         }
       } catch (err) {
-        output.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+        output.innerHTML = `<div class="error">Error: ${err.message}<br><br>
+          <strong>Troubleshooting:</strong><br>
+          • Use HTTPS (not HTTP)<br>
+          • Try Chrome or Edge<br>
+          • Make sure the device is plugged in and powered on
+        </div>`;
       }
+    }
+
+    function buyLicense() {
+      if (!currentMAC) {
+        alert("Please connect your device first!");
+        return;
+      }
+      alert(`Opening Buy License page for MAC: ${currentMAC}\n\n(This will be linked to the full purchase flow later)`);
+      // Future: window.open(`https://plschat.net/buy?mac=${currentMAC}`);
+    }
+
+    function claimRewards() {
+      if (!currentMAC) {
+        alert("Please connect your device first!");
+        return;
+      }
+      alert(`Opening Claim Rewards for MAC: ${currentMAC}\n\n(This will connect to your wallet and claim PLSC)`);
+      // Future: window.open(`https://plschat.net/claim?mac=${currentMAC}`);
     }
   </script>
 </body>
