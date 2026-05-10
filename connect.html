@@ -10,7 +10,7 @@
     button { 
       padding: 14px 28px; 
       font-size: 1.1em; 
-      margin: 10px; 
+      margin: 8px; 
       border: none; 
       border-radius: 8px; 
       cursor: pointer; 
@@ -23,9 +23,8 @@
   </style>
 </head>
 <body>
-  <h1>Your Gateway to a Community-Centric Decentralised Communication Platform</h1>
-  <h2>PLSChat Device Connector</h2>
-  <p>Plug in your Heltec V4 and click the button below</p>
+  <h1>PLSChat Device Connector</h1>
+  <p>Plug in your Heltec V4 and click below</p>
   
   <button class="connect" onclick="connectDevice()">🔌 Connect Device</button>
   <button class="buy" onclick="buyLicense()">💰 Buy License</button>
@@ -34,19 +33,18 @@
   <div id="output" class="status"></div>
 
   <script>
-    let currentPort = null;
     let currentMAC = "";
 
     async function connectDevice() {
       const output = document.getElementById('output');
       output.style.display = 'block';
-      output.innerHTML = '<p>Connecting to device...</p>';
+      output.innerHTML = '<p>Attempting to connect...</p>';
 
       try {
-        currentPort = await navigator.serial.requestPort();
-        await currentPort.open({ baudRate: 115200 });
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
 
-        const reader = currentPort.readable.getReader();
+        const reader = port.readable.getReader();
         let buffer = '';
 
         while (true) {
@@ -55,52 +53,41 @@
           buffer += new TextDecoder().decode(value);
 
           if (buffer.includes('=== END_STATUS ===')) {
-            const statusBlock = buffer.substring(
+            const block = buffer.substring(
               buffer.lastIndexOf('=== PLSCHAT_STATUS ==='),
               buffer.lastIndexOf('=== END_STATUS ===') + 18
             );
 
-            const macMatch = statusBlock.match(/MAC:(.+)/);
-            const claimMatch = statusBlock.match(/CLAIMABLE:([\d.]+)/);
-            const licensedMatch = statusBlock.match(/LICENSED:(.+)/);
-
-            currentMAC = macMatch ? macMatch[1].trim() : "Unknown";
+            currentMAC = (block.match(/MAC:(.+)/) || [])[1] || "Unknown";
 
             output.innerHTML = `
-              <h2>✅ Device Connected Successfully</h2>
-              <pre>${statusBlock}</pre>
-              <p><strong>MAC Address:</strong> ${currentMAC}</p>
-              <p><strong>License Status:</strong> ${licensedMatch ? licensedMatch[1].trim() : 'Unknown'}</p>
-              <p><strong>Claimable Rewards:</strong> ${claimMatch ? claimMatch[1].trim() : '0'} PLSC</p>
+              <h2>✅ Device Connected</h2>
+              <pre>${block}</pre>
+              <p><strong>MAC:</strong> ${currentMAC}</p>
             `;
           }
         }
       } catch (err) {
-        output.innerHTML = `<div class="error">Error: ${err.message}<br><br>
-          <strong>Troubleshooting:</strong><br>
-          • Use HTTPS (not HTTP)<br>
-          • Try Chrome or Edge<br>
-          • Make sure the device is plugged in and powered on
-        </div>`;
+        output.innerHTML = `
+          <div class="error">
+            <strong>Error:</strong> ${err.message}<br><br>
+            <strong>Troubleshooting:</strong><br>
+            • Must use <strong>HTTPS</strong> (not HTTP or raw GitHub preview)<br>
+            • Try in <strong>Chrome or Edge</strong><br>
+            • Click the button directly (not from an iframe if possible)<br>
+            • Make sure the Heltec is plugged in and powered on
+          </div>`;
       }
     }
 
     function buyLicense() {
-      if (!currentMAC) {
-        alert("Please connect your device first!");
-        return;
-      }
-      alert(`Opening Buy License page for MAC: ${currentMAC}\n\n(This will be linked to the full purchase flow later)`);
-      // Future: window.open(`https://plschat.net/buy?mac=${currentMAC}`);
+      if (!currentMAC) return alert("Please connect your device first!");
+      alert(`Buy License flow for MAC: ${currentMAC}\n\n(We'll connect this to the payment page next)`);
     }
 
     function claimRewards() {
-      if (!currentMAC) {
-        alert("Please connect your device first!");
-        return;
-      }
-      alert(`Opening Claim Rewards for MAC: ${currentMAC}\n\n(This will connect to your wallet and claim PLSC)`);
-      // Future: window.open(`https://plschat.net/claim?mac=${currentMAC}`);
+      if (!currentMAC) return alert("Please connect your device first!");
+      alert(`Claim Rewards for MAC: ${currentMAC}\n\n(We'll connect wallet + claim next)`);
     }
   </script>
 </body>
