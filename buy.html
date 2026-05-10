@@ -1,66 +1,41 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PLSChat - Buy License</title>
+  <title>Buy License - PLSChat</title>
   <style>
     body { font-family: 'Inter', Arial, sans-serif; background: #0d1117; color: #c9d1d9; text-align: center; padding: 40px; }
-    .container { max-width: 700px; margin: 0 auto; }
-    h1 { color: #58a6ff; }
-    .card {
-      background: #161b22;
-      border-radius: 16px;
-      padding: 30px;
-      margin: 20px auto;
-      max-width: 500px;
-      border: 1px solid #30363d;
-    }
-    button {
-      padding: 16px 32px;
-      font-size: 1.1em;
-      margin: 10px;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-    }
-    .btn-annual { background: #f0b429; color: black; font-weight: bold; }
-    .btn-lifetime { background: #238636; color: white; font-weight: bold; }
+    .card { background: #161b22; border-radius: 16px; padding: 30px; max-width: 500px; margin: 20px auto; }
+    button { padding: 16px 32px; font-size: 1.1em; margin: 10px; border: none; border-radius: 12px; cursor: pointer; }
+    .btn-annual { background: #f0b429; color: black; }
+    .btn-lifetime { background: #238636; color: white; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Buy PLSChat License</h1>
-    <p id="mac-display">Device MAC: Not connected</p>
+  <h1>Buy PLSChat License</h1>
+  <p id="mac-display">Device MAC: Loading...</p>
 
-    <div class="card">
-      <h2>Annual License</h2>
-      <h3>15 PLSC / year</h3>
-      <p>Recurring access • Best for testing</p>
-      <button class="btn-annual" onclick="buyLicense('annual')">Buy Annual (15 PLSC)</button>
-    </div>
+  <div class="card">
+    <h2>Annual License</h2>
+    <h3>15 PLSC / year</h3>
+    <button class="btn-annual" onclick="buy('annual')">Buy Annual License</button>
+  </div>
 
-    <div class="card">
-      <h2>Lifetime License</h2>
-      <h3>50 PLSC (one-time)</h3>
-      <p>Best value • No renewal needed</p>
-      <button class="btn-lifetime" onclick="buyLicense('lifetime')">Buy Lifetime (50 PLSC)</button>
-    </div>
-
-    <p style="margin-top:40px; color:#8b949e;">
-      Payment in PLS • 20% burned • 60% treasury • 20% rewards pool
-    </p>
+  <div class="card">
+    <h2>Lifetime License</h2>
+    <h3>50 PLSC (one-time)</h3>
+    <button class="btn-lifetime" onclick="buy('lifetime')">Buy Lifetime License</button>
   </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const mac = params.get('mac');
+    const mac = new URLSearchParams(window.location.search).get('mac');
     if (mac) document.getElementById('mac-display').textContent = `Device MAC: ${mac}`;
 
-    async function buyLicense(type) {
+    async function buy(type) {
       const amount = type === 'annual' ? 15 : 50;
-      alert(`Buying ${type} license (${amount} PLSC) for MAC: ${mac || 'Unknown'}\n\nWallet connection + payment flow will go here.`);
-      // Future: Integrate with MetaMask / ZKX + smart contract call
+      alert(`Purchasing ${type} license (${amount} PLSC) for MAC: ${mac}\n\nMetaMask / ZKX wallet connection will be triggered here.`);
     }
   </script>
 </body>
