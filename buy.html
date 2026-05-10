@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,33 +8,57 @@
     body { font-family: 'Inter', Arial, sans-serif; background: #0d1117; color: #c9d1d9; text-align: center; padding: 40px; }
     .card { background: #161b22; border-radius: 16px; padding: 30px; max-width: 500px; margin: 20px auto; }
     button { padding: 16px 32px; font-size: 1.1em; margin: 10px; border: none; border-radius: 12px; cursor: pointer; }
-    .btn-annual { background: #f0b429; color: black; }
-    .btn-lifetime { background: #238636; color: white; }
+    .btn-annual { background: #f0b429; color: black; font-weight: bold; }
+    .btn-lifetime { background: #238636; color: white; font-weight: bold; }
+    .wallet-btn { background: #6f42c1; color: white; }
   </style>
 </head>
 <body>
   <h1>Buy PLSChat License</h1>
   <p id="mac-display">Device MAC: Loading...</p>
+  <p id="wallet-status" style="color:#8b949e;">Wallet: Not connected</p>
 
   <div class="card">
-    <h2>Annual License</h2>
-    <h3>15 PLSC / year</h3>
-    <button class="btn-annual" onclick="buy('annual')">Buy Annual License</button>
+    <h2>Annual License - 15 PLSC</h2>
+    <button class="wallet-btn" onclick="connectWallet()">Connect Wallet (MetaMask / ZKX)</button>
+    <button class="btn-annual" onclick="buyLicense('annual')">Buy Annual License</button>
   </div>
 
   <div class="card">
-    <h2>Lifetime License</h2>
-    <h3>50 PLSC (one-time)</h3>
-    <button class="btn-lifetime" onclick="buy('lifetime')">Buy Lifetime License</button>
+    <h2>Lifetime License - 50 PLSC</h2>
+    <button class="wallet-btn" onclick="connectWallet()">Connect Wallet (MetaMask / ZKX)</button>
+    <button class="btn-lifetime" onclick="buyLicense('lifetime')">Buy Lifetime License</button>
   </div>
 
   <script>
-    const mac = new URLSearchParams(window.location.search).get('mac');
+    const params = new URLSearchParams(window.location.search);
+    const mac = params.get('mac');
     if (mac) document.getElementById('mac-display').textContent = `Device MAC: ${mac}`;
 
-    async function buy(type) {
+    let connectedWallet = "";
+
+    async function connectWallet() {
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          connectedWallet = accounts[0];
+          document.getElementById('wallet-status').innerHTML = `✅ Connected: ${connectedWallet.substring(0,6)}...${connectedWallet.substring(38)}`;
+          alert("Wallet connected successfully!");
+        } catch (err) {
+          alert("Connection cancelled.");
+        }
+      } else {
+        alert("Please install MetaMask or use ZKX Wallet.");
+      }
+    }
+
+    async function buyLicense(type) {
+      if (!connectedWallet) {
+        alert("Please connect your wallet first!");
+        return;
+      }
       const amount = type === 'annual' ? 15 : 50;
-      alert(`Purchasing ${type} license (${amount} PLSC) for MAC: ${mac}\n\nMetaMask / ZKX wallet connection will be triggered here.`);
+      alert(`Ready to buy ${type} license (${amount} PLSC) for MAC: ${mac}\nWallet: ${connectedWallet}\n\nPayment transaction would be triggered here.`);
     }
   </script>
 </body>
