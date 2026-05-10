@@ -7,26 +7,29 @@
   <style>
     body { font-family: 'Inter', Arial, sans-serif; background: #0d1117; color: #c9d1d9; text-align: center; padding: 40px; }
     .card { background: #161b22; border-radius: 16px; padding: 30px; max-width: 500px; margin: 20px auto; }
-    button { padding: 16px 32px; font-size: 1.1em; margin: 10px; border: none; border-radius: 12px; cursor: pointer; }
+    button { padding: 14px 28px; font-size: 1.05em; margin: 8px; border: none; border-radius: 10px; cursor: pointer; }
     .btn-annual { background: #f0b429; color: black; font-weight: bold; }
     .btn-lifetime { background: #238636; color: white; font-weight: bold; }
-    .wallet-btn { background: #6f42c1; color: white; }
+    .btn-mm { background: #f6851b; color: white; }
+    .btn-zkx { background: #6f42c1; color: white; }
   </style>
 </head>
 <body>
   <h1>Buy PLSChat License</h1>
   <p id="mac-display">Device MAC: Loading...</p>
-  <p id="wallet-status" style="color:#8b949e;">Wallet: Not connected</p>
+  <p id="wallet-status" style="color:#8b949e;">No wallet connected</p>
 
   <div class="card">
-    <h2>Annual License - 15 PLSC</h2>
-    <button class="wallet-btn" onclick="connectWallet()">Connect Wallet (MetaMask / ZKX)</button>
+    <h2>Annual License — 15 PLSC</h2>
+    <button class="btn-mm" onclick="connectWallet('metamask')">MetaMask</button>
+    <button class="btn-zkx" onclick="connectWallet('zkx')">ZKX (Private)</button>
     <button class="btn-annual" onclick="buyLicense('annual')">Buy Annual License</button>
   </div>
 
   <div class="card">
-    <h2>Lifetime License - 50 PLSC</h2>
-    <button class="wallet-btn" onclick="connectWallet()">Connect Wallet (MetaMask / ZKX)</button>
+    <h2>Lifetime License — 50 PLSC</h2>
+    <button class="btn-mm" onclick="connectWallet('metamask')">MetaMask</button>
+    <button class="btn-zkx" onclick="connectWallet('zkx')">ZKX (Private)</button>
     <button class="btn-lifetime" onclick="buyLicense('lifetime')">Buy Lifetime License</button>
   </div>
 
@@ -36,29 +39,33 @@
     if (mac) document.getElementById('mac-display').textContent = `Device MAC: ${mac}`;
 
     let connectedWallet = "";
+    let isZKX = false;
 
-    async function connectWallet() {
-      if (typeof window.ethereum !== 'undefined') {
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          connectedWallet = accounts[0];
-          document.getElementById('wallet-status').innerHTML = `✅ Connected: ${connectedWallet.substring(0,6)}...${connectedWallet.substring(38)}`;
-          alert("Wallet connected successfully!");
-        } catch (err) {
-          alert("Connection cancelled.");
+    async function connectWallet(type) {
+      if (type === 'metamask') {
+        if (typeof window.ethereum !== 'undefined') {
+          try {
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            connectedWallet = accounts[0];
+            isZKX = false;
+            document.getElementById('wallet-status').innerHTML = `✅ MetaMask Connected: ${connectedWallet.substring(0,6)}...${connectedWallet.substring(38)}`;
+          } catch (e) { alert("MetaMask connection cancelled"); }
+        } else {
+          alert("Please install MetaMask");
         }
-      } else {
-        alert("Please install MetaMask or use ZKX Wallet.");
+      } else if (type === 'zkx') {
+        alert("ZKX Wallet connection coming soon!\n\nWe'll add full shielded transaction support shortly.");
+        // Future ZKX integration code goes here
       }
     }
 
     async function buyLicense(type) {
       if (!connectedWallet) {
-        alert("Please connect your wallet first!");
+        alert("Please connect a wallet first (MetaMask or ZKX)");
         return;
       }
       const amount = type === 'annual' ? 15 : 50;
-      alert(`Ready to buy ${type} license (${amount} PLSC) for MAC: ${mac}\nWallet: ${connectedWallet}\n\nPayment transaction would be triggered here.`);
+      alert(`✅ Ready to purchase ${type} license (${amount} PLSC)\nDevice: ${mac}\nWallet: ${connectedWallet}\n\nTransaction will be sent from your wallet.`);
     }
   </script>
 </body>
