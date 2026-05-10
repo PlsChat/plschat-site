@@ -7,19 +7,19 @@
   <style>
     body { font-family: 'Inter', Arial, sans-serif; background: #0d1117; color: #c9d1d9; text-align: center; padding: 40px; }
     .card { background: #161b22; border-radius: 16px; padding: 40px; max-width: 500px; margin: 30px auto; }
-    button { padding: 18px 40px; font-size: 1.2em; background: #22d3ee; color: #0d1117; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; }
-    .wallet-btn { background: #6f42c1; color: white; }
+    button { padding: 16px 32px; font-size: 1.1em; margin: 10px; border: none; border-radius: 12px; cursor: pointer; }
+    .btn-wallet { background: #6f42c1; color: white; }
   </style>
 </head>
 <body>
-  <h1>Claim Rewards</h1>
+  <h1>Claim Your Rewards</h1>
   <p id="mac-display">Device MAC: Loading...</p>
-  <p id="wallet-status" style="color:#8b949e;">Wallet: Not connected</p>
+  <p id="wallet-status" style="color:#8b949e;">No wallet connected</p>
 
   <div class="card">
     <h2>Available Rewards</h2>
     <h3 id="claimable">0.1284 PLSC</h3>
-    <button class="wallet-btn" onclick="connectWallet()">Connect Wallet</button>
+    <button class="btn-wallet" onclick="connectWallet()">Connect Wallet</button>
     <button onclick="claimNow()">Claim Rewards Now</button>
   </div>
 
@@ -35,12 +35,10 @@
         try {
           const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
           connectedWallet = accounts[0];
-          document.getElementById('wallet-status').innerHTML = `✅ Connected: ${connectedWallet.substring(0,6)}...`;
-        } catch (err) {
-          alert("Connection cancelled.");
-        }
+          document.getElementById('wallet-status').innerHTML = `✅ Connected: ${connectedWallet.substring(0,8)}...`;
+        } catch (e) { alert("Connection cancelled"); }
       } else {
-        alert("Please install MetaMask or use ZKX Wallet.");
+        alert("Please install MetaMask or ZKX Wallet");
       }
     }
 
@@ -49,7 +47,7 @@
         alert("Please connect your wallet first!");
         return;
       }
-      alert(`Claiming 0.1284 PLSC to wallet: ${connectedWallet}\n\nTransaction would be sent here (MetaMask / ZKX).`);
+      alert(`Claiming rewards to wallet: ${connectedWallet}\n\nTransaction would be sent here.`);
     }
   </script>
 </body>
