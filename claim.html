@@ -3,56 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PLSChat - Claim Rewards</title>
+  <title>Claim Rewards - PLSChat</title>
   <style>
     body { font-family: 'Inter', Arial, sans-serif; background: #0d1117; color: #c9d1d9; text-align: center; padding: 40px; }
-    .container { max-width: 700px; margin: 0 auto; }
-    h1 { color: #58a6ff; }
-    .card {
-      background: #161b22;
-      border-radius: 16px;
-      padding: 40px;
-      margin: 30px auto;
-      max-width: 500px;
-    }
-    button {
-      padding: 18px 40px;
-      font-size: 1.2em;
-      background: #22d3ee;
-      color: #0d1117;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+    .card { background: #161b22; border-radius: 16px; padding: 40px; max-width: 500px; margin: 30px auto; }
+    button { padding: 18px 40px; font-size: 1.2em; background: #22d3ee; color: #0d1117; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Claim Your Rewards</h1>
-    <p id="mac-display">Device MAC: Not connected</p>
+  <h1>Claim Rewards</h1>
+  <p id="mac-display">Device MAC: Loading...</p>
 
-    <div class="card">
-      <h2>Available Rewards</h2>
-      <h3 id="claimable-display">0.0000 PLSC</h3>
-      <button onclick="claimNow()">Claim Rewards Now</button>
-      <p style="margin-top:20px; font-size:0.9em; color:#8b949e;">
-        Rewards are sent directly to your connected wallet
-      </p>
-    </div>
+  <div class="card">
+    <h2>Available Rewards</h2>
+    <h3 id="claimable">0.0000 PLSC</h3>
+    <button onclick="claimNow()">Claim Now</button>
   </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const mac = params.get('mac');
+    const mac = new URLSearchParams(window.location.search).get('mac');
     if (mac) document.getElementById('mac-display').textContent = `Device MAC: ${mac}`;
 
-    // Simulate current claimable (in real version this comes from backend)
-    document.getElementById('claimable-display').textContent = "0.1284 PLSC";
-
     async function claimNow() {
-      alert(`Claiming rewards for MAC: ${mac || 'Unknown'}\n\nWallet connection (MetaMask / ZKX) + transaction will happen here.`);
-      // Future: Call smart contract claim function
+      alert(`Claiming rewards for MAC: ${mac}\n\nMetaMask / ZKX connection + transaction will happen here.`);
     }
   </script>
 </body>
