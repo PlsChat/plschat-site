@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PLSChat - Device Manager</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      text-align: center;
+      padding: 40px;
+      margin: 0;
+    }
+    h1 { color: #58a6ff; margin-bottom: 10px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    button {
+      padding: 16px 32px;
+      font-size: 1.1em;
+      margin: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .connect { background: #238636; color: white; }
+    .buy { background: #f0b429; color: black; font-weight: bold; }
+    .claim { background: #22d3ee; color: black; font-weight: bold; }
+    .status { 
+      margin: 30px auto; 
+      padding: 20px; 
+      background: #161b22; 
+      border-radius: 12px; 
+      text-align: left; 
+      display: none; 
+      max-width: 700px;
+    }
+    .error { color: #f85149; background: #3a1f1f; padding: 15px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PLSChat Device Manager</h1>
+    <p>Plug in your Heltec V4 and manage your license & rewards</p>
+
+    <button class="connect" onclick="connectDevice()">🔌 Connect Device</button>
+    <button class="buy" onclick="buyLicense()">💰 Buy License</button>
+    <button class="claim" onclick="claimRewards()">🏦 Claim Rewards</button>
+
+    <div id="output" class="status"></div>
+  </div>
+
+  <script>
+    let currentMAC = "";
+
+    async function connectDevice() {
+      const output = document.getElementById('output');
+      output.style.display = 'block';
+      output.innerHTML = '<p>Connecting to device... Make sure it's plugged in.</p>';
+
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+
+        const reader = port.readable.getReader();
+        let buffer = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += new TextDecoder().decode(value);
+
+          if (buffer.includes('=== END_STATUS ===')) {
+            const block = buffer.substring(
+              buffer.lastIndexOf('=== PLSCHAT_STATUS ==='),
+              buffer.lastIndexOf('=== END_STATUS ===') + 18
+            );
+
+            currentMAC = (block.match(/MAC:(.+)/) || [])[1] || "Unknown";
+
+            output.innerHTML = `
+              <h2>✅ Device Connected Successfully</h2>
+              <pre>${block}</pre>
+              <p><strong>MAC Address:</strong> ${currentMAC}</p>
+            `;
+          }
+        }
+      } catch (err) {
+        output.innerHTML = `<div class="error">
+          <strong>Connection Failed</strong><br><br>
+          ${err.message}<br><br>
+          <strong>Troubleshooting:</strong><br>
+          • Use Chrome or Edge<br>
+          • Page must be on HTTPS<br>
+          • Device must be powered on and plugged in
+        </div>`;
+      }
+    }
+
+    function buyLicense() {
+      if (!currentMAC) return alert("Please connect your device first!");
+      window.open(`https://plschat.net/buy?mac=${currentMAC}`, '_blank');
+    }
+
+    function claimRewards() {
+      if (!currentMAC) return alert("Please connect your device first!");
+      window.open(`https://plschat.net/claim?mac=${currentMAC}`, '_blank');
+    }
+  </script>
+</body>
+</html>
