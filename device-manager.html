@@ -5,53 +5,140 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PLSChat - Device Manager</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-    body { font-family: 'Inter', Arial, sans-serif; background: linear-gradient(135deg, #0d1117 0%, #1a2332 100%); color: #c9d1d9; margin: 0; padding: 40px 20px; min-height: 100vh; }
-    .container { max-width: 900px; margin: 0 auto; text-align: center; }
-    h1 { color: #58a6ff; font-size: 2.8em; margin-bottom: 8px; }
-    p { font-size: 1.1em; color: #8b949e; max-width: 600px; margin: 0 auto 40px; }
-    .btn {
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: #0a0e1a;
+      color: #c9d1d9;
+      margin: 0;
+      padding: 40px 20px;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Animated Mesh Background */
+    #mesh-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: -1;
+      opacity: 0.15;
+    }
+
+    h1 {
+      font-size: 3.2em;
+      background: linear-gradient(90deg, #a855f7, #22d3ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .subtitle { color: #8b949e; font-size: 1.2em; }
+
+    .container { max-width: 900px; margin: 0 auto; text-align: center; position: relative; z-index: 2; }
+    button {
       padding: 16px 32px;
       font-size: 1.1em;
       font-weight: 600;
       border: none;
       border-radius: 12px;
       cursor: pointer;
-      margin: 8px;
+      margin: 10px;
       transition: all 0.3s;
     }
     .btn-connect { background: #238636; color: white; }
     .btn-buy { background: #f0b429; color: #0d1117; }
     .btn-claim { background: #22d3ee; color: #0d1117; }
-    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+    .btn-wallet { background: #6f42c1; color: white; }
+    .btn:hover { transform: translateY(-4px); box-shadow: 0 12px 25px rgba(0,0,0,0.4); }
+
+    .status { 
+      margin: 40px auto; 
+      padding: 25px; 
+      background: rgba(22, 27, 34, 0.95); 
+      border-radius: 16px; 
+      text-align: left; 
+      display: none; 
+      max-width: 700px;
+      border: 1px solid #30363d;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Animated Mesh Background -->
+  <canvas id="mesh-bg"></canvas>
+
   <div class="container">
-    <h1>PLSChat Device Manager</h1>
-    <p>Plug in your Heltec V4 to manage your license and rewards</p>
+    <h1>PULSE CHAT</h1>
+    <p class="subtitle">Decentralised LoRa Mesh Communication</p>
 
     <button class="btn btn-connect" onclick="connectDevice()">🔌 Connect Device</button>
+    <button class="btn btn-wallet" onclick="connectMetaMask()">🔗 MetaMask</button>
+    <button class="btn btn-wallet" onclick="connectZKX()">🛡️ ZKX (Private)</button>
     <button class="btn btn-buy" onclick="buyLicense()">💰 Buy License</button>
     <button class="btn btn-claim" onclick="claimRewards()">🏦 Claim Rewards</button>
 
-    <div id="output" class="status" style="display:none; margin-top:40px; padding:25px; background:#161b22; border-radius:16px; text-align:left;"></div>
+    <div id="output" class="status"></div>
   </div>
 
   <script>
     let currentMAC = "";
 
-    async function connectDevice() { /* ... same as before ... */ }
+    // Simple animated mesh background
+    const canvas = document.getElementById('mesh-bg');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    function buyLicense() {
-      if (!currentMAC) return alert("Please connect your device first!");
-      window.open(`buy.html?mac=${currentMAC}`, '_blank');
+    let nodes = [];
+    for (let i = 0; i < 35; i++) {
+      nodes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: 3,
+        speed: Math.random() * 0.5 + 0.2
+      });
     }
 
-    function claimRewards() {
-      if (!currentMAC) return alert("Please connect your device first!");
-      window.open(`claim.html?mac=${currentMAC}`, '_blank');
+    function animateMesh() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#6f42c1';
+      ctx.lineWidth = 1;
+
+      nodes.forEach((node, i) => {
+        node.x += Math.sin(i) * node.speed;
+        if (node.x < 0 || node.x > canvas.width) node.speed *= -1;
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#22d3ee';
+        ctx.fill();
+
+        // Connect lines
+        nodes.forEach((other, j) => {
+          if (i !== j) {
+            const dist = Math.hypot(node.x - other.x, node.y - other.y);
+            if (dist < 180) {
+              ctx.globalAlpha = (180 - dist) / 180;
+              ctx.beginPath();
+              ctx.moveTo(node.x, node.y);
+              ctx.lineTo(other.x, other.y);
+              ctx.stroke();
+            }
+          }
+        });
+      });
+      requestAnimationFrame(animateMesh);
     }
+    animateMesh();
+
+    // Rest of the functions (connectDevice, buyLicense, etc.)
+    async function connectDevice() { /* same as previous version */ }
+    async function connectMetaMask() { /* same as before */ }
+    function connectZKX() { alert("ZKX Shielded Wallet connection coming soon!"); }
+    function buyLicense() { if (!currentMAC) return alert("Connect device first!"); window.open(`buy.html?mac=${currentMAC}`, '_blank'); }
+    function claimRewards() { if (!currentMAC) return alert("Connect device first!"); window.open(`claim.html?mac=${currentMAC}`, '_blank'); }
   </script>
 </body>
 </html>
