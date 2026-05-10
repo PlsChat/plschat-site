@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PLSChat - Connect Device</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #0d1117; color: #c9d1d9; text-align: center; padding: 40px; }
+    button { padding: 15px 30px; font-size: 1.2em; background: #238636; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    button:hover { background: #2ea44f; }
+    .status { margin: 20px auto; padding: 15px; background: #161b22; border-radius: 8px; max-width: 600px; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>PLSChat Device Connector</h1>
+  <p>Plug in your Heltec V4 and click the button below</p>
+  
+  <button onclick="connectDevice()">🔌 Connect Device</button>
+
+  <div id="output" class="status" style="display:none;"></div>
+
+  <script>
+    async function connectDevice() {
+      const output = document.getElementById('output');
+      output.style.display = 'block';
+      output.innerHTML = '<p>Connecting...</p>';
+
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+
+        const reader = port.readable.getReader();
+        let buffer = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += new TextDecoder().decode(value);
+
+          // Look for our status block
+          if (buffer.includes('=== END_STATUS ===')) {
+            const statusBlock = buffer.substring(
+              buffer.lastIndexOf('=== PLSCHAT_STATUS ==='),
+              buffer.lastIndexOf('=== END_STATUS ===') + 18
+            );
+
+            output.innerHTML = `
+              <h2>✅ Device Detected</h2>
+              <pre>${statusBlock}</pre>
+              <p><strong>MAC Address:</strong> <span id="mac"></span></p>
+              <p><strong>License:</strong> <span id="licensed"></span></p>
+              <p><strong>Claimable Rewards:</strong> <span id="claimable"></span> PLSC</p>
+            `;
+
+            // Parse MAC and Claimable
+            const macMatch = statusBlock.match(/MAC:(.+)/);
+            const claimMatch = statusBlock.match(/CLAIMABLE:([\d.]+)/);
+            const licensedMatch = statusBlock.match(/LICENSED:(.+)/);
+
+            if (macMatch) document.getElementById('mac').textContent = macMatch[1].trim();
+            if (claimMatch) document.getElementById('claimable').textContent = claimMatch[1].trim();
+            if (licensedMatch) document.getElementById('licensed').textContent = licensedMatch[1].trim();
+          }
+        }
+      } catch (err) {
+        output.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
