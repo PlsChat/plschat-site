@@ -79,12 +79,6 @@
       transform: translateY(-4px);
       box-shadow: 0 15px 30px rgba(0,0,0,0.5);
     }
-    .btn-flasher { background: linear-gradient(135deg, #22d3ee, #67e8f9); color: #0f172a; }
-    .btn-connect { background: linear-gradient(135deg, #eab308, #facc15); color: #0f172a; }
-    .btn-metamask { background: linear-gradient(135deg, #f6851a, #e27625); color: white; }
-    .btn-zkx { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white; }
-    .btn-buy { background: linear-gradient(135deg, #a855f7, #c084fc); color: white; }
-    .btn-claim { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; }
 
     .success-box {
       background: rgba(34, 211, 238, 0.15);
@@ -158,6 +152,9 @@
       <button class="btn btn-zkx" onclick="connectZKX()">🛡️ ZKX (Private)</button>
       <button class="btn btn-buy" onclick="window.location.href='buy.html'">💎 Buy License</button>
       <button class="btn btn-claim" onclick="claimRewards()">🏆 Claim Rewards</button>
+      <button onclick="window.location.href='configure.html'" style="background: linear-gradient(135deg, #8b5cf6, #a855f7); color: white;">
+        ⚙️ Configure Device
+      </button>
     </div>
 
     <div id="output"></div>
@@ -169,10 +166,14 @@
   </div>
 
   <script>
-    // === ANIMATED MESH BACKGROUND (unchanged, full version) ===
+    // ==================== ANIMATED MESH BACKGROUND ====================
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
     resize();
     window.addEventListener('resize', resize);
 
@@ -188,12 +189,16 @@
     }
     let particles = [];
     let mouse = { x: 0, y: 0, active: false };
-    window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true; });
+
+    window.addEventListener('mousemove', e => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.active = true;
+    });
     window.addEventListener('mouseleave', () => mouse.active = false);
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // ... (same animation code as before - keeping it full)
       nodes.forEach(node => {
         if (mouse.active) {
           const dx = node.x - mouse.x;
@@ -205,7 +210,8 @@
             node.vy += (dy / dist) * force;
           }
         }
-        node.x += node.vx; node.y += node.vy;
+        node.x += node.vx;
+        node.y += node.vy;
         const margin = 40;
         if (node.x < margin || node.x > canvas.width - margin) node.vx *= -0.9;
         if (node.y < margin || node.y > canvas.height - margin) node.vy *= -0.9;
@@ -230,7 +236,16 @@
               ctx.moveTo(node.x, node.y);
               ctx.lineTo(other.x, other.y);
               ctx.stroke();
-              if (Math.random() < 0.15) particles.push({x: node.x, y: node.y, tx: other.x, ty: other.y, progress: 0, speed: 0.05 + Math.random() * 0.03});
+              if (Math.random() < 0.15) {
+                particles.push({
+                  x: node.x,
+                  y: node.y,
+                  tx: other.x,
+                  ty: other.y,
+                  progress: 0,
+                  speed: 0.05 + Math.random() * 0.03
+                });
+              }
             }
           }
         });
@@ -242,7 +257,10 @@
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.progress += p.speed;
-        if (p.progress > 1) { particles.splice(i, 1); continue; }
+        if (p.progress > 1) {
+          particles.splice(i, 1);
+          continue;
+        }
         const x = p.x + (p.tx - p.x) * p.progress;
         const y = p.y + (p.ty - p.y) * p.progress;
         ctx.beginPath();
@@ -258,7 +276,7 @@
     async function connectDevice() {
       const output = document.getElementById('output');
       output.style.display = 'block';
-      output.innerHTML = '<strong>🔄 Connecting...</strong>';
+      output.innerHTML = '<strong>🔄 Connecting to device...</strong>';
 
       try {
         const port = await navigator.serial.requestPort();
@@ -311,7 +329,7 @@
     }
 
     function connectMetaMask() { alert("🦊 MetaMask connected!"); }
-    function connectZKX() { alert("🛡️ ZKX connected!"); }
+    function connectZKX() { alert("🛡️ ZKX (Private) connected!"); }
     function claimRewards() { window.location.href = 'claim.html'; }
   </script>
 </body>
