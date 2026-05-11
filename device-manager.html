@@ -111,12 +111,24 @@
       border-radius: 12px;
       border-left: 5px solid #67e8f9;
       text-align: left;
+      position: relative;
     }
     .info-card strong {
       color: #67e8f9;
       display: block;
       margin-bottom: 6px;
     }
+    .copy-btn, .claim-btn {
+      font-size: 0.85em;
+      padding: 4px 10px;
+      margin-left: 8px;
+      background: #334155;
+      color: #67e8f9;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .copy-btn:hover { background: #22d3ee; color: #0f172a; }
   </style>
 </head>
 <body>
@@ -279,12 +291,26 @@
             output.innerHTML = `
               <div class="success-box">✅ Device Connected Successfully!</div>
               <div class="info-grid">
-                <div class="info-card"><strong>MAC Address</strong><br>${mac}</div>
-                <div class="info-card"><strong>License Status</strong><br>${licensed}</div>
-                <div class="info-card"><strong>Claimable Rewards</strong><br>${parseFloat(claimable).toFixed(5)} PLSC</div>
-                <div class="info-card"><strong>Uptime</strong><br>${parseFloat(uptime).toFixed(3)} hours</div>
-                <div class="info-card"><strong>Signal Strength</strong><br>${rssi} dBm</div>
-              </div>`;
+                <div class="info-card">
+                  <strong>MAC Address</strong><br>${mac}
+                  <button class="copy-btn" onclick="copyToClipboard('${mac}', this)">📋 Copy</button>
+                </div>
+                <div class="info-card">
+                  <strong>License Status</strong><br>${licensed}
+                </div>
+                <div class="info-card">
+                  <strong>Claimable Rewards</strong><br>${parseFloat(claimable).toFixed(5)} PLSC
+                  <button class="claim-btn" onclick="window.location.href='claim.html'">Claim Now →</button>
+                </div>
+                <div class="info-card">
+                  <strong>Uptime</strong><br>${parseFloat(uptime).toFixed(3)} hours
+                </div>
+                <div class="info-card">
+                  <strong>Signal Strength</strong><br>${rssi} dBm
+                </div>
+              </div>
+              <button onclick="window.location.href='index.html'" style="margin-top:25px; padding:12px 24px; background:#334155; color:#c9d1d9; border:none; border-radius:8px; cursor:pointer;">← Back to Home</button>
+            `;
             break;
           }
         }
@@ -293,9 +319,17 @@
       }
     }
 
+    function copyToClipboard(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const original = btn.textContent;
+        btn.textContent = "✅ Copied!";
+        setTimeout(() => btn.textContent = original, 1800);
+      });
+    }
+
     function connectMetaMask() { alert("🦊 MetaMask connected!"); }
     function connectZKX() { alert("🛡️ ZKX (Private) connected!"); }
-    function claimRewards() { alert("🏆 Claim Rewards page coming soon..."); }
+    function claimRewards() { window.location.href = 'claim.html'; }
   </script>
 </body>
 </html>
