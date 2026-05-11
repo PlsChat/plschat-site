@@ -1,0 +1,15 @@
+{
+  "name": "PLSChat Firmware",
+  "version": "1.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        { "path": "https://raw.githubusercontent.com/PlsChat/plschat-site/main/firmware/bootloader.bin", "offset": 0 },
+        { "path": "https://raw.githubusercontent.com/PlsChat/plschat-site/main/firmware/partitions.bin", "offset": 32768 },
+        { "path": "https://raw.githubusercontent.com/PlsChat/plschat-site/main/firmware/firmware.bin", "offset": 65536 }
+      ]
+    }
+  ]
+}
