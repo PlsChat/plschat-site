@@ -101,7 +101,7 @@
       border-radius: 16px;
       margin-bottom: 25px;
       color: #67e8f9;
-      font-size: 1.5em;
+      font-size: 1.4em;
       font-weight: 600;
     }
     .info-grid {
@@ -251,7 +251,7 @@
     async function connectDevice() {
       const output = document.getElementById('output');
       output.style.display = 'block';
-      output.innerHTML = '<strong>🔄 Connecting to device...</strong>';
+      output.innerHTML = '<strong>🔄 Connecting to device... (Hold BOOT if needed)</strong>';
 
       try {
         const port = await navigator.serial.requestPort();
@@ -262,7 +262,7 @@
 
         const timeout = setTimeout(() => {
           reader.cancel();
-          output.innerHTML += '<br><br>⚠️ Timeout - Try holding BOOT button while plugging in.';
+          output.innerHTML += '<br><br>⚠️ Timeout. Try holding BOOT button while plugging in.';
         }, 12000);
 
         while (true) {
@@ -275,7 +275,6 @@
             clearTimeout(timeout);
 
             const raw = buffer;
-
             const mac = raw.match(/MAC:([\w:]+)/) ? raw.match(/MAC:([\w:]+)/)[1] : 'Unknown';
             const licensed = raw.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
             const claimable = raw.match(/CLAIMABLE:([\d.]+)/) ? raw.match(/CLAIMABLE:([\d.]+)/)[1] : '0';
@@ -296,7 +295,7 @@
           }
         }
       } catch (err) {
-        output.innerHTML = `❌ ${err.message}`;
+        output.innerHTML = `❌ ${err.message}<br><br>Try: Unplug → Hold BOOT → Plug in → Click Connect again.`;
       }
     }
 
