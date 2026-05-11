@@ -12,10 +12,10 @@
       background: #0a0c1f;
       color: #c9d1d9;
       margin: 0;
-      padding: 60px 20px;
+      padding: 40px 20px;
       min-height: 100vh;
       position: relative;
-      overflow: hidden;
+      overflow-y: auto;
     }
     #mesh-bg {
       position: fixed;
@@ -32,7 +32,7 @@
     }
    
     h1 {
-      font-size: 3.8em;
+      font-size: 3.6em;
       font-weight: 700;
       background: linear-gradient(90deg, #a855f7, #67e8f9, #58a6ff);
       -webkit-background-clip: text;
@@ -41,21 +41,23 @@
     }
     .subtitle { 
       color: #94a3b8; 
-      font-size: 1.35em; 
-      margin-bottom: 30px; 
+      font-size: 1.3em; 
+      margin-bottom: 40px; 
     }
 
     .buttons {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 14px;
       margin: 40px 0;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     button {
-      padding: 18px 36px;
-      font-size: 1.15em;
+      padding: 18px 24px;
+      font-size: 1.1em;
       font-weight: 600;
       border: none;
       border-radius: 12px;
@@ -66,8 +68,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      min-width: 280px;
+      gap: 10px;
     }
 
     button::before {
@@ -87,7 +88,7 @@
       box-shadow: 0 15px 30px rgba(0,0,0,0.5); 
     }
 
-    .btn-flasher { background: linear-gradient(135deg, #22d3ee, #67e8f9); color: #0f172a; font-size: 1.1em; }
+    .btn-flasher { background: linear-gradient(135deg, #22d3ee, #67e8f9); color: #0f172a; }
     .btn-connect { background: linear-gradient(135deg, #eab308, #facc15); color: #0f172a; }
     .btn-metamask { background: linear-gradient(135deg, #f6851a, #e27625); color: white; }
     .btn-zkx { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white; }
@@ -143,9 +144,7 @@
   </div>
 
   <script>
-    // (Full animation + connectDevice function from previous working version)
-    // ... [I kept the full animation and connectDevice code exactly as in the last successful version]
-
+    // ==================== FULL ANIMATED BACKGROUND ====================
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
    
@@ -178,15 +177,86 @@
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // Full animation code (same as before)
-      nodes.forEach(/* ... */);
-      // lines + particles
+
+      nodes.forEach(node => {
+        if (mouse.active) {
+          const dx = node.x - mouse.x;
+          const dy = node.y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 280 && dist > 0) {
+            const force = (280 - dist) / 280 * 0.6;
+            node.vx += (dx / dist) * force;
+            node.vy += (dy / dist) * force;
+          }
+        }
+        node.x += node.vx;
+        node.y += node.vy;
+
+        const margin = 40;
+        if (node.x < margin) { node.x = margin; node.vx *= -0.9; }
+        if (node.x > canvas.width - margin) { node.x = canvas.width - margin; node.vx *= -0.9; }
+        if (node.y < margin) { node.y = margin; node.vy *= -0.9; }
+        if (node.y > canvas.height - margin) { node.y = canvas.height - margin; node.vy *= -0.9; }
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#67e8f9';
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#67e8f9';
+        ctx.fill();
+      });
+
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 1.8;
+      nodes.forEach((node, i) => {
+        nodes.forEach((other, j) => {
+          if (i < j) {
+            const dist = Math.hypot(node.x - other.x, node.y - other.y);
+            if (dist < 240) {
+              ctx.globalAlpha = (240 - dist) / 240 * 0.85;
+              ctx.beginPath();
+              ctx.moveTo(node.x, node.y);
+              ctx.lineTo(other.x, other.y);
+              ctx.stroke();
+
+              if (Math.random() < 0.15) {
+                particles.push({
+                  x: node.x,
+                  y: node.y,
+                  tx: other.x,
+                  ty: other.y,
+                  progress: 0,
+                  speed: 0.05 + Math.random() * 0.03
+                });
+              }
+            }
+          }
+        });
+      });
+
+      ctx.fillStyle = '#67e8f9';
+      ctx.shadowBlur = 22;
+      ctx.shadowColor = '#67e8f9';
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.progress += p.speed;
+        if (p.progress > 1) {
+          particles.splice(i, 1);
+          continue;
+        }
+        const x = p.x + (p.tx - p.x) * p.progress;
+        const y = p.y + (p.ty - p.y) * p.progress;
+        ctx.beginPath();
+        ctx.arc(x, y, 3.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
       requestAnimationFrame(animate);
     }
     animate();
 
+    // ==================== CONNECT DEVICE ====================
     async function connectDevice() {
-      // (Your working connectDevice function from before)
       const output = document.getElementById('output');
       output.style.display = 'block';
       output.innerHTML = '<strong>🔄 Connecting to device...</strong>';
