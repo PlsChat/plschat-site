@@ -22,7 +22,7 @@
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       z-index: -1;
-      opacity: 0.95;   /* Much more visible */
+      opacity: 0.95;
     }
 
     .container { max-width: 960px; margin: 0 auto; text-align: center; position: relative; z-index: 2; }
@@ -94,8 +94,8 @@
     }
 
     let particles = [];
-
     let mouse = { x: 0, y: 0, active: false };
+
     window.addEventListener('mousemove', (e) => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
@@ -107,6 +107,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       nodes.forEach(node => {
+        // Gentle cursor interaction
         if (mouse.active) {
           const dx = node.x - mouse.x;
           const dy = node.y - mouse.y;
@@ -121,8 +122,12 @@
         node.x += node.vx;
         node.y += node.vy;
 
-        if (node.x < 0 || node.x > canvas.width) node.vx *= -0.8;
-        if (node.y < 0 || node.y > canvas.height) node.vy *= -0.8;
+        // Stronger bounce off edges
+        const margin = 40;
+        if (node.x < margin) { node.x = margin; node.vx = Math.abs(node.vx) * 0.9; }
+        if (node.x > canvas.width - margin) { node.x = canvas.width - margin; node.vx = -Math.abs(node.vx) * 0.9; }
+        if (node.y < margin) { node.y = margin; node.vy = Math.abs(node.vy) * 0.9; }
+        if (node.y > canvas.height - margin) { node.y = canvas.height - margin; node.vy = -Math.abs(node.vy) * 0.9; }
 
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
@@ -132,6 +137,7 @@
         ctx.fill();
       });
 
+      // Electricity lines + particles
       ctx.strokeStyle = '#c084fc';
       ctx.lineWidth = 1.8;
       nodes.forEach((node, i) => {
@@ -160,6 +166,7 @@
         });
       });
 
+      // Flowing particles
       ctx.fillStyle = '#67e8f9';
       ctx.shadowBlur = 22;
       ctx.shadowColor = '#67e8f9';
