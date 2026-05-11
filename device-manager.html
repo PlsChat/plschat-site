@@ -101,8 +101,20 @@
       border-radius: 16px;
       margin-bottom: 25px;
       color: #67e8f9;
-      font-size: 1.4em;
+      font-size: 1.5em;
       font-weight: 600;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .info-card {
+      background: rgba(30, 30, 50, 0.95);
+      padding: 18px;
+      border-radius: 12px;
+      border-left: 5px solid #67e8f9;
+      text-align: left;
     }
   </style>
 </head>
@@ -239,24 +251,18 @@
     async function connectDevice() {
       const output = document.getElementById('output');
       output.style.display = 'block';
-      output.innerHTML = '<strong>🔄 Connecting... (Hold BOOT button if it times out)</strong>';
+      output.innerHTML = '<strong>🔄 Connecting to device...</strong>';
 
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
-
-        output.innerHTML += '<br><strong>✅ Port opened. Waiting for data...</strong>';
-
-        const writer = port.writable.getWriter();
-        await writer.write(new TextEncoder().encode('\n')); // Send newline to wake up
-        writer.releaseLock();
 
         const reader = port.readable.getReader();
         let buffer = '';
 
         const timeout = setTimeout(() => {
           reader.cancel();
-          output.innerHTML += '<br><br>⚠️ Timeout. Try holding BOOT button while plugging in.';
+          output.innerHTML += '<br><br>⚠️ Timeout - Try holding BOOT button while plugging in.';
         }, 12000);
 
         while (true) {
@@ -265,22 +271,32 @@
 
           buffer += new TextDecoder().decode(value);
 
-          if (buffer.includes('PLSCHAT') || buffer.includes('LICENSED') || buffer.includes('MAC')) {
+          if (buffer.includes('=== PLSCHAT_STATUS ===') && buffer.includes('=== END_STATUS ===')) {
             clearTimeout(timeout);
+
+            const raw = buffer;
+
+            const mac = raw.match(/MAC:([\w:]+)/) ? raw.match(/MAC:([\w:]+)/)[1] : 'Unknown';
+            const licensed = raw.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
+            const claimable = raw.match(/CLAIMABLE:([\d.]+)/) ? raw.match(/CLAIMABLE:([\d.]+)/)[1] : '0';
+            const uptime = raw.match(/UPTIME_HOURS:([\d.]+)/) ? raw.match(/UPTIME_HOURS:([\d.]+)/)[1] : '0';
+            const rssi = raw.match(/AVG_RSSI:(-?[\d.]+)/) ? raw.match(/AVG_RSSI:(-?[\d.]+)/)[1] : '-';
+
             output.innerHTML = `
               <div class="success-box">✅ Device Connected Successfully!</div>
-              <pre style="background:#1f2937; padding:15px; border-radius:8px; text-align:left; white-space:pre-wrap; max-height:400px;">${buffer}</pre>
+              <div class="info-grid">
+                <div class="info-card"><strong>MAC Address</strong><br>${mac}</div>
+                <div class="info-card"><strong>License Status</strong><br>${licensed}</div>
+                <div class="info-card"><strong>Claimable Rewards</strong><br>${claimable} PLSC</div>
+                <div class="info-card"><strong>Uptime</strong><br>${uptime} hours</div>
+                <div class="info-card"><strong>Signal Strength</strong><br>${rssi} dBm</div>
+              </div>
             `;
             break;
           }
         }
       } catch (err) {
-        output.innerHTML = `❌ ${err.message}<br><br><strong>Recommended:</strong><br>
-        1. Unplug Heltec<br>
-        2. Hold BOOT button<br>
-        3. Plug in while holding BOOT<br>
-        4. Release after 3 seconds<br>
-        5. Click Connect Device again`;
+        output.innerHTML = `❌ ${err.message}`;
       }
     }
 
