@@ -268,7 +268,7 @@
         const timeout = setTimeout(() => {
           reader.cancel();
           output.innerHTML += '<br><br>⚠️ Timeout. Try holding BOOT button while plugging in.';
-        }, 12000);
+        }, 15000);
 
         while (true) {
           const { value, done } = await reader.read();
