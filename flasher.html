@@ -7,54 +7,67 @@
   <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
     body {
       font-family: 'Inter', sans-serif;
       background: #0a0c1f;
       color: #c9d1d9;
-      text-align: center;
+      margin: 0;
       padding: 40px 20px;
+      text-align: center;
       min-height: 100vh;
     }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
     h1 {
-      font-size: 3.2em;
+      font-size: 3em;
       background: linear-gradient(90deg, #a855f7, #67e8f9);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
     }
-    .container { max-width: 800px; margin: 0 auto; }
+    p {
+      font-size: 1.2em;
+      color: #94a3b8;
+      max-width: 600px;
+      margin: 20px auto;
+    }
     esp-web-install-button {
       margin: 40px auto;
       display: block;
     }
-    .note {
-      background: rgba(34, 211, 238, 0.1);
-      border: 1px solid #22d3ee;
+    .instructions {
+      background: rgba(30, 30, 50, 0.8);
       padding: 20px;
       border-radius: 12px;
-      margin: 30px auto;
+      text-align: left;
       max-width: 600px;
+      margin: 30px auto;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>PULSE CHAT</h1>
-    <p style="font-size:1.4em; color:#67e8f9;">Web Firmware Flasher</p>
-    <p>Flash PLSChat firmware directly to your Heltec V4 or other ESP32 boards</p>
+    <h1>PLSChat Web Flasher</h1>
+    <p>Flash the latest PLSChat firmware directly to your Heltec WiFi LoRa 32 (V4) from your browser.<br>
+       <strong>No software installation required.</strong></p>
 
     <esp-web-install-button
       manifest="manifest.json">
     </esp-web-install-button>
 
-    <div class="note">
-      <strong>Instructions:</strong><br>
-      1. Plug in your Heltec V4<br>
-      2. Hold the <strong>BOOT button</strong> (small button next to USB-C)<br>
-      3. Click <strong>Connect</strong> and select the port<br>
-      4. Release BOOT button when it starts flashing
+    <div class="instructions">
+      <strong>📋 How to Flash:</strong><br><br>
+      1. Plug in your Heltec V4 via USB<br>
+      2. <strong>Hold the BOOT button</strong> (small button next to USB-C)<br>
+      3. Click <strong>"Install"</strong> or <strong>"Connect"</strong><br>
+      4. Release BOOT button when it starts uploading<br>
+      5. Wait for completion (green success message)
     </div>
 
-    <a href="device-manager.html" style="color:#67e8f9; text-decoration:none;">← Back to Device Manager</a>
+    <p><em>Works best on Chrome / Edge. Firmware includes licensed repeater mode.</em></p>
   </div>
 </body>
 </html>
