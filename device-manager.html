@@ -128,7 +128,6 @@
   </div>
 
   <script>
-    // Animated Mesh Background (Mobile Optimized)
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
     let nodes = [];
@@ -140,12 +139,13 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
+    // Slower animation (50% slower)
     for (let i = 0; i < 55; i++) {
       nodes.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.8,
-        vy: (Math.random() - 0.5) * 0.8
+        vx: (Math.random() - 0.5) * 0.4,   // Reduced from 0.8 to 0.4
+        vy: (Math.random() - 0.5) * 0.4
       });
     }
 
