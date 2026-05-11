@@ -252,7 +252,7 @@
     }
     animate();
 
-    // ==================== CONNECT DEVICE - NICE CARDS ====================
+    // ==================== CONNECT DEVICE - CLEAN CARDS ====================
     async function connectDevice() {
       const output = document.getElementById('output');
       output.style.display = 'block';
@@ -265,23 +265,15 @@
         const reader = port.readable.getReader();
         let buffer = '';
 
-        const timeout = setTimeout(() => {
-          reader.cancel();
-          output.innerHTML += '<br><br>⚠️ Timeout. Try holding BOOT button while plugging in.';
-        }, 15000);
-
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
 
           buffer += new TextDecoder().decode(value);
 
-          // More flexible detection
-          if (buffer.includes('MAC:') && buffer.includes('LICENSED:')) {
-            clearTimeout(timeout);
-
+          if (buffer.includes('MAC:') && (buffer.includes('LICENSED:') || buffer.includes('LICENSE VALID'))) {
             const mac = buffer.match(/MAC:([\w:]+)/) ? buffer.match(/MAC:([\w:]+)/)[1] : 'Unknown';
-            const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
+            const licensed = buffer.includes('LICENSED:YES') || buffer.includes('LICENSE VALID') ? '✅ Licensed' : '❌ Not Licensed';
             const claimable = buffer.match(/CLAIMABLE:([\d.]+)/) ? buffer.match(/CLAIMABLE:([\d.]+)/)[1] : '0';
             const uptime = buffer.match(/UPTIME_HOURS:([\d.]+)/) ? buffer.match(/UPTIME_HOURS:([\d.]+)/)[1] : '0';
             const rssi = buffer.match(/AVG_RSSI:(-?[\d.]+)/) ? buffer.match(/AVG_RSSI:(-?[\d.]+)/)[1] : '-';
@@ -300,7 +292,7 @@
           }
         }
       } catch (err) {
-        output.innerHTML = `❌ ${err.message}<br><br>Try holding BOOT button while plugging in.`;
+        output.innerHTML = `❌ ${err.message}`;
       }
     }
 
