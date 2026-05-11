@@ -6,6 +6,7 @@
   <title>PLSChat - Configure Device</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  
     body {
       font-family: 'Inter', sans-serif;
       background: #0a0c1f;
@@ -20,7 +21,7 @@
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       z-index: -1;
-      opacity: 0.9;
+      opacity: 0.95;
     }
     .container {
       max-width: 800px;
@@ -29,70 +30,193 @@
       position: relative;
       z-index: 2;
     }
+  
     h1 {
-      font-size: 3.2em;
-      background: linear-gradient(90deg, #a855f7, #67e8f9);
+      font-size: 3.4em;
+      font-weight: 700;
+      background: linear-gradient(90deg, #a855f7, #67e8f9, #58a6ff);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
     }
+    .subtitle {
+      color: #94a3b8;
+      font-size: 1.3em;
+      margin-bottom: 40px;
+    }
+
     button {
-      padding: 16px 32px;
-      font-size: 1.1em;
-      margin: 10px;
+      padding: 18px 32px;
+      font-size: 1.15em;
+      font-weight: 600;
       border: none;
       border-radius: 12px;
       cursor: pointer;
       transition: all 0.3s;
+      margin: 10px;
+      min-width: 260px;
     }
+    button:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+    }
+    .btn-ble { background: linear-gradient(135deg, #22d3ee, #67e8f9); color: #0f172a; }
+    .btn-wifi { background: linear-gradient(135deg, #eab308, #facc15); color: #0f172a; }
     .btn-back { background: #334155; color: white; }
-    .btn-ble { background: #22d3ee; color: #0f172a; }
-    .btn-wifi { background: #eab308; color: #0f172a; }
+
     .status {
-      background: #1f2937;
+      background: rgba(30, 30, 50, 0.95);
       padding: 20px;
       border-radius: 12px;
       margin: 30px 0;
       text-align: left;
       font-family: monospace;
       white-space: pre-wrap;
+      min-height: 180px;
+      border-left: 5px solid #67e8f9;
     }
   </style>
 </head>
 <body>
   <canvas id="mesh-bg"></canvas>
+  
   <div class="container">
     <h1>Configure Device</h1>
-    <p>Change operating mode and view live status</p>
+    <p class="subtitle">Change operating mode • Live Status</p>
 
     <button class="btn-back" onclick="window.location.href='device-manager.html'">← Back to Device Manager</button>
 
-    <div style="margin:30px 0;">
-      <button class="btn-ble" onclick="sendCommand('MODE BLE')">📡 Switch to BLE Mode (Recommended)</button>
+    <div style="margin: 30px 0;">
+      <button class="btn-ble" onclick="sendCommand('MODE BLE')">📡 Switch to BLE Mode (Low Power)</button>
       <button class="btn-wifi" onclick="sendCommand('MODE WIFI')">📶 Switch to WiFi Hotspot</button>
     </div>
 
-    <div id="status" class="status">Click Connect Device first...</div>
+    <div id="status" class="status">Connect your device first from Device Manager to send commands.</div>
   </div>
 
   <script>
-    // Mesh animation (same as before)
+    // ==================== ANIMATED MESH BACKGROUND ====================
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
-    // ... (full animation code from previous version - I kept it short here for space)
-
-    let port;
-    async function sendCommand(cmd) {
-      if (!port) {
-        alert("Please connect your device first from the Device Manager page.");
-        return;
-      }
-      const writer = port.writable.getWriter();
-      await writer.write(new TextEncoder().encode(cmd + "\n"));
-      writer.releaseLock();
-      document.getElementById('status').innerHTML += `\n→ Sent: ${cmd}`;
+  
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     }
+    resize();
+    window.addEventListener('resize', resize);
 
-    // You can expand this later with full live monitoring
+    let nodes = [];
+    for (let i = 0; i < 60; i++) {
+      nodes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: 3.8,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8
+      });
+    }
+    let particles = [];
+    let mouse = { x: 0, y: 0, active: false };
+
+    window.addEventListener('mousemove', e => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.active = true;
+    });
+    window.addEventListener('mouseleave', () => mouse.active = false);
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      nodes.forEach(node => {
+        if (mouse.active) {
+          const dx = node.x - mouse.x;
+          const dy = node.y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 280 && dist > 0) {
+            const force = (280 - dist) / 280 * 0.6;
+            node.vx += (dx / dist) * force;
+            node.vy += (dy / dist) * force;
+          }
+        }
+        node.x += node.vx;
+        node.y += node.vy;
+        const margin = 40;
+        if (node.x < margin || node.x > canvas.width - margin) node.vx *= -0.9;
+        if (node.y < margin || node.y > canvas.height - margin) node.vy *= -0.9;
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#67e8f9';
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#67e8f9';
+        ctx.fill();
+      });
+
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 1.8;
+      nodes.forEach((node, i) => {
+        nodes.forEach((other, j) => {
+          if (i < j) {
+            const dist = Math.hypot(node.x - other.x, node.y - other.y);
+            if (dist < 240) {
+              ctx.globalAlpha = (240 - dist) / 240 * 0.85;
+              ctx.beginPath();
+              ctx.moveTo(node.x, node.y);
+              ctx.lineTo(other.x, other.y);
+              ctx.stroke();
+              if (Math.random() < 0.15) {
+                particles.push({
+                  x: node.x,
+                  y: node.y,
+                  tx: other.x,
+                  ty: other.y,
+                  progress: 0,
+                  speed: 0.05 + Math.random() * 0.03
+                });
+              }
+            }
+          }
+        });
+      });
+
+      ctx.fillStyle = '#67e8f9';
+      ctx.shadowBlur = 22;
+      ctx.shadowColor = '#67e8f9';
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.progress += p.speed;
+        if (p.progress > 1) {
+          particles.splice(i, 1);
+          continue;
+        }
+        const x = p.x + (p.tx - p.x) * p.progress;
+        const y = p.y + (p.ty - p.y) * p.progress;
+        ctx.beginPath();
+        ctx.arc(x, y, 3.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // ==================== SEND COMMAND ====================
+    async function sendCommand(cmd) {
+      const statusDiv = document.getElementById('status');
+      statusDiv.innerHTML += `\n→ Sending: ${cmd} ...`;
+
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+        const writer = port.writable.getWriter();
+        await writer.write(new TextEncoder().encode(cmd + "\n"));
+        writer.releaseLock();
+        statusDiv.innerHTML += `\n✅ Command sent successfully!`;
+      } catch (err) {
+        statusDiv.innerHTML += `\n❌ Error: ${err.message}`;
+      }
+    }
   </script>
 </body>
 </html>
