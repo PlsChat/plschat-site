@@ -17,105 +17,47 @@
       position: relative;
       overflow-y: auto;
     }
-    #mesh-bg {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      z-index: -1;
-      opacity: 0.95;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      text-align: center;
-      position: relative;
-      z-index: 2;
-    }
+    #mesh-bg { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -1; opacity: 0.95; }
+    .container { max-width: 820px; margin: 0 auto; text-align: center; position: relative; z-index: 2; }
  
     h1 {
-      font-size: 3.6em;
+      font-size: 3.4em;
       font-weight: 700;
       background: linear-gradient(90deg, #67e8f9, #a855f7);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 8px;
     }
-    .subtitle {
-      color: #94a3b8;
-      font-size: 1.35em;
-      margin-bottom: 50px;
-    }
+    .subtitle { color: #94a3b8; font-size: 1.35em; margin-bottom: 40px; }
 
     .btn-back {
-      position: absolute;
-      top: 30px;
-      left: 30px;
-      padding: 10px 22px;
-      background: rgba(30, 41, 59, 0.9);
-      color: white;
-      border: none;
-      border-radius: 9999px;
-      cursor: pointer;
-      font-size: 1em;
-      transition: all 0.3s;
-    }
-    .btn-back:hover {
-      background: #22d3ee;
-      color: #0a0c1f;
+      position: absolute; top: 25px; left: 25px;
+      padding: 10px 22px; background: rgba(30,41,59,0.9); color: white;
+      border: none; border-radius: 9999px; cursor: pointer;
     }
 
-    .buttons {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      margin: 40px 0;
+    .mode-buttons {
+      display: flex; flex-direction: column; gap: 18px; margin: 40px 0;
     }
     button {
-      padding: 18px 36px;
-      font-size: 1.15em;
-      font-weight: 600;
-      border: none;
-      border-radius: 14px;
-      cursor: pointer;
+      padding: 18px 36px; font-size: 1.15em; font-weight: 600;
+      border: none; border-radius: 14px; cursor: pointer;
+      background: linear-gradient(135deg, #3b82f6, #a855f7);
+      color: white; box-shadow: 0 4px 20px rgba(139,92,246,0.5);
       transition: all 0.4s;
-      position: relative;
-      overflow: hidden;
-      min-width: 340px;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6, #a855f7);
-      color: white;
-      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
     }
-    button::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -150%;
-      width: 60%;
-      height: 200%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
-      transition: 0.7s;
-    }
-    button:hover::before { left: 250%; }
-    button:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 15px 35px rgba(139, 92, 246, 0.7);
-    }
+    button:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(139,92,246,0.7); }
 
-    .status {
-      background: rgba(15, 23, 42, 0.95);
-      padding: 25px;
-      border-radius: 16px;
-      margin: 40px auto;
-      text-align: left;
-      font-family: monospace;
-      white-space: pre-wrap;
-      min-height: 160px;
-      border-left: 6px solid #22d3ee;
-      max-width: 700px;
+    .config-panel {
+      background: rgba(15,23,42,0.95); padding: 25px; border-radius: 16px;
+      margin: 30px auto; text-align: left; max-width: 700px; border-left: 6px solid #22d3ee;
+    }
+    input {
+      width: 100%; padding: 12px; margin: 8px 0; background: #1e2937;
+      border: 1px solid #475569; border-radius: 8px; color: white;
+    }
+    .send-btn {
+      background: #22d3ee; color: #0a0c1f; margin-top: 12px;
     }
   </style>
 </head>
@@ -128,129 +70,123 @@
     <h1>Configure Device</h1>
     <p class="subtitle">Change operating mode • Secure Connection</p>
 
-    <div class="buttons">
-      <button onclick="sendCommand('MODE BLE')">
-        🔵 Bluetooth Mode (Low Power)
-      </button>
-      <button onclick="sendCommand('MODE WIFI')">
-        📶 WiFi Hotspot
-      </button>
+    <div class="mode-buttons">
+      <button onclick="showConfig('BLE')">🔵 Bluetooth Mode (Low Power)</button>
+      <button onclick="showConfig('WIFI')">📶 WiFi Hotspot</button>
     </div>
 
-    <div id="status" class="status">Connect your device first from Device Manager to send commands.</div>
+    <div id="configPanel" class="config-panel" style="display:none;">
+      <!-- Dynamic content injected by JS -->
+    </div>
   </div>
 
   <script>
-    // ==================== MATCHING ANIMATED MESH BACKGROUND ====================
+    // ==================== ANIMATED MESH BACKGROUND (matching your style) ====================
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
-  
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize);
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
 
     let nodes = [];
     for (let i = 0; i < 72; i++) {
-      nodes.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.7,
-        vy: (Math.random() - 0.5) * 0.7
-      });
+      nodes.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.7, vy: (Math.random()-0.5)*0.7 });
     }
     let particles = [];
     let mouse = { x: 0, y: 0, active: false };
 
-    window.addEventListener('mousemove', e => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-      mouse.active = true;
-    });
+    window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true; });
     window.addEventListener('mouseleave', () => mouse.active = false);
 
     function animate() {
-      ctx.fillStyle = 'rgba(10, 12, 31, 0.16)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.fillStyle = '#67e8f9';
-      ctx.shadowBlur = 26;
-      ctx.shadowColor = '#67e8f9';
+      ctx.fillStyle = 'rgba(10,12,31,0.16)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = '#67e8f9'; ctx.shadowBlur = 26; ctx.shadowColor = '#67e8f9';
 
       nodes.forEach(node => {
         if (mouse.active) {
-          const dx = node.x - mouse.x;
-          const dy = node.y - mouse.y;
-          const d = Math.hypot(dx, dy);
+          const d = Math.hypot(node.x - mouse.x, node.y - mouse.y);
           if (d < 280 && d > 0) {
-            const force = (280 - d) / 280 * 0.6;
-            node.vx += (dx / d) * force;
-            node.vy += (dy / d) * force;
+            const force = (280 - d) / 280 * 0.55;
+            node.vx += ((node.x - mouse.x) / d) * force * -1;
+            node.vy += ((node.y - mouse.y) / d) * force * -1;
           }
         }
-        node.x += node.vx;
-        node.y += node.vy;
-
+        node.x += node.vx; node.y += node.vy;
         if (node.x < 0 || node.x > canvas.width) node.vx *= -0.85;
         if (node.y < 0 || node.y > canvas.height) node.vy *= -0.85;
-
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, 3.8, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(node.x, node.y, 3.8, 0, Math.PI*2); ctx.fill();
       });
 
-      ctx.strokeStyle = '#c084fc';
-      ctx.lineWidth = 1.7;
-      nodes.forEach((node, i) => {
-        nodes.forEach((other, j) => {
+      ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 1.7;
+      nodes.forEach((node,i) => {
+        nodes.forEach((other,j) => {
           if (i < j) {
-            const dist = Math.hypot(node.x - other.x, node.y - other.y);
+            const dist = Math.hypot(node.x-other.x, node.y-other.y);
             if (dist < 260) {
-              ctx.globalAlpha = (260 - dist) / 260 * 0.8;
-              ctx.beginPath();
-              ctx.moveTo(node.x, node.y);
-              ctx.lineTo(other.x, other.y);
-              ctx.stroke();
-              if (Math.random() < 0.16) {
-                particles.push({ x: node.x, y: node.y, tx: other.x, ty: other.y, progress: 0, speed: 0.055 + Math.random() * 0.04 });
-              }
+              ctx.globalAlpha = (260-dist)/260 * 0.78;
+              ctx.beginPath(); ctx.moveTo(node.x,node.y); ctx.lineTo(other.x,other.y); ctx.stroke();
+              if (Math.random() < 0.16) particles.push({x:node.x,y:node.y,tx:other.x,ty:other.y,progress:0,speed:0.055+Math.random()*0.04});
             }
           }
         });
       });
 
-      ctx.fillStyle = '#67e8f9';
-      ctx.shadowBlur = 24;
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.progress += p.speed;
-        if (p.progress > 1) { particles.splice(i, 1); continue; }
-        const x = p.x + (p.tx - p.x) * p.progress;
-        const y = p.y + (p.ty - p.y) * p.progress;
-        ctx.beginPath();
-        ctx.arc(x, y, 3.6, 0, Math.PI * 2);
-        ctx.fill();
+      ctx.fillStyle = '#67e8f9'; ctx.shadowBlur = 24;
+      for (let i=particles.length-1; i>=0; i--) {
+        const p = particles[i]; p.progress += p.speed;
+        if (p.progress > 1) { particles.splice(i,1); continue; }
+        const x = p.x + (p.tx-p.x)*p.progress;
+        const y = p.y + (p.ty-p.y)*p.progress;
+        ctx.beginPath(); ctx.arc(x,y,3.6,0,Math.PI*2); ctx.fill();
       }
       ctx.globalAlpha = 1;
       requestAnimationFrame(animate);
     }
     animate();
 
-    // ==================== SEND COMMAND ====================
+    // ==================== CONFIG PANELS ====================
+    function showConfig(mode) {
+      const panel = document.getElementById('configPanel');
+      if (mode === 'BLE') {
+        panel.innerHTML = `
+          <h3>🔵 Bluetooth Mode (Low Power)</h3>
+          <p>Pairing Code (shown on device OLED):</p>
+          <input type="text" id="bleCode" value="482917" readonly>
+          <button class="send-btn" onclick="sendCommand('MODE BLE')">Activate Bluetooth Mode</button>
+          <small>Enter this code on your phone to pair securely.</small>
+        `;
+      } else {
+        panel.innerHTML = `
+          <h3>📶 WiFi Hotspot</h3>
+          <label>SSID (Network Name)</label>
+          <input type="text" id="ssid" value="PLSChat-Repeater" placeholder="PLSChat-Repeater">
+          <label>Password (min 8 characters)</label>
+          <input type="text" id="pass" value="pls12345" placeholder="Your secure password">
+          <button class="send-btn" onclick="sendWifiConfig()">Activate WiFi Hotspot</button>
+          <small>Warning: WiFi uses more power — recommended for permanent USB/solar setups.</small>
+        `;
+      }
+      panel.style.display = 'block';
+    }
+
+    async function sendWifiConfig() {
+      const ssid = document.getElementById('ssid').value.trim();
+      const pass = document.getElementById('pass').value.trim();
+      if (pass.length < 8) { alert("Password must be at least 8 characters"); return; }
+      await sendCommand(`WIFI SSID:${ssid} PASS:${pass}`);
+    }
+
     async function sendCommand(cmd) {
-      const statusDiv = document.getElementById('status');
-      statusDiv.innerHTML += `\n→ Sending: ${cmd} ...`;
+      const panel = document.getElementById('configPanel');
+      panel.innerHTML += `<br>→ Sending: ${cmd} ...`;
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
         const writer = port.writable.getWriter();
         await writer.write(new TextEncoder().encode(cmd + "\n"));
         writer.releaseLock();
-        statusDiv.innerHTML += `\n✅ Command sent!`;
+        panel.innerHTML += `<br>✅ Command sent successfully!`;
       } catch (err) {
-        statusDiv.innerHTML += `\n❌ ${err.message}`;
+        panel.innerHTML += `<br>❌ ${err.message}`;
       }
     }
   </script>
