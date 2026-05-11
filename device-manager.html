@@ -239,19 +239,21 @@
     async function connectDevice() {
       const output = document.getElementById('output');
       output.style.display = 'block';
-      output.innerHTML = '<strong>🔄 Connecting to device... (this may take a few seconds)</strong>';
+      output.innerHTML = '<strong>🔄 Connecting... Hold BOOT button if it times out.</strong>';
 
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
+
+        output.innerHTML += '<br><strong>✅ Port opened. Reading data from Heltec...</strong>';
 
         const reader = port.readable.getReader();
         let buffer = '';
 
         const timeout = setTimeout(() => {
           reader.cancel();
-          output.innerHTML += '<br><br>⚠️ Timeout - Try holding BOOT button while plugging in.';
-        }, 15000);
+          output.innerHTML += '<br><br>⚠️ Timeout. Try: Unplug → Hold BOOT button → Plug in → Click Connect again.';
+        }, 12000);
 
         while (true) {
           const { value, done } = await reader.read();
@@ -259,17 +261,22 @@
 
           buffer += new TextDecoder().decode(value);
 
-          if (buffer.includes('=== PLSCHAT_STATUS ===') && buffer.includes('=== END_STATUS ===')) {
+          if (buffer.includes('PLSCHAT_STATUS') || buffer.includes('LICENSED')) {
             clearTimeout(timeout);
             output.innerHTML = `
               <div class="success-box">✅ Device Connected Successfully!</div>
-              <pre style="background:#1f2937; padding:15px; border-radius:8px; text-align:left; white-space:pre-wrap;">${buffer}</pre>
+              <pre style="background:#1f2937; padding:15px; border-radius:8px; text-align:left; white-space:pre-wrap; max-height:400px; overflow:auto;">${buffer}</pre>
             `;
             break;
           }
         }
       } catch (err) {
-        output.innerHTML = `❌ ${err.message}<br><br>Try: Unplug → Hold BOOT button → Plug in → Click Connect.`;
+        output.innerHTML = `❌ ${err.message}<br><br><strong>Try this:</strong><br>
+        1. Unplug Heltec<br>
+        2. Hold BOOT button<br>
+        3. Plug in while holding BOOT<br>
+        4. Release after 2 seconds<br>
+        5. Click Connect Device again`;
       }
     }
 
