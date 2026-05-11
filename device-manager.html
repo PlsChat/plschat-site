@@ -252,7 +252,7 @@
     }
     animate();
 
-    // ==================== FINAL PARSING (Tuned to your exact output) ====================
+    // ==================== FINAL ROBUST PARSING ====================
     async function connectDevice() {
       const output = document.getElementById('output');
       output.style.display = 'block';
@@ -275,7 +275,7 @@
 
           buffer += new TextDecoder().decode(value);
 
-          // Wait for the complete block
+          // Wait for complete block
           if (buffer.includes('=== PLSCHAT_STATUS ===') && buffer.includes('=== END_STATUS ===')) {
             clearTimeout(timeout);
 
