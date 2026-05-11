@@ -32,7 +32,7 @@
     }
   
     h1 {
-      font-size: 3.6em;
+      font-size: 3.8em;
       font-weight: 700;
       background: linear-gradient(90deg, #a855f7, #67e8f9, #58a6ff);
       -webkit-background-clip: text;
@@ -41,43 +41,52 @@
     }
     .subtitle {
       color: #94a3b8;
-      font-size: 1.3em;
-      margin-bottom: 30px;
+      font-size: 1.35em;
+      margin-bottom: 50px;
     }
 
     .top-nav {
       position: absolute;
-      top: 20px;
-      left: 20px;
+      top: 25px;
+      left: 25px;
     }
 
     .buttons {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 14px;
-      margin: 40px 0;
-      max-width: 800px;
-      margin-left: auto;
-      margin-right: auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin: 50px 0;
     }
     button {
-      padding: 18px 24px;
-      font-size: 1.1em;
+      padding: 18px 36px;
+      font-size: 1.15em;
       font-weight: 600;
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.4s;
       position: relative;
       overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
+      min-width: 240px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6, #a855f7);
+      color: white;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
     }
+    button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -150%;
+      width: 60%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+      transition: 0.7s;
+    }
+    button:hover::before { left: 250%; }
     button:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(139, 92, 246, 0.6);
     }
 
     .success-box {
@@ -129,7 +138,7 @@
     }
 
     .bottom-nav {
-      margin-top: 40px;
+      margin-top: 50px;
     }
   </style>
 </head>
@@ -137,36 +146,32 @@
   <canvas id="mesh-bg"></canvas>
   
   <div class="container">
-    <!-- Top Left Back Button -->
     <div class="top-nav">
-      <button onclick="window.location.href='index.html'" style="padding:10px 16px; font-size:1em; background:#334155;">← Back to Home</button>
+      <button onclick="window.location.href='index.html'" style="padding:10px 18px; font-size:1em; background:#334155;">← Back to Home</button>
     </div>
 
     <h1>PULSE CHAT</h1>
     <p class="subtitle">Decentralised LoRa Mesh Communication</p>
    
     <div class="buttons">
-      <button class="btn btn-flasher" onclick="window.location.href='flasher.html'">🚀 Open Web Flasher</button>
-      <button class="btn btn-connect" onclick="connectDevice()">🔌 Connect Device</button>
-      <button class="btn btn-metamask" onclick="connectMetaMask()">🦊 MetaMask</button>
-      <button class="btn btn-zkx" onclick="connectZKX()">🛡️ ZKX (Private)</button>
-      <button class="btn btn-buy" onclick="window.location.href='buy.html'">💎 Buy License</button>
-      <button class="btn btn-claim" onclick="claimRewards()">🏆 Claim Rewards</button>
-      <button onclick="window.location.href='configure.html'" style="background: linear-gradient(135deg, #8b5cf6, #a855f7); color: white;">
-        ⚙️ Configure Device
-      </button>
+      <button onclick="window.location.href='flasher.html'">🚀 Open Web Flasher</button>
+      <button onclick="connectDevice()">🔌 Connect Device</button>
+      <button onclick="connectMetaMask()">🦊 MetaMask</button>
+      <button onclick="connectZKX()">🛡️ ZKX (Private)</button>
+      <button onclick="window.location.href='buy.html'">💎 Buy License</button>
+      <button onclick="claimRewards()">🏆 Claim Rewards</button>
+      <button onclick="window.location.href='configure.html'">⚙️ Configure Device</button>
     </div>
 
     <div id="output"></div>
 
-    <!-- Bottom Centered Back Button -->
     <div class="bottom-nav">
-      <button onclick="window.location.href='index.html'" style="padding:14px 32px; font-size:1.1em; background:#334155; color:#c9d1d9;">← Back to Home</button>
+      <button onclick="window.location.href='index.html'" style="padding:14px 32px; font-size:1.1em; background:#334155;">← Back to Home</button>
     </div>
   </div>
 
   <script>
-    // ==================== ANIMATED MESH BACKGROUND ====================
+    // ==================== FULL ANIMATED MESH BACKGROUND ====================
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
   
@@ -178,7 +183,7 @@
     window.addEventListener('resize', resize);
 
     let nodes = [];
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 65; i++) {
       nodes.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -198,8 +203,15 @@
     window.addEventListener('mouseleave', () => mouse.active = false);
 
     function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(10, 12, 31, 0.15)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw nodes
+      ctx.fillStyle = '#67e8f9';
+      ctx.shadowBlur = 30;
+      ctx.shadowColor = '#67e8f9';
       nodes.forEach(node => {
+        // Mouse interaction
         if (mouse.active) {
           const dx = node.x - mouse.x;
           const dy = node.y - mouse.y;
@@ -210,20 +222,20 @@
             node.vy += (dy / dist) * force;
           }
         }
+
         node.x += node.vx;
         node.y += node.vy;
+
         const margin = 40;
         if (node.x < margin || node.x > canvas.width - margin) node.vx *= -0.9;
         if (node.y < margin || node.y > canvas.height - margin) node.vy *= -0.9;
 
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-        ctx.fillStyle = '#67e8f9';
-        ctx.shadowBlur = 30;
-        ctx.shadowColor = '#67e8f9';
         ctx.fill();
       });
 
+      // Draw connections + particles
       ctx.strokeStyle = '#c084fc';
       ctx.lineWidth = 1.8;
       nodes.forEach((node, i) => {
@@ -236,6 +248,7 @@
               ctx.moveTo(node.x, node.y);
               ctx.lineTo(other.x, other.y);
               ctx.stroke();
+
               if (Math.random() < 0.15) {
                 particles.push({
                   x: node.x,
@@ -251,6 +264,7 @@
         });
       });
 
+      // Draw flowing particles
       ctx.fillStyle = '#67e8f9';
       ctx.shadowBlur = 22;
       ctx.shadowColor = '#67e8f9';
