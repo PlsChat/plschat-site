@@ -1,313 +1,265 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PLSChat - Device Manager</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-   
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #0a0c1f;
-      color: #c9d1d9;
-      margin: 0;
-      padding: 60px 20px;
-      min-height: 100vh;
-      position: relative;
-      overflow: hidden;
-    }
-    #mesh-bg {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      z-index: -1;
-      opacity: 0.95;
-    }
-    .container { 
-      max-width: 960px; 
-      margin: 0 auto; 
-      text-align: center; 
-      position: relative; 
-      z-index: 2; 
-    }
-   
-    h1 {
-      font-size: 3.8em;
-      font-weight: 700;
-      background: linear-gradient(90deg, #a855f7, #67e8f9, #58a6ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 8px;
-    }
-    .subtitle { 
-      color: #94a3b8; 
-      font-size: 1.35em; 
-      margin-bottom: 50px; 
-    }
-
-    .buttons {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 40px;
-    }
-
-    button {
-      padding: 18px 36px;
-      font-size: 1.15em;
-      font-weight: 600;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.3s;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      min-width: 280px;
-    }
-
-    button::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -150%;
-      width: 60%;
-      height: 200%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-      transition: 0.7s;
-    }
-    button:hover::before { left: 250%; }
-
-    button:hover { 
-      transform: translateY(-4px); 
-      box-shadow: 0 15px 30px rgba(0,0,0,0.5); 
-    }
-
-    .btn-connect { background: linear-gradient(135deg, #22d3ee, #67e8f9); color: #0f172a; }
-    .btn-metamask { background: linear-gradient(135deg, #f6851a, #e27625); color: white; }
-    .btn-zkx { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white; }
-    .btn-buy { background: linear-gradient(135deg, #a855f7, #c084fc); color: white; }
-    .btn-claim { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; }
-
-    #output { margin-top: 30px; display: none; }
-    .success-box {
-      background: rgba(34, 211, 238, 0.15);
-      border: 2px solid #22d3ee;
-      padding: 20px;
-      border-radius: 16px;
-      margin-bottom: 25px;
-      color: #67e8f9;
-      font-size: 1.5em;
-      font-weight: 600;
-    }
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 14px;
-    }
-    .info-card {
-      background: rgba(30, 30, 50, 0.95);
-      padding: 18px;
-      border-radius: 12px;
-      border-left: 5px solid #67e8f9;
-      text-align: left;
-    }
-    .info-card strong {
-      color: #67e8f9;
-      display: block;
-      margin-bottom: 6px;
-    }
-  </style>
+&nbsp;&nbsp;<meta charset="UTF-8">
+&nbsp;&nbsp;<meta name="viewport" content="width=device-width, initial-scale=1.0">
+&nbsp;&nbsp;<title>PLSChat - Device Manager</title>
+&nbsp;&nbsp;<style>
+&nbsp;&nbsp;&nbsp;&nbsp;@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;body {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;font-family: 'Inter', sans-serif;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;background: #0a0c1f;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;color: #c9d1d9;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;margin: 0;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;padding: 60px 20px;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;min-height: 100vh;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;position: relative;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;overflow: hidden;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;#mesh-bg {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;position: fixed;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;top: 0; left: 0; right: 0; bottom: 0;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;z-index: -1;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;opacity: 0.95;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;.container {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;max-width: 960px;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;margin: 0 auto;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text-align: center;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;position: relative;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;z-index: 2;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;h1 {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;font-size: 3.8em;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;font-weight: 700;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;background: linear-gradient(90deg, #a855f7, #67e8f9, #58a6ff);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-webkit-background-clip: text;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-webkit-text-fill-color: transparent;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;margin-bottom: 8px;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;.subtitle {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;color: #94a3b8;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;font-size: 1.35em;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;margin-bottom: 50px;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;.buttons {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;display: flex;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;flex-direction: column;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;align-items: center;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gap: 14px;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;margin-bottom: 40px;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;button {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;padding: 18px 36px;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;font-size: 1.15em;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;font-weight: 600;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;border: none;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;border-radius: 12px;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cursor: pointer;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;transition: all 0.3s;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;position: relative;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;overflow: hidden;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;display: flex;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;align-items: center;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;justify-content: center;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gap: 12px;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;min-width: 280px;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;button::before {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;content: '';
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;position: absolute;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;top: -50%;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;left: -150%;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;width: 60%;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;height: 200%;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;transition: 0.7s;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;button:hover::before { left: 250%; }
+&nbsp;&nbsp;&nbsp;&nbsp;button:hover {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;transform: translateY(-4px);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;.btn-connect { background: linear-gradient(135deg, #22d3ee, #67e8f9); color: #0f172a; }
+&nbsp;&nbsp;&nbsp;&nbsp;.btn-metamask { background: linear-gradient(135deg, #f6851a, #e27625); color: white; }
+&nbsp;&nbsp;&nbsp;&nbsp;.btn-zkx { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white; }
+&nbsp;&nbsp;&nbsp;&nbsp;.btn-buy { background: linear-gradient(135deg, #a855f7, #c084fc); color: white; }
+&nbsp;&nbsp;&nbsp;&nbsp;.btn-claim { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; }
+&nbsp;&nbsp;&nbsp;&nbsp;#output { margin-top: 30px; display: none; }
+&nbsp;&nbsp;&nbsp;&nbsp;.success-box {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;background: rgba(34, 211, 238, 0.15);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;border: 2px solid #22d3ee;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;padding: 20px;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;border-radius: 16px;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;margin-bottom: 25px;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;color: #67e8f9;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;font-size: 1.4em;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;font-weight: 600;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;</style>
 </head>
 <body>
-  <canvas id="mesh-bg"></canvas>
-  <div class="container">
-    <h1>PULSE CHAT</h1>
-    <p class="subtitle">Decentralised LoRa Mesh Communication</p>
-    
-    <div class="buttons">
-      <button class="btn btn-connect" onclick="connectDevice()">🔌 Connect Device</button>
-      <button class="btn btn-metamask" onclick="connectMetaMask()">🦊 MetaMask</button>
-      <button class="btn btn-zkx" onclick="connectZKX()">🛡️ ZKX (Private)</button>
-      <button class="btn btn-buy" onclick="buyLicense()">💎 Buy License</button>
-      <button class="btn btn-claim" onclick="claimRewards()">🏆 Claim Rewards</button>
-    </div>
-
-    <div id="output"></div>
-  </div>
-
-  <script>
-    // === FULL ANIMATED BACKGROUND ===
-    const canvas = document.getElementById('mesh-bg');
-    const ctx = canvas.getContext('2d');
-   
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    let nodes = [];
-    for (let i = 0; i < 60; i++) {
-      nodes.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: 3.8,
-        vx: (Math.random() - 0.5) * 0.8,
-        vy: (Math.random() - 0.5) * 0.8
-      });
-    }
-    let particles = [];
-    let mouse = { x: 0, y: 0, active: false };
-
-    window.addEventListener('mousemove', (e) => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-      mouse.active = true;
-    });
-    window.addEventListener('mouseleave', () => mouse.active = false);
-
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      nodes.forEach(node => {
-        if (mouse.active) {
-          const dx = node.x - mouse.x;
-          const dy = node.y - mouse.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < 280 && dist > 0) {
-            const force = (280 - dist) / 280 * 0.8;
-            node.vx += (dx / dist) * force;
-            node.vy += (dy / dist) * force;
-          }
-        }
-        node.x += node.vx;
-        node.y += node.vy;
-
-        const margin = 40;
-        if (node.x < margin) { node.x = margin; node.vx = Math.abs(node.vx) * 0.9; }
-        if (node.x > canvas.width - margin) { node.x = canvas.width - margin; node.vx = -Math.abs(node.vx) * 0.9; }
-        if (node.y < margin) { node.y = margin; node.vy = Math.abs(node.vy) * 0.9; }
-        if (node.y > canvas.height - margin) { node.y = canvas.height - margin; node.vy = -Math.abs(node.vy) * 0.9; }
-
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-        ctx.fillStyle = '#67e8f9';
-        ctx.shadowBlur = 30;
-        ctx.shadowColor = '#67e8f9';
-        ctx.fill();
-      });
-
-      ctx.strokeStyle = '#c084fc';
-      ctx.lineWidth = 1.8;
-      nodes.forEach((node, i) => {
-        nodes.forEach((other, j) => {
-          if (i < j) {
-            const dist = Math.hypot(node.x - other.x, node.y - other.y);
-            if (dist < 240) {
-              ctx.globalAlpha = (240 - dist) / 240 * 0.85;
-              ctx.beginPath();
-              ctx.moveTo(node.x, node.y);
-              ctx.lineTo(other.x, other.y);
-              ctx.stroke();
-
-              if (Math.random() < 0.15) {
-                particles.push({
-                  x: node.x,
-                  y: node.y,
-                  tx: other.x,
-                  ty: other.y,
-                  progress: 0,
-                  speed: 0.05 + Math.random() * 0.03
-                });
-              }
-            }
-          }
-        });
-      });
-
-      ctx.fillStyle = '#67e8f9';
-      ctx.shadowBlur = 22;
-      ctx.shadowColor = '#67e8f9';
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.progress += p.speed;
-        if (p.progress > 1) {
-          particles.splice(i, 1);
-          continue;
-        }
-        const x = p.x + (p.tx - p.x) * p.progress;
-        const y = p.y + (p.ty - p.y) * p.progress;
-        ctx.beginPath();
-        ctx.arc(x, y, 3.8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-      requestAnimationFrame(animate);
-    }
-    animate();
-
-    // ==================== CONNECT DEVICE ====================
-    async function connectDevice() {
-      const output = document.getElementById('output');
-      output.style.display = 'block';
-      output.innerHTML = '<strong>🔄 Connecting to device... (Hold BOOT button if needed)</strong>';
-
-      try {
-        const port = await navigator.serial.requestPort();
-        await port.open({ baudRate: 115200 });
-
-        const reader = port.readable.getReader();
-        let buffer = '';
-
-        const timeout = setTimeout(() => {
-          reader.cancel();
-          output.innerHTML += '<br><br>⚠️ Timeout. Try holding BOOT button while plugging in.';
-        }, 15000);
-
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-
-          buffer += new TextDecoder().decode(value);
-
-          if (buffer.includes('=== PLSCHAT_STATUS ===') && buffer.includes('=== END_STATUS ===')) {
-            clearTimeout(timeout);
-
-            const raw = buffer;
-            const mac = raw.match(/MAC:([\w:]+)/) ? raw.match(/MAC:([\w:]+)/)[1] : 'Unknown';
-            const licensed = raw.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
-            const claimable = raw.match(/CLAIMABLE:([\d.]+)/) ? raw.match(/CLAIMABLE:([\d.]+)/)[1] : '0';
-            const uptime = raw.match(/UPTIME_HOURS:([\d.]+)/) ? raw.match(/UPTIME_HOURS:([\d.]+)/)[1] : '0';
-            const rssi = raw.match(/AVG_RSSI:(-?[\d.]+)/) ? raw.match(/AVG_RSSI:(-?[\d.]+)/)[1] : '-';
-
-            output.innerHTML = `
-              <div class="success-box">✅ Device Connected Successfully!</div>
-              <div class="info-grid">
-                <div class="info-card"><strong>MAC Address</strong><br>${mac}</div>
-                <div class="info-card"><strong>License Status</strong><br>${licensed}</div>
-                <div class="info-card"><strong>Claimable Rewards</strong><br>${claimable} PLSC</div>
-                <div class="info-card"><strong>Uptime</strong><br>${uptime} hours</div>
-                <div class="info-card"><strong>Signal Strength</strong><br>${rssi} dBm</div>
-              </div>
-            `;
-            break;
-          }
-        }
-      } catch (err) {
-        output.innerHTML = `❌ ${err.message}<br><br>Try: Unplug → Hold BOOT → Plug in → Click Connect again.`;
-      }
-    }
-
-    function connectMetaMask() { alert("🦊 MetaMask connected!"); }
-    function connectZKX() { alert("🛡️ ZKX (Private) connected!"); }
-    function buyLicense() { alert("💎 Buy License page coming soon..."); }
-    function claimRewards() { alert("🏆 Claim Rewards page coming soon..."); }
-  </script>
+&nbsp;&nbsp;<canvas id="mesh-bg"></canvas>
+&nbsp;&nbsp;<div class="container">
+&nbsp;&nbsp;&nbsp;&nbsp;<h1>PULSE CHAT</h1>
+&nbsp;&nbsp;&nbsp;&nbsp;<p class="subtitle">Decentralised LoRa Mesh Communication</p>
+&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;<div class="buttons">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-connect" onclick="connectDevice()">🔌 Connect Device</button>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-metamask" onclick="connectMetaMask()">🦊 MetaMask</button>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-zkx" onclick="connectZKX()">🛡️ ZKX (Private)</button>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-buy" onclick="buyLicense()">💎 Buy License</button>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-claim" onclick="claimRewards()">🏆 Claim Rewards</button>
+&nbsp;&nbsp;&nbsp;&nbsp;</div>
+&nbsp;&nbsp;&nbsp;&nbsp;<div id="output"></div>
+&nbsp;&nbsp;</div>
+&nbsp;&nbsp;<script>
+&nbsp;&nbsp;&nbsp;&nbsp;// === FULL ANIMATED BACKGROUND ===
+&nbsp;&nbsp;&nbsp;&nbsp;const canvas = document.getElementById('mesh-bg');
+&nbsp;&nbsp;&nbsp;&nbsp;const ctx = canvas.getContext('2d');
+&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;function resize() {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;canvas.width = window.innerWidth;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;canvas.height = window.innerHeight;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;resize();
+&nbsp;&nbsp;&nbsp;&nbsp;window.addEventListener('resize', resize);
+&nbsp;&nbsp;&nbsp;&nbsp;let nodes = [];
+&nbsp;&nbsp;&nbsp;&nbsp;for (let i = 0; i < 60; i++) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nodes.push({
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x: Math.random() * canvas.width,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y: Math.random() * canvas.height,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;radius: 3.8,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vx: (Math.random() - 0.5) * 0.8,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vy: (Math.random() - 0.5) * 0.8
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;let particles = [];
+&nbsp;&nbsp;&nbsp;&nbsp;let mouse = { x: 0, y: 0, active: false };
+&nbsp;&nbsp;&nbsp;&nbsp;window.addEventListener('mousemove', (e) => {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mouse.x = e.clientX;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mouse.y = e.clientY;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mouse.active = true;
+&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;window.addEventListener('mouseleave', () => mouse.active = false);
+&nbsp;&nbsp;&nbsp;&nbsp;function animate() {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.clearRect(0, 0, canvas.width, canvas.height);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nodes.forEach(node => {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (mouse.active) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const dx = node.x - mouse.x;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const dy = node.y - mouse.y;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const dist = Math.hypot(dx, dy);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (dist < 280 && dist > 0) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const force = (280 - dist) / 280 * 0.8;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node.vx += (dx / dist) * force;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node.vy += (dy / dist) * force;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node.x += node.vx;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node.y += node.vy;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const margin = 40;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (node.x < margin) { node.x = margin; node.vx = Math.abs(node.vx) * 0.9; }
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (node.x > canvas.width - margin) { node.x = canvas.width - margin; node.vx = -Math.abs(node.vx) * 0.9; }
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (node.y < margin) { node.y = margin; node.vy = Math.abs(node.vy) * 0.9; }
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (node.y > canvas.height - margin) { node.y = canvas.height - margin; node.vy = -Math.abs(node.vy) * 0.9; }
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.beginPath();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.fillStyle = '#67e8f9';
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.shadowBlur = 30;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.shadowColor = '#67e8f9';
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.fill();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.strokeStyle = '#c084fc';
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.lineWidth = 1.8;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nodes.forEach((node, i) => {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nodes.forEach((other, j) => {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (i < j) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const dist = Math.hypot(node.x - other.x, node.y - other.y);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (dist < 240) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.globalAlpha = (240 - dist) / 240 * 0.85;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.beginPath();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.moveTo(node.x, node.y);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.lineTo(other.x, other.y);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.stroke();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (Math.random() < 0.15) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;particles.push({
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x: node.x,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y: node.y,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tx: other.x,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ty: other.y,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;progress: 0,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;speed: 0.05 + Math.random() * 0.03
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.fillStyle = '#67e8f9';
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.shadowBlur = 22;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.shadowColor = '#67e8f9';
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (let i = particles.length - 1; i >= 0; i--) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const p = particles[i];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;p.progress += p.speed;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (p.progress > 1) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;particles.splice(i, 1);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const x = p.x + (p.tx - p.x) * p.progress;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const y = p.y + (p.ty - p.y) * p.progress;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.beginPath();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.arc(x, y, 3.8, 0, Math.PI * 2);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.fill();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctx.globalAlpha = 1;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;requestAnimationFrame(animate);
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;animate();
+&nbsp;&nbsp;&nbsp;&nbsp;// ==================== CONNECT DEVICE ====================
+&nbsp;&nbsp;&nbsp;&nbsp;async function connectDevice() {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const output = document.getElementById('output');
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;output.style.display = 'block';
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;output.innerHTML = '<strong>🔄 Connecting... (Hold BOOT button if it times out)</strong>';
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;try {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const port = await navigator.serial.requestPort();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;await port.open({ baudRate: 115200 });
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;output.innerHTML += '<br><strong>✅ Port opened. Waiting for data...</strong>';
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const writer = port.writable.getWriter();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;await writer.write(new TextEncoder().encode('\n')); // Send newline to wake up
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;writer.releaseLock();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const reader = port.readable.getReader();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;let buffer = '';
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const timeout = setTimeout(() => {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reader.cancel();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;output.innerHTML += '<br><br>⚠️ Timeout. Try holding BOOT button while plugging in.';
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}, 12000);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;while (true) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const { value, done } = await reader.read();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (done) break;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;buffer += new TextDecoder().decode(value);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (buffer.includes('PLSCHAT') || buffer.includes('LICENSED') || buffer.includes('MAC')) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;clearTimeout(timeout);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;output.innerHTML = `
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<div class="success-box">✅ Device Connected Successfully!</div>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<pre style="background:#1f2937; padding:15px; border-radius:8px; text-align:left; white-space:pre-wrap; max-height:400px;">${buffer}</pre>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} catch (err) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;output.innerHTML = `❌ ${err.message}<br><br><strong>Recommended:</strong><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. Unplug Heltec<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. Hold BOOT button<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. Plug in while holding BOOT<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. Release after 3 seconds<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5. Click Connect Device again`;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;function connectMetaMask() { alert("🦊 MetaMask connected!"); }
+&nbsp;&nbsp;&nbsp;&nbsp;function connectZKX() { alert("🛡️ ZKX (Private) connected!"); }
+&nbsp;&nbsp;&nbsp;&nbsp;function buyLicense() { alert("💎 Buy License page coming soon..."); }
+&nbsp;&nbsp;&nbsp;&nbsp;function claimRewards() { alert("🏆 Claim Rewards page coming soon..."); }
+&nbsp;&nbsp;</script>
 </body>
 </html>
