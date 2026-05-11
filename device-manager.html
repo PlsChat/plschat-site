@@ -6,7 +6,7 @@
   <title>PLSChat - Device Manager</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
+   
     body {
       font-family: 'Inter', sans-serif;
       background: #0a0c1f;
@@ -17,16 +17,20 @@
       position: relative;
       overflow: hidden;
     }
-
     #mesh-bg {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       z-index: -1;
       opacity: 0.95;
     }
-
-    .container { max-width: 960px; margin: 0 auto; text-align: center; position: relative; z-index: 2; }
-    
+    .container { 
+      max-width: 960px; 
+      margin: 0 auto; 
+      text-align: center; 
+      position: relative; 
+      z-index: 2; 
+    }
+   
     h1 {
       font-size: 3.8em;
       font-weight: 700;
@@ -35,7 +39,11 @@
       -webkit-text-fill-color: transparent;
       margin-bottom: 8px;
     }
-    .subtitle { color: #94a3b8; font-size: 1.35em; margin-bottom: 50px; }
+    .subtitle { 
+      color: #94a3b8; 
+      font-size: 1.35em; 
+      margin-bottom: 50px; 
+    }
 
     button {
       padding: 18px 36px;
@@ -46,35 +54,67 @@
       cursor: pointer;
       margin: 10px;
       transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      min-width: 280px;
     }
-    .btn-connect { background: #22d3ee; color: #0f172a; }
-    .btn-buy { background: #a855f7; color: white; }
-    .btn-claim { background: #3b82f6; color: white; }
-    .btn-wallet { background: #6f42c1; color: white; }
-    .btn:hover { transform: translateY(-4px); box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
+
+    /* Shimmer Effect */
+    button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -150%;
+      width: 60%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      transition: 0.7s;
+    }
+    button:hover::before { left: 250%; }
+
+    button:hover { 
+      transform: translateY(-4px); 
+      box-shadow: 0 15px 30px rgba(0,0,0,0.5); 
+    }
+
+    .btn-connect { background: linear-gradient(135deg, #22d3ee, #67e8f9); color: #0f172a; }
+    .btn-metamask { background: linear-gradient(135deg, #f6851a, #e27625); color: white; }
+    .btn-zkx { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white; }
+    .btn-buy { background: linear-gradient(135deg, #a855f7, #c084fc); color: white; }
+    .btn-claim { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; }
   </style>
 </head>
 <body>
-
   <canvas id="mesh-bg"></canvas>
-
   <div class="container">
     <h1>PULSE CHAT</h1>
     <p class="subtitle">Decentralised LoRa Mesh Communication</p>
-
+    
     <button class="btn btn-connect" onclick="connectDevice()">🔌 Connect Device</button>
-    <button class="btn btn-wallet" onclick="connectMetaMask()">🔗 MetaMask</button>
-    <button class="btn btn-wallet" onclick="connectZKX()">🛡️ ZKX (Private)</button>
-    <button class="btn btn-buy" onclick="buyLicense()">💰 Buy License</button>
-    <button class="btn btn-claim" onclick="claimRewards()">🏦 Claim Rewards</button>
-
-    <div id="output" class="status" style="display:none; margin-top:40px; padding:25px; background:rgba(22,27,34,0.95); border-radius:16px; text-align:left;"></div>
+    <button class="btn btn-metamask" onclick="connectMetaMask()">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/>
+      </svg>
+      MetaMask
+    </button>
+    <button class="btn btn-zkx" onclick="connectZKX()">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/>
+      </svg>
+      ZKX (Private)
+    </button>
+    <button class="btn btn-buy" onclick="buyLicense()">💎 Buy License</button>
+    <button class="btn btn-claim" onclick="claimRewards()">🏆 Claim Rewards</button>
   </div>
 
   <script>
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
-    
+   
     function resize() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -92,7 +132,6 @@
         vy: (Math.random() - 0.5) * 0.8
       });
     }
-
     let particles = [];
     let mouse = { x: 0, y: 0, active: false };
 
@@ -107,7 +146,6 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       nodes.forEach(node => {
-        // Gentle cursor interaction
         if (mouse.active) {
           const dx = node.x - mouse.x;
           const dy = node.y - mouse.y;
@@ -118,11 +156,9 @@
             node.vy += (dy / dist) * force;
           }
         }
-
         node.x += node.vx;
         node.y += node.vy;
 
-        // Stronger bounce off edges
         const margin = 40;
         if (node.x < margin) { node.x = margin; node.vx = Math.abs(node.vx) * 0.9; }
         if (node.x > canvas.width - margin) { node.x = canvas.width - margin; node.vx = -Math.abs(node.vx) * 0.9; }
@@ -137,7 +173,6 @@
         ctx.fill();
       });
 
-      // Electricity lines + particles
       ctx.strokeStyle = '#c084fc';
       ctx.lineWidth = 1.8;
       nodes.forEach((node, i) => {
@@ -166,7 +201,6 @@
         });
       });
 
-      // Flowing particles
       ctx.fillStyle = '#67e8f9';
       ctx.shadowBlur = 22;
       ctx.shadowColor = '#67e8f9';
@@ -183,11 +217,17 @@
         ctx.arc(x, y, 3.8, 0, Math.PI * 2);
         ctx.fill();
       }
-
       ctx.globalAlpha = 1;
       requestAnimationFrame(animate);
     }
     animate();
+
+    // Button functions
+    function connectDevice() { alert("🔌 Web Serial connection works best on Desktop Chrome/Edge."); }
+    function connectMetaMask() { alert("🦊 MetaMask connected!"); }
+    function connectZKX() { alert("🛡️ ZKX (Private) connected!"); }
+    function buyLicense() { alert("💎 Buy License page coming soon..."); }
+    function claimRewards() { alert("🏆 Claim Rewards page coming soon..."); }
   </script>
 </body>
 </html>
