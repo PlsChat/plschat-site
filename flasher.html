@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PLSChat - Web Flasher</title>
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0c1f;
+      color: #c9d1d9;
+      text-align: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+    h1 {
+      font-size: 3.2em;
+      background: linear-gradient(90deg, #a855f7, #67e8f9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    esp-web-install-button {
+      margin: 40px auto;
+      display: block;
+    }
+    .note {
+      background: rgba(34, 211, 238, 0.1);
+      border: 1px solid #22d3ee;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 30px auto;
+      max-width: 600px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PULSE CHAT</h1>
+    <p style="font-size:1.4em; color:#67e8f9;">Web Firmware Flasher</p>
+    <p>Flash PLSChat firmware directly to your Heltec V4 or other ESP32 boards</p>
+
+    <esp-web-install-button
+      manifest="manifest.json">
+    </esp-web-install-button>
+
+    <div class="note">
+      <strong>Instructions:</strong><br>
+      1. Plug in your Heltec V4<br>
+      2. Hold the <strong>BOOT button</strong> (small button next to USB-C)<br>
+      3. Click <strong>Connect</strong> and select the port<br>
+      4. Release BOOT button when it starts flashing
+    </div>
+
+    <a href="device-manager.html" style="color:#67e8f9; text-decoration:none;">← Back to Device Manager</a>
+  </div>
+</body>
+</html>
