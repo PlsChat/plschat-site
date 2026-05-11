@@ -9,7 +9,7 @@
   
     body {
       font-family: 'Inter', sans-serif;
-      background: #05070f;
+      background: #0a0c1f;
       color: #c9d1d9;
       margin: 0;
       padding: 40px 20px;
@@ -21,7 +21,7 @@
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       z-index: -1;
-      opacity: 0.96;
+      opacity: 0.95;
     }
     .container {
       max-width: 800px;
@@ -32,9 +32,9 @@
     }
  
     h1 {
-      font-size: 3.4em;
+      font-size: 3.6em;
       font-weight: 700;
-      background: linear-gradient(90deg, #a855f7, #67e8f9);
+      background: linear-gradient(90deg, #67e8f9, #a855f7);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 8px;
@@ -42,19 +42,25 @@
     .subtitle {
       color: #94a3b8;
       font-size: 1.35em;
-      margin-bottom: 40px;
+      margin-bottom: 50px;
     }
 
     .btn-back {
       position: absolute;
-      top: 25px;
-      left: 25px;
-      padding: 10px 18px;
-      background: #334155;
+      top: 30px;
+      left: 30px;
+      padding: 10px 22px;
+      background: rgba(30, 41, 59, 0.9);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 9999px;
       cursor: pointer;
+      font-size: 1em;
+      transition: all 0.3s;
+    }
+    .btn-back:hover {
+      background: #22d3ee;
+      color: #0a0c1f;
     }
 
     .buttons {
@@ -62,7 +68,7 @@
       flex-direction: column;
       align-items: center;
       gap: 16px;
-      margin: 50px 0;
+      margin: 40px 0;
     }
     button {
       padding: 18px 36px;
@@ -74,10 +80,10 @@
       transition: all 0.4s;
       position: relative;
       overflow: hidden;
-      min-width: 320px;
+      min-width: 340px;
       background: linear-gradient(135deg, #3b82f6, #8b5cf6, #a855f7);
       color: white;
-      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.5);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -90,25 +96,26 @@
       left: -150%;
       width: 60%;
       height: 200%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.65), transparent);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
       transition: 0.7s;
     }
     button:hover::before { left: 250%; }
     button:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 35px rgba(139, 92, 246, 0.6);
+      transform: translateY(-6px);
+      box-shadow: 0 15px 35px rgba(139, 92, 246, 0.7);
     }
 
     .status {
-      background: rgba(30, 30, 50, 0.95);
+      background: rgba(15, 23, 42, 0.95);
       padding: 25px;
       border-radius: 16px;
-      margin: 30px 0;
+      margin: 40px auto;
       text-align: left;
       font-family: monospace;
       white-space: pre-wrap;
-      min-height: 180px;
-      border-left: 6px solid #67e8f9;
+      min-height: 160px;
+      border-left: 6px solid #22d3ee;
+      max-width: 700px;
     }
   </style>
 </head>
@@ -134,7 +141,7 @@
   </div>
 
   <script>
-    // ==================== FULL ANIMATED MESH BACKGROUND (Darker style) ====================
+    // ==================== MATCHING ANIMATED MESH BACKGROUND ====================
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
   
@@ -146,11 +153,10 @@
     window.addEventListener('resize', resize);
 
     let nodes = [];
-    for (let i = 0; i < 70; i++) {
+    for (let i = 0; i < 72; i++) {
       nodes.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        radius: 3.6,
         vx: (Math.random() - 0.5) * 0.7,
         vy: (Math.random() - 0.5) * 0.7
       });
@@ -166,55 +172,49 @@
     window.addEventListener('mouseleave', () => mouse.active = false);
 
     function animate() {
-      ctx.fillStyle = 'rgba(5, 7, 15, 0.18)';
+      ctx.fillStyle = 'rgba(10, 12, 31, 0.16)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.fillStyle = '#67e8f9';
-      ctx.shadowBlur = 28;
+      ctx.shadowBlur = 26;
       ctx.shadowColor = '#67e8f9';
+
       nodes.forEach(node => {
         if (mouse.active) {
           const dx = node.x - mouse.x;
           const dy = node.y - mouse.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < 300 && dist > 0) {
-            const force = (300 - dist) / 300 * 0.5;
-            node.vx += (dx / dist) * force;
-            node.vy += (dy / dist) * force;
+          const d = Math.hypot(dx, dy);
+          if (d < 280 && d > 0) {
+            const force = (280 - d) / 280 * 0.6;
+            node.vx += (dx / d) * force;
+            node.vy += (dy / d) * force;
           }
         }
         node.x += node.vx;
         node.y += node.vy;
-        const margin = 50;
-        if (node.x < margin || node.x > canvas.width - margin) node.vx *= -0.85;
-        if (node.y < margin || node.y > canvas.height - margin) node.vy *= -0.85;
+
+        if (node.x < 0 || node.x > canvas.width) node.vx *= -0.85;
+        if (node.y < 0 || node.y > canvas.height) node.vy *= -0.85;
 
         ctx.beginPath();
-        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.arc(node.x, node.y, 3.8, 0, Math.PI * 2);
         ctx.fill();
       });
 
-      ctx.strokeStyle = '#a855f7';
+      ctx.strokeStyle = '#c084fc';
       ctx.lineWidth = 1.7;
       nodes.forEach((node, i) => {
         nodes.forEach((other, j) => {
           if (i < j) {
             const dist = Math.hypot(node.x - other.x, node.y - other.y);
             if (dist < 260) {
-              ctx.globalAlpha = (260 - dist) / 260 * 0.78;
+              ctx.globalAlpha = (260 - dist) / 260 * 0.8;
               ctx.beginPath();
               ctx.moveTo(node.x, node.y);
               ctx.lineTo(other.x, other.y);
               ctx.stroke();
               if (Math.random() < 0.16) {
-                particles.push({
-                  x: node.x,
-                  y: node.y,
-                  tx: other.x,
-                  ty: other.y,
-                  progress: 0,
-                  speed: 0.055 + Math.random() * 0.035
-                });
+                particles.push({ x: node.x, y: node.y, tx: other.x, ty: other.y, progress: 0, speed: 0.055 + Math.random() * 0.04 });
               }
             }
           }
@@ -223,14 +223,10 @@
 
       ctx.fillStyle = '#67e8f9';
       ctx.shadowBlur = 24;
-      ctx.shadowColor = '#67e8f9';
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.progress += p.speed;
-        if (p.progress > 1) {
-          particles.splice(i, 1);
-          continue;
-        }
+        if (p.progress > 1) { particles.splice(i, 1); continue; }
         const x = p.x + (p.tx - p.x) * p.progress;
         const y = p.y + (p.ty - p.y) * p.progress;
         ctx.beginPath();
@@ -252,9 +248,9 @@
         const writer = port.writable.getWriter();
         await writer.write(new TextEncoder().encode(cmd + "\n"));
         writer.releaseLock();
-        statusDiv.innerHTML += `\n✅ Command sent successfully!`;
+        statusDiv.innerHTML += `\n✅ Command sent!`;
       } catch (err) {
-        statusDiv.innerHTML += `\n❌ Error: ${err.message}`;
+        statusDiv.innerHTML += `\n❌ ${err.message}`;
       }
     }
   </script>
