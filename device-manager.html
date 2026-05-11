@@ -8,37 +8,38 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
     body {
-      font-family: 'Inter', Arial, sans-serif;
-      background: #0a0e1a;
+      font-family: 'Inter', sans-serif;
+      background: #0a0c1f;
       color: #c9d1d9;
       margin: 0;
-      padding: 40px 20px;
+      padding: 60px 20px;
       min-height: 100vh;
-      overflow: hidden;
       position: relative;
+      overflow: hidden;
     }
 
-    /* Animated Mesh Background */
     #mesh-bg {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       z-index: -1;
-      opacity: 0.15;
+      opacity: 0.95;   /* Much more visible */
     }
 
+    .container { max-width: 960px; margin: 0 auto; text-align: center; position: relative; z-index: 2; }
+    
     h1 {
-      font-size: 3.2em;
-      background: linear-gradient(90deg, #a855f7, #22d3ee);
+      font-size: 3.8em;
+      font-weight: 700;
+      background: linear-gradient(90deg, #a855f7, #67e8f9, #58a6ff);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 8px;
     }
-    .subtitle { color: #8b949e; font-size: 1.2em; }
+    .subtitle { color: #94a3b8; font-size: 1.35em; margin-bottom: 50px; }
 
-    .container { max-width: 900px; margin: 0 auto; text-align: center; position: relative; z-index: 2; }
     button {
-      padding: 16px 32px;
-      font-size: 1.1em;
+      padding: 18px 36px;
+      font-size: 1.15em;
       font-weight: 600;
       border: none;
       border-radius: 12px;
@@ -46,27 +47,15 @@
       margin: 10px;
       transition: all 0.3s;
     }
-    .btn-connect { background: #238636; color: white; }
-    .btn-buy { background: #f0b429; color: #0d1117; }
-    .btn-claim { background: #22d3ee; color: #0d1117; }
+    .btn-connect { background: #22d3ee; color: #0f172a; }
+    .btn-buy { background: #a855f7; color: white; }
+    .btn-claim { background: #3b82f6; color: white; }
     .btn-wallet { background: #6f42c1; color: white; }
-    .btn:hover { transform: translateY(-4px); box-shadow: 0 12px 25px rgba(0,0,0,0.4); }
-
-    .status { 
-      margin: 40px auto; 
-      padding: 25px; 
-      background: rgba(22, 27, 34, 0.95); 
-      border-radius: 16px; 
-      text-align: left; 
-      display: none; 
-      max-width: 700px;
-      border: 1px solid #30363d;
-    }
+    .btn:hover { transform: translateY(-4px); box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
   </style>
 </head>
 <body>
 
-  <!-- Animated Mesh Background -->
   <canvas id="mesh-bg"></canvas>
 
   <div class="container">
@@ -79,66 +68,119 @@
     <button class="btn btn-buy" onclick="buyLicense()">💰 Buy License</button>
     <button class="btn btn-claim" onclick="claimRewards()">🏦 Claim Rewards</button>
 
-    <div id="output" class="status"></div>
+    <div id="output" class="status" style="display:none; margin-top:40px; padding:25px; background:rgba(22,27,34,0.95); border-radius:16px; text-align:left;"></div>
   </div>
 
   <script>
-    let currentMAC = "";
-
-    // Simple animated mesh background
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
 
     let nodes = [];
-    for (let i = 0; i < 35; i++) {
+    for (let i = 0; i < 60; i++) {
       nodes.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        radius: 3,
-        speed: Math.random() * 0.5 + 0.2
+        radius: 3.8,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8
       });
     }
 
-    function animateMesh() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = '#6f42c1';
-      ctx.lineWidth = 1;
+    let particles = [];
 
-      nodes.forEach((node, i) => {
-        node.x += Math.sin(i) * node.speed;
-        if (node.x < 0 || node.x > canvas.width) node.speed *= -1;
+    let mouse = { x: 0, y: 0, active: false };
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.active = true;
+    });
+    window.addEventListener('mouseleave', () => mouse.active = false);
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      nodes.forEach(node => {
+        if (mouse.active) {
+          const dx = node.x - mouse.x;
+          const dy = node.y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 280 && dist > 0) {
+            const force = (280 - dist) / 280 * 0.8;
+            node.vx += (dx / dist) * force;
+            node.vy += (dy / dist) * force;
+          }
+        }
+
+        node.x += node.vx;
+        node.y += node.vy;
+
+        if (node.x < 0 || node.x > canvas.width) node.vx *= -0.8;
+        if (node.y < 0 || node.y > canvas.height) node.vy *= -0.8;
 
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-        ctx.fillStyle = '#22d3ee';
+        ctx.fillStyle = '#67e8f9';
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#67e8f9';
         ctx.fill();
+      });
 
-        // Connect lines
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 1.8;
+      nodes.forEach((node, i) => {
         nodes.forEach((other, j) => {
-          if (i !== j) {
+          if (i < j) {
             const dist = Math.hypot(node.x - other.x, node.y - other.y);
-            if (dist < 180) {
-              ctx.globalAlpha = (180 - dist) / 180;
+            if (dist < 240) {
+              ctx.globalAlpha = (240 - dist) / 240 * 0.85;
               ctx.beginPath();
               ctx.moveTo(node.x, node.y);
               ctx.lineTo(other.x, other.y);
               ctx.stroke();
+
+              if (Math.random() < 0.15) {
+                particles.push({
+                  x: node.x,
+                  y: node.y,
+                  tx: other.x,
+                  ty: other.y,
+                  progress: 0,
+                  speed: 0.05 + Math.random() * 0.03
+                });
+              }
             }
           }
         });
       });
-      requestAnimationFrame(animateMesh);
-    }
-    animateMesh();
 
-    // Rest of the functions (connectDevice, buyLicense, etc.)
-    async function connectDevice() { /* same as previous version */ }
-    async function connectMetaMask() { /* same as before */ }
-    function connectZKX() { alert("ZKX Shielded Wallet connection coming soon!"); }
-    function buyLicense() { if (!currentMAC) return alert("Connect device first!"); window.open(`buy.html?mac=${currentMAC}`, '_blank'); }
-    function claimRewards() { if (!currentMAC) return alert("Connect device first!"); window.open(`claim.html?mac=${currentMAC}`, '_blank'); }
+      ctx.fillStyle = '#67e8f9';
+      ctx.shadowBlur = 22;
+      ctx.shadowColor = '#67e8f9';
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.progress += p.speed;
+        if (p.progress > 1) {
+          particles.splice(i, 1);
+          continue;
+        }
+        const x = p.x + (p.tx - p.x) * p.progress;
+        const y = p.y + (p.ty - p.y) * p.progress;
+        ctx.beginPath();
+        ctx.arc(x, y, 3.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(animate);
+    }
+    animate();
   </script>
 </body>
 </html>
