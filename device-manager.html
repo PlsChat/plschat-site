@@ -6,80 +6,104 @@
   <title>PLSChat - Device Manager</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body { 
-      font-family: 'Inter', sans-serif; 
-      background: #0a0c1f; 
-      color: #c9d1d9; 
-      margin:0; 
-      padding:40px 20px; 
-      min-height:100vh; 
-      position:relative; 
-      overflow-y:auto; 
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f1b2e;
+      color: #c9d1d9;
+      margin: 0;
+      padding: 40px 20px;
+      min-height: 100vh;
+      position: relative;
+      overflow-y: auto;
     }
-    #mesh-bg { 
-      position:fixed; 
-      top:0; left:0; right:0; bottom:0; 
-      z-index:-1; 
-      opacity:0.92; 
+    
+    #mesh-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: -1;
+      opacity: 0.95;
     }
-    .container { 
-      max-width:960px; 
-      margin:0 auto; 
-      text-align:center; 
-      position:relative; 
-      z-index:2; 
+    
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 2;
     }
-    h1 { 
-      font-size:3.8em; 
-      background:linear-gradient(90deg,#a855f7,#67e8f9,#58a6ff); 
-      -webkit-background-clip:text; 
-      -webkit-text-fill-color:transparent; 
-      margin-bottom:8px; 
+    
+    h1 {
+      font-size: 4.2em;
+      font-weight: 700;
+      background: linear-gradient(90deg, #67e8f9, #a855f7, #58a6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
     }
-    .buttons { 
-      display:flex; 
-      flex-wrap:wrap; 
-      justify-content:center; 
-      gap:15px; 
-      margin:40px 0; 
+    
+    .subtitle {
+      color: #94a3b8;
+      font-size: 1.4em;
+      margin-bottom: 50px;
     }
-    button { 
-      padding:18px 32px; 
-      font-size:1.1em; 
-      font-weight:600; 
-      border:none; 
-      border-radius:12px; 
-      cursor:pointer; 
-      transition:all 0.3s; 
-      min-width:220px; 
+    
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 18px;
+      margin: 40px 0;
     }
-    .btn-connect { background:#22d3ee; color:#0f172a; }
-    .btn-buy { background:#a855f7; color:white; }
-    .btn-claim { background:#3b82f6; color:white; }
-    .success-box { 
-      background:#22c55e; 
-      color:#0f172a; 
-      padding:16px; 
-      border-radius:10px; 
-      margin:25px auto; 
-      max-width:500px; 
-      font-weight:600; 
+    
+    button {
+      padding: 18px 36px;
+      font-size: 1.15em;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      min-width: 240px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
-    .info-grid { 
-      display:grid; 
-      grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); 
-      gap:16px; 
-      margin-top:30px; 
+    
+    .btn-connect { background: #22d3ee; color: #0f172a; }
+    .btn-buy { background: #a855f7; color: white; }
+    .btn-claim { background: #3b82f6; color: white; }
+    
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(103, 232, 249, 0.4);
     }
-    .info-card { 
-      background:#1f2937; 
-      padding:18px; 
-      border-radius:10px; 
-      text-align:left; 
-      border:1px solid #334155; 
+    
+    .success-box {
+      background: #22c55e;
+      color: #0f172a;
+      padding: 16px;
+      border-radius: 12px;
+      margin: 30px auto;
+      max-width: 500px;
+      font-weight: 600;
     }
-    .label { color:#94a3b8; font-size:0.9em; }
-    .value { font-size:1.35em; font-weight:600; color:#67e8f9; margin-top:4px; }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 30px;
+    }
+    
+    .info-card {
+      background: #1e2937;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: left;
+      border: 1px solid #334155;
+    }
+    
+    .label { color: #94a3b8; font-size: 0.95em; }
+    .value { font-size: 1.4em; font-weight: 600; color: #67e8f9; margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -87,7 +111,7 @@
   
   <div class="container">
     <h1>PLSChat</h1>
-    <p style="color:#94a3b8; font-size:1.3em;">Device Manager</p>
+    <p class="subtitle">Device Manager</p>
 
     <div class="buttons">
       <button class="btn-connect" onclick="connectDevice()">🔌 Connect Device</button>
@@ -99,33 +123,33 @@
   </div>
 
   <script>
-    // === ANIMATED MESH BACKGROUND ===
+    // === FULL ANIMATED MESH BACKGROUND ===
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
     let nodes = [], particles = [];
     
-    function resize() {
+    function resizeCanvas() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     }
-    window.addEventListener('resize', resize);
-    resize();
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-    for(let i = 0; i < 65; i++) {
+    for(let i = 0; i < 70; i++) {
       nodes.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.6,
-        vy: (Math.random() - 0.5) * 0.6
+        vx: (Math.random() - 0.5) * 0.7,
+        vy: (Math.random() - 0.5) * 0.7
       });
     }
 
     function animate() {
-      ctx.fillStyle = 'rgba(10, 12, 31, 0.15)';
+      ctx.fillStyle = 'rgba(15, 27, 46, 0.18)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.strokeStyle = '#c084fc';
-      ctx.lineWidth = 1.6;
+      ctx.strokeStyle = '#a855f7';
+      ctx.lineWidth = 1.8;
 
       nodes.forEach((n, i) => {
         n.x += n.vx;
@@ -135,20 +159,20 @@
 
         ctx.fillStyle = '#67e8f9';
         ctx.beginPath();
-        ctx.arc(n.x, n.y, 3.5, 0, Math.PI * 2);
+        ctx.arc(n.x, n.y, 3.8, 0, Math.PI * 2);
         ctx.fill();
 
         nodes.forEach((o, j) => {
           if (i < j) {
             const d = Math.hypot(n.x - o.x, n.y - o.y);
-            if (d < 240) {
-              ctx.globalAlpha = (240 - d) / 240 * 0.75;
+            if (d < 260) {
+              ctx.globalAlpha = (260 - d) / 260 * 0.8;
               ctx.beginPath();
               ctx.moveTo(n.x, n.y);
               ctx.lineTo(o.x, o.y);
               ctx.stroke();
 
-              if (Math.random() < 0.12) {
+              if (Math.random() < 0.15) {
                 particles.push({x: n.x, y: n.y, tx: o.x, ty: o.y, progress: 0});
               }
             }
@@ -157,11 +181,11 @@
       });
 
       ctx.fillStyle = '#67e8f9';
-      ctx.shadowBlur = 18;
+      ctx.shadowBlur = 22;
       ctx.shadowColor = '#67e8f9';
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
-        p.progress += 0.055;
+        p.progress += 0.06;
         if (p.progress > 1) {
           particles.splice(i, 1);
           continue;
@@ -169,7 +193,7 @@
         const x = p.x + (p.tx - p.x) * p.progress;
         const y = p.y + (p.ty - p.y) * p.progress;
         ctx.beginPath();
-        ctx.arc(x, y, 3.2, 0, Math.PI * 2);
+        ctx.arc(x, y, 3.5, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalAlpha = 1;
@@ -177,10 +201,10 @@
     }
     animate();
 
-    // === Connect Device ===
+    // === Connect Device Function ===
     async function connectDevice() {
       const output = document.getElementById('output');
-      output.innerHTML = "<p>Connecting...</p>";
+      output.innerHTML = "<p style='color:#67e8f9'>Connecting to device...</p>";
       
       try {
         const port = await navigator.serial.requestPort();
@@ -204,7 +228,7 @@
               <div class="success-box">✅ Device Connected Successfully!</div>
               <div class="info-grid">
                 <div class="info-card"><div class="label">MAC Address</div><div class="value">${macMatch ? macMatch[1] : 'Unknown'}</div></div>
-                <div class="info-card"><div class="label">License Status</div><div class="value">${licMatch && licMatch[1]==='YES' ? '✅ Licensed' : '❌ Not Licensed'}</div></div>
+                <div class="info-card"><div class="label">License</div><div class="value">${licMatch && licMatch[1]==='YES' ? '✅ Licensed' : '❌ Not Licensed'}</div></div>
                 <div class="info-card"><div class="label">Claimable Rewards</div><div class="value">${claimMatch ? claimMatch[1] : '0.00000'} PLSC</div></div>
                 <div class="info-card"><div class="label">Uptime</div><div class="value">${upMatch ? parseFloat(upMatch[1]).toFixed(2) : '0.00'} hours</div></div>
                 <div class="info-card"><div class="label">Signal Strength</div><div class="value">${rssiMatch ? rssiMatch[1] : '-85'} dBm</div></div>
@@ -213,7 +237,7 @@
           }
         }
       } catch (e) {
-        output.innerHTML = `<div style="color:#ef4444">❌ ${e.message}<br><br>Hold BOOT button while plugging in and try again.</div>`;
+        output.innerHTML = `<div style="color:#ef4444">❌ ${e.message}<br><br>Hold the BOOT button while plugging in the device.</div>`;
       }
     }
 
