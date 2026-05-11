@@ -124,72 +124,159 @@
   </div>
 
   <script>
-    // Animated Background
+    // === FULL ANIMATED BACKGROUND ===
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+   
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
     resize();
     window.addEventListener('resize', resize);
 
     let nodes = [];
     for (let i = 0; i < 60; i++) {
-      nodes.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.8, vy: (Math.random()-0.5)*0.8 });
+      nodes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: 3.8,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8
+      });
     }
     let particles = [];
     let mouse = { x: 0, y: 0, active: false };
-    window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true; });
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.active = true;
+    });
     window.addEventListener('mouseleave', () => mouse.active = false);
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // ... (animation code - kept same as before) ...
+
+      nodes.forEach(node => {
+        if (mouse.active) {
+          const dx = node.x - mouse.x;
+          const dy = node.y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 280 && dist > 0) {
+            const force = (280 - dist) / 280 * 0.8;
+            node.vx += (dx / dist) * force;
+            node.vy += (dy / dist) * force;
+          }
+        }
+        node.x += node.vx;
+        node.y += node.vy;
+
+        const margin = 40;
+        if (node.x < margin) { node.x = margin; node.vx = Math.abs(node.vx) * 0.9; }
+        if (node.x > canvas.width - margin) { node.x = canvas.width - margin; node.vx = -Math.abs(node.vx) * 0.9; }
+        if (node.y < margin) { node.y = margin; node.vy = Math.abs(node.vy) * 0.9; }
+        if (node.y > canvas.height - margin) { node.y = canvas.height - margin; node.vy = -Math.abs(node.vy) * 0.9; }
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#67e8f9';
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#67e8f9';
+        ctx.fill();
+      });
+
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 1.8;
+      nodes.forEach((node, i) => {
+        nodes.forEach((other, j) => {
+          if (i < j) {
+            const dist = Math.hypot(node.x - other.x, node.y - other.y);
+            if (dist < 240) {
+              ctx.globalAlpha = (240 - dist) / 240 * 0.85;
+              ctx.beginPath();
+              ctx.moveTo(node.x, node.y);
+              ctx.lineTo(other.x, other.y);
+              ctx.stroke();
+
+              if (Math.random() < 0.15) {
+                particles.push({
+                  x: node.x,
+                  y: node.y,
+                  tx: other.x,
+                  ty: other.y,
+                  progress: 0,
+                  speed: 0.05 + Math.random() * 0.03
+                });
+              }
+            }
+          }
+        });
+      });
+
+      ctx.fillStyle = '#67e8f9';
+      ctx.shadowBlur = 22;
+      ctx.shadowColor = '#67e8f9';
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.progress += p.speed;
+        if (p.progress > 1) {
+          particles.splice(i, 1);
+          continue;
+        }
+        const x = p.x + (p.tx - p.x) * p.progress;
+        const y = p.y + (p.ty - p.y) * p.progress;
+        ctx.beginPath();
+        ctx.arc(x, y, 3.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
       requestAnimationFrame(animate);
     }
     animate();
 
-    // ==================== IMPROVED CONNECT ====================
+    // ==================== CONNECT DEVICE ====================
     async function connectDevice() {
       const output = document.getElementById('output');
       output.style.display = 'block';
-      output.innerHTML = '<strong>🔄 Trying to connect... Hold BOOT button if needed.</strong>';
+      output.innerHTML = '<strong>🔄 Connecting to device... (this may take a few seconds)</strong>';
 
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
-
-        output.innerHTML += '<br><strong>✅ Port opened! Reading data...</strong>';
 
         const reader = port.readable.getReader();
         let buffer = '';
 
         const timeout = setTimeout(() => {
           reader.cancel();
-          output.innerHTML += '<br><br>⚠️ No data received. Try the BOOT button method again.';
+          output.innerHTML += '<br><br>⚠️ Timeout - Try holding BOOT button while plugging in.';
         }, 15000);
 
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
+
           buffer += new TextDecoder().decode(value);
 
-          if (buffer.includes('PLSCHAT_STATUS') || buffer.includes('LICENSED')) {
+          if (buffer.includes('=== PLSCHAT_STATUS ===') && buffer.includes('=== END_STATUS ===')) {
             clearTimeout(timeout);
             output.innerHTML = `
               <div class="success-box">✅ Device Connected Successfully!</div>
-              <pre style="background:#1f2937; padding:15px; border-radius:8px; text-align:left; overflow:auto; max-height:400px;">${buffer}</pre>
+              <pre style="background:#1f2937; padding:15px; border-radius:8px; text-align:left; white-space:pre-wrap;">${buffer}</pre>
             `;
             break;
           }
         }
       } catch (err) {
-        output.innerHTML = `❌ ${err.message}<br><br>Try: Unplug → Hold BOOT → Plug in → Click Connect again.`;
+        output.innerHTML = `❌ ${err.message}<br><br>Try: Unplug → Hold BOOT button → Plug in → Click Connect.`;
       }
     }
 
     function connectMetaMask() { alert("🦊 MetaMask connected!"); }
-    function connectZKX() { alert("🛡️ ZKX connected!"); }
-    function buyLicense() { alert("Buy License page coming soon..."); }
-    function claimRewards() { alert("Claim Rewards page coming soon..."); }
+    function connectZKX() { alert("🛡️ ZKX (Private) connected!"); }
+    function buyLicense() { alert("💎 Buy License page coming soon..."); }
+    function claimRewards() { alert("🏆 Claim Rewards page coming soon..."); }
   </script>
 </body>
 </html>
