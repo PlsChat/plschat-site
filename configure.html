@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PLSChat - Configure Device</title>
+  <title>PLSChat - Device Manager</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
   
     body {
       font-family: 'Inter', sans-serif;
-      background: #0a0c1f;
+      background: #05070f;
       color: #c9d1d9;
       margin: 0;
       padding: 40px 20px;
@@ -21,19 +21,20 @@
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       z-index: -1;
-      opacity: 0.95;
+      opacity: 0.96;
     }
     .container {
-      max-width: 800px;
+      max-width: 960px;
       margin: 0 auto;
       text-align: center;
       position: relative;
       z-index: 2;
     }
+  
     h1 {
-      font-size: 3.4em;
+      font-size: 3.8em;
       font-weight: 700;
-      background: linear-gradient(90deg, #a855f7, #67e8f9);
+      background: linear-gradient(90deg, #a855f7, #67e8f9, #58a6ff);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 8px;
@@ -41,7 +42,21 @@
     .subtitle {
       color: #94a3b8;
       font-size: 1.35em;
-      margin-bottom: 40px;
+      margin-bottom: 50px;
+    }
+
+    .top-nav {
+      position: absolute;
+      top: 25px;
+      left: 25px;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin: 50px 0;
     }
     button {
       padding: 18px 36px;
@@ -51,8 +66,9 @@
       border-radius: 14px;
       cursor: pointer;
       transition: all 0.4s;
-      margin: 10px;
-      min-width: 260px;
+      position: relative;
+      overflow: hidden;
+      min-width: 240px;
       background: linear-gradient(135deg, #3b82f6, #8b5cf6, #a855f7);
       color: white;
       box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
@@ -64,22 +80,67 @@
       left: -150%;
       width: 60%;
       height: 200%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.65), transparent);
       transition: 0.7s;
     }
-    button:hover::before { left: 250%; }
+    button:hover::before { 
+      left: 250%; 
+    }
     button:hover {
       transform: translateY(-5px);
       box-shadow: 0 15px 35px rgba(139, 92, 246, 0.6);
     }
-    .btn-back { background: #334155; color: white; }
-    .config-panel {
-      background: rgba(30, 30, 50, 0.95);
-      padding: 25px;
+
+    .success-box {
+      background: rgba(34, 211, 238, 0.15);
+      border: 2px solid #22d3ee;
+      padding: 20px;
       border-radius: 16px;
-      margin-top: 30px;
+      margin: 30px auto;
+      color: #67e8f9;
+      font-size: 1.5em;
+      font-weight: 600;
+      max-width: 500px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .info-card {
+      background: rgba(30, 30, 50, 0.95);
+      padding: 18px;
+      border-radius: 12px;
+      border-left: 5px solid #67e8f9;
       text-align: left;
-      border-left: 6px solid #67e8f9;
+      position: relative;
+    }
+    .info-card strong {
+      color: #67e8f9;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .action-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 0.85em;
+      padding: 4px 10px;
+      background: #334155;
+      color: #67e8f9;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .action-btn:hover {
+      background: #22d3ee;
+      color: #0f172a;
+    }
+
+    .bottom-nav {
+      margin-top: 50px;
     }
   </style>
 </head>
@@ -87,23 +148,32 @@
   <canvas id="mesh-bg"></canvas>
   
   <div class="container">
-    <h1>Configure Device</h1>
-    <p class="subtitle">Change operating mode • Secure Connection Info</p>
-
-    <button class="btn-back" onclick="window.location.href='device-manager.html'">← Back to Device Manager</button>
-
-    <div style="margin: 40px 0;">
-      <button onclick="selectMode('BLE')">📡 Switch to BLE Mode (Low Power)</button>
-      <button onclick="selectMode('WIFI')">📶 Switch to WiFi Hotspot</button>
+    <div class="top-nav">
+      <button onclick="window.location.href='index.html'" style="padding:10px 18px; font-size:1em; background:#334155;">← Back to Home</button>
     </div>
 
-    <div id="configPanel" class="config-panel" style="display:none;">
-      <!-- Dynamic content will appear here -->
+    <h1>PULSE CHAT</h1>
+    <p class="subtitle">Decentralised LoRa Mesh Communication</p>
+   
+    <div class="buttons">
+      <button onclick="window.location.href='flasher.html'">🚀 Open Web Flasher</button>
+      <button onclick="connectDevice()">🔌 Connect Device</button>
+      <button onclick="connectMetaMask()">🦊 MetaMask</button>
+      <button onclick="connectZKX()">🛡️ ZKX (Private)</button>
+      <button onclick="window.location.href='buy.html'">💎 Buy License</button>
+      <button onclick="claimRewards()">🏆 Claim Rewards</button>
+      <button onclick="window.location.href='configure.html'">⚙️ Configure Device</button>
+    </div>
+
+    <div id="output"></div>
+
+    <div class="bottom-nav">
+      <button onclick="window.location.href='index.html'" style="padding:14px 32px; font-size:1.1em; background:#334155;">← Back to Home</button>
     </div>
   </div>
 
   <script>
-    // ==================== FULL ANIMATED MESH BACKGROUND ====================
+    // ==================== REFINED ANIMATED MESH BACKGROUND ====================
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
   
@@ -115,13 +185,13 @@
     window.addEventListener('resize', resize);
 
     let nodes = [];
-    for (let i = 0; i < 65; i++) {
+    for (let i = 0; i < 72; i++) {
       nodes.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        radius: 3.8,
-        vx: (Math.random() - 0.5) * 0.8,
-        vy: (Math.random() - 0.5) * 0.8
+        radius: 3.6,
+        vx: (Math.random() - 0.5) * 0.65,
+        vy: (Math.random() - 0.5) * 0.65
       });
     }
     let particles = [];
@@ -135,54 +205,57 @@
     window.addEventListener('mouseleave', () => mouse.active = false);
 
     function animate() {
-      ctx.fillStyle = 'rgba(10, 12, 31, 0.15)';
+      ctx.fillStyle = 'rgba(5, 7, 15, 0.16)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+      // Nodes
       ctx.fillStyle = '#67e8f9';
-      ctx.shadowBlur = 30;
+      ctx.shadowBlur = 28;
       ctx.shadowColor = '#67e8f9';
       nodes.forEach(node => {
         if (mouse.active) {
           const dx = node.x - mouse.x;
           const dy = node.y - mouse.y;
           const dist = Math.hypot(dx, dy);
-          if (dist < 280 && dist > 0) {
-            const force = (280 - dist) / 280 * 0.6;
+          if (dist < 300 && dist > 0) {
+            const force = (300 - dist) / 300 * 0.5;
             node.vx += (dx / dist) * force;
             node.vy += (dy / dist) * force;
           }
         }
         node.x += node.vx;
         node.y += node.vy;
-        const margin = 40;
-        if (node.x < margin || node.x > canvas.width - margin) node.vx *= -0.9;
-        if (node.y < margin || node.y > canvas.height - margin) node.vy *= -0.9;
+        const margin = 50;
+        if (node.x < margin || node.x > canvas.width - margin) node.vx *= -0.85;
+        if (node.y < margin || node.y > canvas.height - margin) node.vy *= -0.85;
 
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
         ctx.fill();
       });
 
-      ctx.strokeStyle = '#c084fc';
-      ctx.lineWidth = 1.8;
+      // Connections
+      ctx.strokeStyle = '#a855f7';
+      ctx.lineWidth = 1.7;
       nodes.forEach((node, i) => {
         nodes.forEach((other, j) => {
           if (i < j) {
             const dist = Math.hypot(node.x - other.x, node.y - other.y);
-            if (dist < 240) {
-              ctx.globalAlpha = (240 - dist) / 240 * 0.85;
+            if (dist < 260) {
+              ctx.globalAlpha = (260 - dist) / 260 * 0.78;
               ctx.beginPath();
               ctx.moveTo(node.x, node.y);
               ctx.lineTo(other.x, other.y);
               ctx.stroke();
-              if (Math.random() < 0.15) {
+
+              if (Math.random() < 0.16) {
                 particles.push({
                   x: node.x,
                   y: node.y,
                   tx: other.x,
                   ty: other.y,
                   progress: 0,
-                  speed: 0.05 + Math.random() * 0.03
+                  speed: 0.055 + Math.random() * 0.035
                 });
               }
             }
@@ -190,8 +263,9 @@
         });
       });
 
+      // Particles
       ctx.fillStyle = '#67e8f9';
-      ctx.shadowBlur = 22;
+      ctx.shadowBlur = 24;
       ctx.shadowColor = '#67e8f9';
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
@@ -203,7 +277,7 @@
         const x = p.x + (p.tx - p.x) * p.progress;
         const y = p.y + (p.ty - p.y) * p.progress;
         ctx.beginPath();
-        ctx.arc(x, y, 3.8, 0, Math.PI * 2);
+        ctx.arc(x, y, 3.6, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalAlpha = 1;
@@ -211,32 +285,65 @@
     }
     animate();
 
-    // ==================== MODE SELECTION ====================
-    function selectMode(mode) {
-      const panel = document.getElementById('configPanel');
-      panel.style.display = 'block';
+    // ==================== CONNECT DEVICE ====================
+    async function connectDevice() {
+      const output = document.getElementById('output');
+      output.style.display = 'block';
+      output.innerHTML = '<strong>🔄 Connecting to device...</strong>';
 
-      if (mode === 'BLE') {
-        panel.innerHTML = `
-          <h2 style="color:#67e8f9; margin-top:0;">📡 BLE Mode (Recommended)</h2>
-          <p><strong>Low Power • Ideal for solar/battery devices</strong></p>
-          <p>1. Turn on Bluetooth on your phone<br>
-             2. Scan for "PLSChat-Repeater"<br>
-             3. Pair using the numeric code shown on the device OLED (future app feature)</p>
-          <p style="color:#94a3b8; font-size:0.95em;">Secure pairing code will be displayed on the OLED screen.</p>
-        `;
-      } else if (mode === 'WIFI') {
-        panel.innerHTML = `
-          <h2 style="color:#facc15; margin-top:0;">📶 WiFi Hotspot Mode</h2>
-          <p><strong>High Power • USB-C recommended</strong></p>
-          <p><strong>SSID:</strong> PLSChat-Repeater<br>
-             <strong>Password:</strong> pls12345</p>
-          <p>1. Connect your phone to the WiFi network above<br>
-             2. Open the PLSChat mobile app (coming soon)</p>
-          <p style="color:#94a3b8; font-size:0.95em;">Warning: WiFi uses significantly more power than BLE.</p>
-        `;
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+        const reader = port.readable.getReader();
+        let buffer = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += new TextDecoder().decode(value);
+
+          if (buffer.includes('=== END_STATUS ===')) {
+            const mac = buffer.match(/MAC:([\w:]+)/i)?.[1] || 'Unknown';
+            const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
+            const claimable = buffer.match(/CLAIMABLE:([\d.]+)/i)?.[1] || '0.00000';
+            const uptime = buffer.match(/UPTIME_HOURS:([\d.]+)/i)?.[1] || '0.000';
+            const rssi = buffer.match(/RSSI:(-?\d+)/i)?.[1] || '-85';
+
+            output.innerHTML = `
+              <div class="success-box">✅ Device Connected Successfully!</div>
+              <div class="info-grid">
+                <div class="info-card">
+                  <strong>MAC Address</strong><br>${mac}
+                  <button class="action-btn" onclick="copyToClipboard('${mac}', this)">📋 Copy</button>
+                </div>
+                <div class="info-card"><strong>License Status</strong><br>${licensed}</div>
+                <div class="info-card">
+                  <strong>Claimable Rewards</strong><br>${parseFloat(claimable).toFixed(5)} PLSC
+                  <button class="action-btn" onclick="window.location.href='claim.html'">Claim →</button>
+                </div>
+                <div class="info-card"><strong>Uptime</strong><br>${parseFloat(uptime).toFixed(3)} hours</div>
+                <div class="info-card"><strong>Signal Strength</strong><br>${rssi} dBm</div>
+              </div>
+            `;
+            break;
+          }
+        }
+      } catch (err) {
+        output.innerHTML = `❌ ${err.message}`;
       }
     }
+
+    function copyToClipboard(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = "✅ Copied!";
+        setTimeout(() => btn.textContent = orig, 1500);
+      });
+    }
+
+    function connectMetaMask() { alert("🦊 MetaMask connected!"); }
+    function connectZKX() { alert("🛡️ ZKX (Private) connected!"); }
+    function claimRewards() { window.location.href = 'claim.html'; }
   </script>
 </body>
 </html>
