@@ -65,18 +65,40 @@
       cursor: pointer;
       width: 100%;
       max-width: 360px;
-      transition: all 0.3s;
+      transition: all 0.4s;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
     }
 
-    .btn-connect { background: #22d3ee; color: #0f172a; }
-    .btn-metamask { background: #f6851a; color: white; }
-    .btn-zkx { background: #6b46c1; color: white; }
-    .btn-buy { background: #a855f7; color: white; }
-    .btn-claim { background: #3b82f6; color: white; }
+    /* Shimmer Effect */
+    button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -100%;
+      width: 50%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      transition: 0.7s;
+    }
+
+    button:hover::before {
+      left: 200%;
+    }
+
+    .btn-connect { background: linear-gradient(135deg, #22d3ee, #67e8f9); color: #0f172a; }
+    .btn-metamask { background: linear-gradient(135deg, #f6851a, #e27625); color: white; }
+    .btn-zkx { background: linear-gradient(135deg, #6b46c1, #a855f7); color: white; }
+    .btn-buy { background: linear-gradient(135deg, #a855f7, #c084fc); color: white; }
+    .btn-claim { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white; }
 
     button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+      transform: scale(1.06);
+      box-shadow: 0 15px 25px rgba(0,0,0,0.4);
     }
 
     .manual-input {
@@ -113,9 +135,9 @@
     <p class="subtitle">Device Manager</p>
 
     <div class="buttons">
-      <button class="btn btn-connect" onclick="connectDevice()">🔌 Connect Device<br><small>(Desktop Chrome/Edge only)</small></button>
+      <button class="btn btn-connect" onclick="connectDevice()">🔌 Connect Device<br><small>(Desktop only)</small></button>
       <button class="btn btn-metamask" onclick="connectWallet('metamask')">🦊 MetaMask</button>
-      <button class="btn btn-zkx" onclick="connectWallet('zkx')">🛡️ ZKX (Private)</button>
+      <button class="btn btn-zkx" onclick="connectWallet('zkx')">🛡️ ZKX</button>
       <button class="btn btn-buy" onclick="goToBuy()">💎 Buy License</button>
       <button class="btn btn-claim" onclick="goToClaim()">🏆 Claim Rewards</button>
     </div>
@@ -128,6 +150,7 @@
   </div>
 
   <script>
+    // Same slower animated background
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
     let nodes = [];
@@ -139,23 +162,20 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Slower animation (50% slower)
     for (let i = 0; i < 55; i++) {
       nodes.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.4,   // Reduced from 0.8 to 0.4
+        vx: (Math.random() - 0.5) * 0.4,
         vy: (Math.random() - 0.5) * 0.4
       });
     }
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       nodes.forEach(node => {
         node.x += node.vx;
         node.y += node.vy;
-
         if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
         if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
 
@@ -166,26 +186,17 @@
         ctx.arc(node.x, node.y, 3.8, 0, Math.PI * 2);
         ctx.fill();
       });
-
       requestAnimationFrame(animate);
     }
     animate();
 
-    // Button functions
-    function connectDevice() {
-      alert("🔌 Web Serial connection works best on Desktop (Chrome/Edge).\n\nUse the manual MAC input on mobile.");
-    }
+    function connectDevice() { alert("🔌 Web Serial works best on Desktop Chrome/Edge."); }
     function useManualMAC() {
       const mac = document.getElementById('mac-input').value.trim();
-      if (mac) {
-        alert("✅ MAC Address saved: " + mac + "\n\nYou can now Buy License or Claim Rewards.");
-      } else {
-        alert("Please enter a MAC address");
-      }
+      if (mac) alert("✅ MAC saved: " + mac);
+      else alert("Please enter a MAC address");
     }
-    function connectWallet(type) {
-      alert(type.toUpperCase() + " wallet connection coming soon!");
-    }
+    function connectWallet(type) { alert(type.toUpperCase() + " wallet connection coming soon!"); }
     function goToBuy() { window.location.href = "buy.html"; }
     function goToClaim() { window.location.href = "claim.html"; }
   </script>
