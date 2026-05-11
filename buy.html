@@ -15,8 +15,21 @@
       padding: 40px 20px;
       min-height: 100vh;
       text-align: center;
+      position: relative;
+      overflow-y: auto;
     }
-    .container { max-width: 700px; margin: 0 auto; }
+    #mesh-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: -1;
+      opacity: 0.95;
+    }
+    .container { 
+      max-width: 700px; 
+      margin: 0 auto; 
+      position: relative; 
+      z-index: 2; 
+    }
     h1 {
       font-size: 3.2em;
       background: linear-gradient(90deg, #a855f7, #67e8f9);
@@ -62,9 +75,10 @@
   </style>
 </head>
 <body>
+  <canvas id="mesh-bg"></canvas>
   <div class="container">
     <h1>Buy Lifetime License</h1>
-    <p style="font-size:1.5em;">Unlock Full Premium Features + Rewards</p>
+    <p style="font-size:1.5em; margin:20px 0;">Unlock Full Premium Features + Rewards</p>
     
     <div class="price">100 PLSC</div>
 
@@ -85,6 +99,118 @@
   </div>
 
   <script>
+    // ==================== FULL ANIMATED BACKGROUND ====================
+    const canvas = document.getElementById('mesh-bg');
+    const ctx = canvas.getContext('2d');
+   
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    let nodes = [];
+    for (let i = 0; i < 60; i++) {
+      nodes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: 3.8,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8
+      });
+    }
+    let particles = [];
+    let mouse = { x: 0, y: 0, active: false };
+
+    window.addEventListener('mousemove', e => { 
+      mouse.x = e.clientX; 
+      mouse.y = e.clientY; 
+      mouse.active = true; 
+    });
+    window.addEventListener('mouseleave', () => mouse.active = false);
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      nodes.forEach(node => {
+        if (mouse.active) {
+          const dx = node.x - mouse.x;
+          const dy = node.y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 280 && dist > 0) {
+            const force = (280 - dist) / 280 * 0.6;
+            node.vx += (dx / dist) * force;
+            node.vy += (dy / dist) * force;
+          }
+        }
+        node.x += node.vx;
+        node.y += node.vy;
+
+        const margin = 40;
+        if (node.x < margin) { node.x = margin; node.vx *= -0.9; }
+        if (node.x > canvas.width - margin) { node.x = canvas.width - margin; node.vx *= -0.9; }
+        if (node.y < margin) { node.y = margin; node.vy *= -0.9; }
+        if (node.y > canvas.height - margin) { node.y = canvas.height - margin; node.vy *= -0.9; }
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#67e8f9';
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#67e8f9';
+        ctx.fill();
+      });
+
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 1.8;
+      nodes.forEach((node, i) => {
+        nodes.forEach((other, j) => {
+          if (i < j) {
+            const dist = Math.hypot(node.x - other.x, node.y - other.y);
+            if (dist < 240) {
+              ctx.globalAlpha = (240 - dist) / 240 * 0.85;
+              ctx.beginPath();
+              ctx.moveTo(node.x, node.y);
+              ctx.lineTo(other.x, other.y);
+              ctx.stroke();
+
+              if (Math.random() < 0.15) {
+                particles.push({
+                  x: node.x,
+                  y: node.y,
+                  tx: other.x,
+                  ty: other.y,
+                  progress: 0,
+                  speed: 0.05 + Math.random() * 0.03
+                });
+              }
+            }
+          }
+        });
+      });
+
+      ctx.fillStyle = '#67e8f9';
+      ctx.shadowBlur = 22;
+      ctx.shadowColor = '#67e8f9';
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.progress += p.speed;
+        if (p.progress > 1) {
+          particles.splice(i, 1);
+          continue;
+        }
+        const x = p.x + (p.tx - p.x) * p.progress;
+        const y = p.y + (p.ty - p.y) * p.progress;
+        ctx.beginPath();
+        ctx.arc(x, y, 3.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // ==================== BUY LICENSE LOGIC ====================
     let userAddress = null;
 
     async function connectWallet() {
@@ -110,18 +236,16 @@
       const status = document.getElementById('status');
       status.innerHTML = "🔄 Processing transaction on PulseChain...";
 
-      // Simulate purchase (we'll connect real contract later)
       setTimeout(() => {
         status.innerHTML = `
           ✅ License Purchased Successfully!<br><br>
-          <strong>Device MAC:</strong> [Connected Device MAC]<br>
-          <strong>License Status:</strong> Lifetime Premium<br><br>
-          Your device is now fully licensed.
+          <strong>License Key:</strong><br>
+          PLSC-LICENSE-${userAddress.substring(2,10)}-1747000000<br><br>
+          Your device is now fully licensed for lifetime use.
         `;
       }, 2500);
     }
 
-    // Auto-connect attempt
     window.onload = connectWallet;
   </script>
 </body>
