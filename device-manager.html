@@ -93,7 +93,7 @@
     .btn-buy { background: linear-gradient(135deg, #a855f7, #c084fc); color: white; }
     .btn-claim { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; }
 
-    /* Status */
+    /* Status Display */
     #output { margin-top: 30px; display: none; }
     .success-box {
       background: rgba(34, 211, 238, 0.15);
@@ -248,11 +248,11 @@
     }
     animate();
 
-    // ==================== CONNECT DEVICE ====================
+    // ==================== IMPROVED CONNECT DEVICE ====================
     async function connectDevice() {
       const output = document.getElementById('output');
       output.style.display = 'block';
-      output.innerHTML = '<strong>🔄 Connecting to device...</strong>';
+      output.innerHTML = '<strong>🔄 Connecting to device... (this may take a few seconds)</strong>';
 
       try {
         const port = await navigator.serial.requestPort();
@@ -261,37 +261,36 @@
         const reader = port.readable.getReader();
         let buffer = '';
 
+        const timeout = setTimeout(() => {
+          reader.cancel();
+          output.innerHTML += '<br><br>⚠️ Timeout - Try unplugging the Heltec and reconnecting it.';
+        }, 15000);
+
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
+
           buffer += new TextDecoder().decode(value);
 
           if (buffer.includes('=== PLSCHAT_STATUS ===') && buffer.includes('=== END_STATUS ===')) {
-            const raw = buffer;
-
-            const macMatch = raw.match(/MAC:([\w:]+)/);
-            const licensedMatch = raw.match(/LICENSED:(\w+)/);
-            const claimableMatch = raw.match(/CLAIMABLE:([\d.]+)/);
-            const uptimeMatch = raw.match(/UPTIME_HOURS:([\d.]+)/);
-            const rssiMatch = raw.match(/AVG_RSSI:(-?[\d.]+)/);
+            clearTimeout(timeout);
+            
+            const statusBlock = buffer.substring(
+              buffer.indexOf('=== PLSCHAT_STATUS ==='),
+              buffer.indexOf('=== END_STATUS ===') + 25
+            );
 
             output.innerHTML = `
-              <div class="success-box">
-                ✅ Device Connected Successfully!
-              </div>
-              <div class="info-grid">
-                <div class="info-card"><strong>MAC Address</strong><br>${macMatch ? macMatch[1] : 'Unknown'}</div>
-                <div class="info-card"><strong>License Status</strong><br>${licensedMatch && licensedMatch[1] === 'YES' ? '✅ Licensed' : '❌ Not Licensed'}</div>
-                <div class="info-card"><strong>Claimable Rewards</strong><br>${claimableMatch ? claimableMatch[1] : '0'} PLSC</div>
-                <div class="info-card"><strong>Uptime</strong><br>${uptimeMatch ? uptimeMatch[1] : '0'} hours</div>
-                <div class="info-card"><strong>Signal Strength</strong><br>${rssiMatch ? rssiMatch[1] : '-'} dBm</div>
+              <div class="success-box">✅ Device Connected Successfully!</div>
+              <div style="background:rgba(30,30,50,0.95); padding:20px; border-radius:12px; margin-top:15px; text-align:left; font-family:monospace; white-space:pre-wrap;">
+                ${statusBlock}
               </div>
             `;
             break;
           }
         }
       } catch (err) {
-        output.innerHTML = `❌ Connection failed: ${err.message}`;
+        output.innerHTML = `❌ Connection failed:<br>${err.message}`;
       }
     }
 
