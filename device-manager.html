@@ -106,7 +106,7 @@
     }
     .info-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 14px;
     }
     .info-card {
@@ -252,7 +252,7 @@
     }
     animate();
 
-    // ==================== DEVICE CONNECTION (Tuned to your output) ====================
+    // ==================== IMPROVED PARSING ====================
     async function connectDevice() {
       const output = document.getElementById('output');
       output.style.display = 'block';
@@ -267,7 +267,7 @@
         const timeout = setTimeout(() => {
           reader.cancel();
           output.innerHTML += '<br><br>⚠️ Timeout — hold BOOT button while plugging in.';
-        }, 12000);
+        }, 15000);
 
         while (true) {
           const { value, done } = await reader.read();
@@ -275,6 +275,7 @@
 
           buffer += new TextDecoder().decode(value);
 
+          // Wait for complete status block
           if (buffer.includes('=== PLSCHAT_STATUS ===') && buffer.includes('=== END_STATUS ===')) {
             clearTimeout(timeout);
 
