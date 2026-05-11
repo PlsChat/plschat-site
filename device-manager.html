@@ -239,20 +239,24 @@
     async function connectDevice() {
       const output = document.getElementById('output');
       output.style.display = 'block';
-      output.innerHTML = '<strong>🔄 Connecting... Hold BOOT button if it times out.</strong>';
+      output.innerHTML = '<strong>🔄 Connecting... (Hold BOOT button if it times out)</strong>';
 
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
 
-        output.innerHTML += '<br><strong>✅ Port opened. Reading data from Heltec...</strong>';
+        output.innerHTML += '<br><strong>✅ Port opened. Waiting for data...</strong>';
+
+        const writer = port.writable.getWriter();
+        await writer.write(new TextEncoder().encode('\n')); // Send newline to wake up
+        writer.releaseLock();
 
         const reader = port.readable.getReader();
         let buffer = '';
 
         const timeout = setTimeout(() => {
           reader.cancel();
-          output.innerHTML += '<br><br>⚠️ Timeout. Try: Unplug → Hold BOOT button → Plug in → Click Connect again.';
+          output.innerHTML += '<br><br>⚠️ Timeout. Try holding BOOT button while plugging in.';
         }, 12000);
 
         while (true) {
@@ -261,21 +265,21 @@
 
           buffer += new TextDecoder().decode(value);
 
-          if (buffer.includes('PLSCHAT_STATUS') || buffer.includes('LICENSED')) {
+          if (buffer.includes('PLSCHAT') || buffer.includes('LICENSED') || buffer.includes('MAC')) {
             clearTimeout(timeout);
             output.innerHTML = `
               <div class="success-box">✅ Device Connected Successfully!</div>
-              <pre style="background:#1f2937; padding:15px; border-radius:8px; text-align:left; white-space:pre-wrap; max-height:400px; overflow:auto;">${buffer}</pre>
+              <pre style="background:#1f2937; padding:15px; border-radius:8px; text-align:left; white-space:pre-wrap; max-height:400px;">${buffer}</pre>
             `;
             break;
           }
         }
       } catch (err) {
-        output.innerHTML = `❌ ${err.message}<br><br><strong>Try this:</strong><br>
+        output.innerHTML = `❌ ${err.message}<br><br><strong>Recommended:</strong><br>
         1. Unplug Heltec<br>
         2. Hold BOOT button<br>
         3. Plug in while holding BOOT<br>
-        4. Release after 2 seconds<br>
+        4. Release after 3 seconds<br>
         5. Click Connect Device again`;
       }
     }
