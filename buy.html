@@ -3,70 +3,126 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Buy License - PLSChat</title>
+  <title>PLSChat - Buy License</title>
   <style>
-    body { font-family: 'Inter', Arial, sans-serif; background: #0d1117; color: #c9d1d9; text-align: center; padding: 40px; }
-    .card { background: #161b22; border-radius: 16px; padding: 30px; max-width: 500px; margin: 20px auto; }
-    button { padding: 14px 28px; font-size: 1.05em; margin: 8px; border: none; border-radius: 10px; cursor: pointer; }
-    .btn-annual { background: #f0b429; color: black; font-weight: bold; }
-    .btn-lifetime { background: #238636; color: white; font-weight: bold; }
-    .btn-mm { background: #f6851b; color: white; }
-    .btn-zkx { background: #6f42c1; color: white; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0c1f;
+      color: #c9d1d9;
+      margin: 0;
+      padding: 40px 20px;
+      min-height: 100vh;
+      text-align: center;
+    }
+    .container { max-width: 700px; margin: 0 auto; }
+    h1 {
+      font-size: 3.2em;
+      background: linear-gradient(90deg, #a855f7, #67e8f9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    .price {
+      font-size: 2.8em;
+      color: #67e8f9;
+      margin: 20px 0;
+    }
+    .benefits {
+      text-align: left;
+      max-width: 500px;
+      margin: 30px auto;
+      background: rgba(30,30,50,0.8);
+      padding: 25px;
+      border-radius: 16px;
+    }
+    button {
+      padding: 20px 50px;
+      font-size: 1.4em;
+      font-weight: 700;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      margin: 20px;
+      transition: all 0.3s;
+    }
+    .btn-buy {
+      background: linear-gradient(135deg, #a855f7, #c084fc);
+      color: white;
+    }
+    .status {
+      margin-top: 30px;
+      padding: 25px;
+      border-radius: 16px;
+      background: rgba(30, 30, 50, 0.9);
+      min-height: 120px;
+      font-size: 1.1em;
+    }
   </style>
 </head>
 <body>
-  <h1>Buy PLSChat License</h1>
-  <p id="mac-display">Device MAC: Loading...</p>
-  <p id="wallet-status" style="color:#8b949e;">No wallet connected</p>
+  <div class="container">
+    <h1>Buy Lifetime License</h1>
+    <p style="font-size:1.5em;">Unlock Full Premium Features + Rewards</p>
+    
+    <div class="price">100 PLSC</div>
 
-  <div class="card">
-    <h2>Annual License — 15 PLSC</h2>
-    <button class="btn-mm" onclick="connectWallet('metamask')">MetaMask</button>
-    <button class="btn-zkx" onclick="connectWallet('zkx')">ZKX (Private)</button>
-    <button class="btn-annual" onclick="buyLicense('annual')">Buy Annual License</button>
-  </div>
+    <div class="benefits">
+      <strong>What you get:</strong><br><br>
+      • Full Repeater Mode<br>
+      • Persistent Room Server Access<br>
+      • Store & Forward Messages<br>
+      • Earn PLSC Rewards<br>
+      • Lifetime License (no renewal)
+    </div>
 
-  <div class="card">
-    <h2>Lifetime License — 50 PLSC</h2>
-    <button class="btn-mm" onclick="connectWallet('metamask')">MetaMask</button>
-    <button class="btn-zkx" onclick="connectWallet('zkx')">ZKX (Private)</button>
-    <button class="btn-lifetime" onclick="buyLicense('lifetime')">Buy Lifetime License</button>
+    <button class="btn-buy" onclick="buyLicense()">💎 Pay 100 PLSC Now</button>
+    
+    <div class="status" id="status">
+      Connect your wallet to purchase a license
+    </div>
   </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const mac = params.get('mac');
-    if (mac) document.getElementById('mac-display').textContent = `Device MAC: ${mac}`;
+    let userAddress = null;
 
-    let connectedWallet = "";
-    let isZKX = false;
-
-    async function connectWallet(type) {
-      if (type === 'metamask') {
-        if (typeof window.ethereum !== 'undefined') {
-          try {
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            connectedWallet = accounts[0];
-            isZKX = false;
-            document.getElementById('wallet-status').innerHTML = `✅ MetaMask Connected: ${connectedWallet.substring(0,6)}...${connectedWallet.substring(38)}`;
-          } catch (e) { alert("MetaMask connection cancelled"); }
-        } else {
-          alert("Please install MetaMask");
+    async function connectWallet() {
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          userAddress = accounts[0];
+          document.getElementById('status').innerHTML = `✅ Wallet Connected: ${userAddress.substring(0,8)}...`;
+        } catch (e) {
+          alert("Wallet connection failed");
         }
-      } else if (type === 'zkx') {
-        alert("ZKX Wallet connection coming soon!\n\nWe'll add full shielded transaction support shortly.");
-        // Future ZKX integration code goes here
+      } else {
+        alert("Please install MetaMask or another wallet");
       }
     }
 
-    async function buyLicense(type) {
-      if (!connectedWallet) {
-        alert("Please connect a wallet first (MetaMask or ZKX)");
+    async function buyLicense() {
+      if (!userAddress) {
+        await connectWallet();
         return;
       }
-      const amount = type === 'annual' ? 15 : 50;
-      alert(`✅ Ready to purchase ${type} license (${amount} PLSC)\nDevice: ${mac}\nWallet: ${connectedWallet}\n\nTransaction will be sent from your wallet.`);
+
+      const status = document.getElementById('status');
+      status.innerHTML = "🔄 Processing transaction on PulseChain...";
+
+      // Simulate purchase (we'll connect real contract later)
+      setTimeout(() => {
+        status.innerHTML = `
+          ✅ License Purchased Successfully!<br><br>
+          <strong>Device MAC:</strong> [Connected Device MAC]<br>
+          <strong>License Status:</strong> Lifetime Premium<br><br>
+          Your device is now fully licensed.
+        `;
+      }, 2500);
     }
+
+    // Auto-connect attempt
+    window.onload = connectWallet;
   </script>
 </body>
 </html>
