@@ -144,7 +144,7 @@
   </div>
 
   <script>
-    // Full animation + connectDevice function (same as working version)
+    // ==================== FULL ANIMATED BACKGROUND ====================
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
    
@@ -177,13 +177,86 @@
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // ... (full animation code remains the same)
+
+      nodes.forEach(node => {
+        if (mouse.active) {
+          const dx = node.x - mouse.x;
+          const dy = node.y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 280 && dist > 0) {
+            const force = (280 - dist) / 280 * 0.6;
+            node.vx += (dx / dist) * force;
+            node.vy += (dy / dist) * force;
+          }
+        }
+        node.x += node.vx;
+        node.y += node.vy;
+
+        const margin = 40;
+        if (node.x < margin) { node.x = margin; node.vx *= -0.9; }
+        if (node.x > canvas.width - margin) { node.x = canvas.width - margin; node.vx *= -0.9; }
+        if (node.y < margin) { node.y = margin; node.vy *= -0.9; }
+        if (node.y > canvas.height - margin) { node.y = canvas.height - margin; node.vy *= -0.9; }
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#67e8f9';
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#67e8f9';
+        ctx.fill();
+      });
+
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 1.8;
+      nodes.forEach((node, i) => {
+        nodes.forEach((other, j) => {
+          if (i < j) {
+            const dist = Math.hypot(node.x - other.x, node.y - other.y);
+            if (dist < 240) {
+              ctx.globalAlpha = (240 - dist) / 240 * 0.85;
+              ctx.beginPath();
+              ctx.moveTo(node.x, node.y);
+              ctx.lineTo(other.x, other.y);
+              ctx.stroke();
+
+              if (Math.random() < 0.15) {
+                particles.push({
+                  x: node.x,
+                  y: node.y,
+                  tx: other.x,
+                  ty: other.y,
+                  progress: 0,
+                  speed: 0.05 + Math.random() * 0.03
+                });
+              }
+            }
+          }
+        });
+      });
+
+      ctx.fillStyle = '#67e8f9';
+      ctx.shadowBlur = 22;
+      ctx.shadowColor = '#67e8f9';
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.progress += p.speed;
+        if (p.progress > 1) {
+          particles.splice(i, 1);
+          continue;
+        }
+        const x = p.x + (p.tx - p.x) * p.progress;
+        const y = p.y + (p.ty - p.y) * p.progress;
+        ctx.beginPath();
+        ctx.arc(x, y, 3.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
       requestAnimationFrame(animate);
     }
     animate();
 
+    // ==================== CONNECT DEVICE ====================
     async function connectDevice() {
-      // Your existing working connectDevice function here
       const output = document.getElementById('output');
       output.style.display = 'block';
       output.innerHTML = '<strong>🔄 Connecting to device...</strong>';
@@ -233,7 +306,6 @@
 
     function connectMetaMask() { alert("🦊 MetaMask connected!"); }
     function connectZKX() { alert("🛡️ ZKX (Private) connected!"); }
-    function buyLicense() { window.location.href = 'buy.html'; }
     function claimRewards() { alert("🏆 Claim Rewards page coming soon..."); }
   </script>
 </body>
