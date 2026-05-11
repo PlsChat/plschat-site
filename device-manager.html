@@ -271,9 +271,10 @@
 
           buffer += new TextDecoder().decode(value);
 
-          if (buffer.includes('MAC:') && (buffer.includes('LICENSED:') || buffer.includes('LICENSE VALID'))) {
+          // More flexible detection
+          if (buffer.includes('MAC:') || buffer.includes('LICENSED:')) {
             const mac = buffer.match(/MAC:([\w:]+)/) ? buffer.match(/MAC:([\w:]+)/)[1] : 'Unknown';
-            const licensed = buffer.includes('LICENSED:YES') || buffer.includes('LICENSE VALID') ? '✅ Licensed' : '❌ Not Licensed';
+            const licensed = (buffer.includes('LICENSED:YES') || buffer.includes('LICENSE VALID')) ? '✅ Licensed' : '❌ Not Licensed';
             const claimable = buffer.match(/CLAIMABLE:([\d.]+)/) ? buffer.match(/CLAIMABLE:([\d.]+)/)[1] : '0';
             const uptime = buffer.match(/UPTIME_HOURS:([\d.]+)/) ? buffer.match(/UPTIME_HOURS:([\d.]+)/)[1] : '0';
             const rssi = buffer.match(/AVG_RSSI:(-?[\d.]+)/) ? buffer.match(/AVG_RSSI:(-?[\d.]+)/)[1] : '-';
