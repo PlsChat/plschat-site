@@ -30,50 +30,56 @@
       position: relative;
       z-index: 2;
     }
-  
     h1 {
       font-size: 3.4em;
       font-weight: 700;
-      background: linear-gradient(90deg, #a855f7, #67e8f9, #58a6ff);
+      background: linear-gradient(90deg, #a855f7, #67e8f9);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 8px;
     }
     .subtitle {
       color: #94a3b8;
-      font-size: 1.3em;
+      font-size: 1.35em;
       margin-bottom: 40px;
     }
-
     button {
-      padding: 18px 32px;
+      padding: 18px 36px;
       font-size: 1.15em;
       font-weight: 600;
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.4s;
       margin: 10px;
       min-width: 260px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6, #a855f7);
+      color: white;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
     }
+    button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -150%;
+      width: 60%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      transition: 0.7s;
+    }
+    button:hover::before { left: 250%; }
     button:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(139, 92, 246, 0.6);
     }
-    .btn-ble { background: linear-gradient(135deg, #22d3ee, #67e8f9); color: #0f172a; }
-    .btn-wifi { background: linear-gradient(135deg, #eab308, #facc15); color: #0f172a; }
     .btn-back { background: #334155; color: white; }
-
-    .status {
+    .config-panel {
       background: rgba(30, 30, 50, 0.95);
-      padding: 20px;
-      border-radius: 12px;
-      margin: 30px 0;
+      padding: 25px;
+      border-radius: 16px;
+      margin-top: 30px;
       text-align: left;
-      font-family: monospace;
-      white-space: pre-wrap;
-      min-height: 180px;
-      border-left: 5px solid #67e8f9;
+      border-left: 6px solid #67e8f9;
     }
   </style>
 </head>
@@ -82,20 +88,22 @@
   
   <div class="container">
     <h1>Configure Device</h1>
-    <p class="subtitle">Change operating mode • Live Status</p>
+    <p class="subtitle">Change operating mode • Secure Connection Info</p>
 
     <button class="btn-back" onclick="window.location.href='device-manager.html'">← Back to Device Manager</button>
 
-    <div style="margin: 30px 0;">
-      <button class="btn-ble" onclick="sendCommand('MODE BLE')">📡 Switch to BLE Mode (Low Power)</button>
-      <button class="btn-wifi" onclick="sendCommand('MODE WIFI')">📶 Switch to WiFi Hotspot</button>
+    <div style="margin: 40px 0;">
+      <button onclick="selectMode('BLE')">📡 Switch to BLE Mode (Low Power)</button>
+      <button onclick="selectMode('WIFI')">📶 Switch to WiFi Hotspot</button>
     </div>
 
-    <div id="status" class="status">Connect your device first from Device Manager to send commands.</div>
+    <div id="configPanel" class="config-panel" style="display:none;">
+      <!-- Dynamic content will appear here -->
+    </div>
   </div>
 
   <script>
-    // ==================== ANIMATED MESH BACKGROUND ====================
+    // ==================== FULL ANIMATED MESH BACKGROUND ====================
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
   
@@ -107,7 +115,7 @@
     window.addEventListener('resize', resize);
 
     let nodes = [];
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 65; i++) {
       nodes.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -127,7 +135,12 @@
     window.addEventListener('mouseleave', () => mouse.active = false);
 
     function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(10, 12, 31, 0.15)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#67e8f9';
+      ctx.shadowBlur = 30;
+      ctx.shadowColor = '#67e8f9';
       nodes.forEach(node => {
         if (mouse.active) {
           const dx = node.x - mouse.x;
@@ -147,9 +160,6 @@
 
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-        ctx.fillStyle = '#67e8f9';
-        ctx.shadowBlur = 30;
-        ctx.shadowColor = '#67e8f9';
         ctx.fill();
       });
 
@@ -201,20 +211,30 @@
     }
     animate();
 
-    // ==================== SEND COMMAND ====================
-    async function sendCommand(cmd) {
-      const statusDiv = document.getElementById('status');
-      statusDiv.innerHTML += `\n→ Sending: ${cmd} ...`;
+    // ==================== MODE SELECTION ====================
+    function selectMode(mode) {
+      const panel = document.getElementById('configPanel');
+      panel.style.display = 'block';
 
-      try {
-        const port = await navigator.serial.requestPort();
-        await port.open({ baudRate: 115200 });
-        const writer = port.writable.getWriter();
-        await writer.write(new TextEncoder().encode(cmd + "\n"));
-        writer.releaseLock();
-        statusDiv.innerHTML += `\n✅ Command sent successfully!`;
-      } catch (err) {
-        statusDiv.innerHTML += `\n❌ Error: ${err.message}`;
+      if (mode === 'BLE') {
+        panel.innerHTML = `
+          <h2 style="color:#67e8f9; margin-top:0;">📡 BLE Mode (Recommended)</h2>
+          <p><strong>Low Power • Ideal for solar/battery devices</strong></p>
+          <p>1. Turn on Bluetooth on your phone<br>
+             2. Scan for "PLSChat-Repeater"<br>
+             3. Pair using the numeric code shown on the device OLED (future app feature)</p>
+          <p style="color:#94a3b8; font-size:0.95em;">Secure pairing code will be displayed on the OLED screen.</p>
+        `;
+      } else if (mode === 'WIFI') {
+        panel.innerHTML = `
+          <h2 style="color:#facc15; margin-top:0;">📶 WiFi Hotspot Mode</h2>
+          <p><strong>High Power • USB-C recommended</strong></p>
+          <p><strong>SSID:</strong> PLSChat-Repeater<br>
+             <strong>Password:</strong> pls12345</p>
+          <p>1. Connect your phone to the WiFi network above<br>
+             2. Open the PLSChat mobile app (coming soon)</p>
+          <p style="color:#94a3b8; font-size:0.95em;">Warning: WiFi uses significantly more power than BLE.</p>
+        `;
       }
     }
   </script>
