@@ -271,7 +271,7 @@
 
           buffer += new TextDecoder().decode(value);
 
-          // Stronger detection for your device output
+          // Flexible parsing for your device output
           if (buffer.includes('MAC:') && buffer.includes('LICENSED:')) {
             const mac = buffer.match(/MAC:([\w:]+)/) ? buffer.match(/MAC:([\w:]+)/)[1] : 'Unknown';
             const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
