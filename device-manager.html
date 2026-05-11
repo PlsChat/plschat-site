@@ -69,7 +69,6 @@
       min-width: 280px;
     }
 
-    /* Shimmer Effect */
     button::before {
       content: '';
       position: absolute;
@@ -103,23 +102,22 @@
     <div class="buttons">
       <button class="btn btn-connect" onclick="connectDevice()">🔌 Connect Device</button>
       <button class="btn btn-metamask" onclick="connectMetaMask()">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/>
-        </svg>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/></svg>
         MetaMask
       </button>
       <button class="btn btn-zkx" onclick="connectZKX()">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/>
-        </svg>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/></svg>
         ZKX (Private)
       </button>
       <button class="btn btn-buy" onclick="buyLicense()">💎 Buy License</button>
       <button class="btn btn-claim" onclick="claimRewards()">🏆 Claim Rewards</button>
     </div>
+
+    <div id="output" style="display:none; margin-top:30px; padding:20px; background:rgba(22,27,34,0.95); border-radius:12px; text-align:left; font-family:monospace;"></div>
   </div>
 
   <script>
+    // === Full Animated Background ===
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
    
@@ -230,8 +228,38 @@
     }
     animate();
 
-    // Button functions
-    function connectDevice() { alert("🔌 Web Serial connection works best on Desktop Chrome/Edge."); }
+    // ==================== REAL WEB SERIAL CONNECT ====================
+    async function connectDevice() {
+      const output = document.getElementById('output');
+      output.style.display = 'block';
+      output.innerHTML = '<strong>Connecting to device...</strong>';
+
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+
+        const reader = port.readable.getReader();
+        let buffer = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += new TextDecoder().decode(value);
+          
+          // Look for status block
+          if (buffer.includes('=== PLSCHAT_STATUS ===') && buffer.includes('=== END_STATUS ===')) {
+            output.innerHTML = `<strong>✅ Device Connected Successfully!</strong><br><br>` + 
+                              buffer.substring(buffer.indexOf('=== PLSCHAT_STATUS ==='));
+            break;
+          }
+        }
+      } catch (err) {
+        output.innerHTML = `❌ Connection failed:<br>${err.message}<br><br>Make sure your Heltec is plugged in and in normal mode.`;
+      }
+    }
+
+    // Other functions
     function connectMetaMask() { alert("🦊 MetaMask connected!"); }
     function connectZKX() { alert("🛡️ ZKX (Private) connected!"); }
     function buyLicense() { alert("💎 Buy License page coming soon..."); }
