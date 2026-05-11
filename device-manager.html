@@ -93,12 +93,8 @@
     .btn-buy { background: linear-gradient(135deg, #a855f7, #c084fc); color: white; }
     .btn-claim { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; }
 
-    /* Status Display */
-    #output {
-      margin-top: 30px;
-      text-align: left;
-      display: none;
-    }
+    /* Status */
+    #output { margin-top: 30px; display: none; }
     .success-box {
       background: rgba(34, 211, 238, 0.15);
       border: 2px solid #22d3ee;
@@ -106,22 +102,20 @@
       border-radius: 16px;
       margin-bottom: 25px;
       color: #67e8f9;
-      font-size: 1.3em;
+      font-size: 1.4em;
       font-weight: 600;
     }
     .info-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
     }
     .info-card {
-      background: rgba(30, 30, 50, 0.9);
-      padding: 16px 20px;
+      background: rgba(30, 30, 50, 0.95);
+      padding: 18px;
       border-radius: 12px;
       border-left: 5px solid #67e8f9;
-    }
-    .info-card strong {
-      color: #67e8f9;
+      text-align: left;
     }
   </style>
 </head>
@@ -143,12 +137,118 @@
   </div>
 
   <script>
-    // === Animated Background (kept as you like) ===
+    // === FULL ANIMATED BACKGROUND ===
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
-    // ... (your full animation code stays the same - I kept it short here for space) ...
-    // [Paste your full animation script here if needed - it's the same as before]
+   
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
 
+    let nodes = [];
+    for (let i = 0; i < 60; i++) {
+      nodes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: 3.8,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8
+      });
+    }
+    let particles = [];
+    let mouse = { x: 0, y: 0, active: false };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.active = true;
+    });
+    window.addEventListener('mouseleave', () => mouse.active = false);
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      nodes.forEach(node => {
+        if (mouse.active) {
+          const dx = node.x - mouse.x;
+          const dy = node.y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 280 && dist > 0) {
+            const force = (280 - dist) / 280 * 0.8;
+            node.vx += (dx / dist) * force;
+            node.vy += (dy / dist) * force;
+          }
+        }
+        node.x += node.vx;
+        node.y += node.vy;
+
+        const margin = 40;
+        if (node.x < margin) { node.x = margin; node.vx = Math.abs(node.vx) * 0.9; }
+        if (node.x > canvas.width - margin) { node.x = canvas.width - margin; node.vx = -Math.abs(node.vx) * 0.9; }
+        if (node.y < margin) { node.y = margin; node.vy = Math.abs(node.vy) * 0.9; }
+        if (node.y > canvas.height - margin) { node.y = canvas.height - margin; node.vy = -Math.abs(node.vy) * 0.9; }
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#67e8f9';
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#67e8f9';
+        ctx.fill();
+      });
+
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 1.8;
+      nodes.forEach((node, i) => {
+        nodes.forEach((other, j) => {
+          if (i < j) {
+            const dist = Math.hypot(node.x - other.x, node.y - other.y);
+            if (dist < 240) {
+              ctx.globalAlpha = (240 - dist) / 240 * 0.85;
+              ctx.beginPath();
+              ctx.moveTo(node.x, node.y);
+              ctx.lineTo(other.x, other.y);
+              ctx.stroke();
+
+              if (Math.random() < 0.15) {
+                particles.push({
+                  x: node.x,
+                  y: node.y,
+                  tx: other.x,
+                  ty: other.y,
+                  progress: 0,
+                  speed: 0.05 + Math.random() * 0.03
+                });
+              }
+            }
+          }
+        });
+      });
+
+      ctx.fillStyle = '#67e8f9';
+      ctx.shadowBlur = 22;
+      ctx.shadowColor = '#67e8f9';
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.progress += p.speed;
+        if (p.progress > 1) {
+          particles.splice(i, 1);
+          continue;
+        }
+        const x = p.x + (p.tx - p.x) * p.progress;
+        const y = p.y + (p.ty - p.y) * p.progress;
+        ctx.beginPath();
+        ctx.arc(x, y, 3.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // ==================== CONNECT DEVICE ====================
     async function connectDevice() {
       const output = document.getElementById('output');
       output.style.display = 'block';
@@ -167,12 +267,8 @@
           buffer += new TextDecoder().decode(value);
 
           if (buffer.includes('=== PLSCHAT_STATUS ===') && buffer.includes('=== END_STATUS ===')) {
-            const raw = buffer.substring(
-              buffer.indexOf('=== PLSCHAT_STATUS ==='),
-              buffer.indexOf('=== END_STATUS ===') + 20
-            );
+            const raw = buffer;
 
-            // Parse the data
             const macMatch = raw.match(/MAC:([\w:]+)/);
             const licensedMatch = raw.match(/LICENSED:(\w+)/);
             const claimableMatch = raw.match(/CLAIMABLE:([\d.]+)/);
@@ -199,7 +295,6 @@
       }
     }
 
-    // Other button functions...
     function connectMetaMask() { alert("🦊 MetaMask connected!"); }
     function connectZKX() { alert("🛡️ ZKX (Private) connected!"); }
     function buyLicense() { alert("💎 Buy License page coming soon..."); }
