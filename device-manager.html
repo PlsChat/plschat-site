@@ -6,7 +6,7 @@
   <title>PLSChat - Device Manager</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-   
+  
     body {
       font-family: 'Inter', sans-serif;
       background: #0a0c1f;
@@ -23,14 +23,14 @@
       z-index: -1;
       opacity: 0.95;
     }
-    .container { 
-      max-width: 960px; 
-      margin: 0 auto; 
-      text-align: center; 
-      position: relative; 
-      z-index: 2; 
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 2;
     }
-   
+  
     h1 {
       font-size: 3.6em;
       font-weight: 700;
@@ -39,12 +39,11 @@
       -webkit-text-fill-color: transparent;
       margin-bottom: 8px;
     }
-    .subtitle { 
-      color: #94a3b8; 
-      font-size: 1.3em; 
-      margin-bottom: 40px; 
+    .subtitle {
+      color: #94a3b8;
+      font-size: 1.3em;
+      margin-bottom: 40px;
     }
-
     .buttons {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -54,7 +53,6 @@
       margin-left: auto;
       margin-right: auto;
     }
-
     button {
       padding: 18px 24px;
       font-size: 1.1em;
@@ -70,7 +68,6 @@
       justify-content: center;
       gap: 10px;
     }
-
     button::before {
       content: '';
       position: absolute;
@@ -82,12 +79,10 @@
       transition: 0.7s;
     }
     button:hover::before { left: 250%; }
-
-    button:hover { 
-      transform: translateY(-4px); 
-      box-shadow: 0 15px 30px rgba(0,0,0,0.5); 
+    button:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.5);
     }
-
     .btn-flasher { background: linear-gradient(135deg, #22d3ee, #67e8f9); color: #0f172a; }
     .btn-connect { background: linear-gradient(135deg, #eab308, #facc15); color: #0f172a; }
     .btn-metamask { background: linear-gradient(135deg, #f6851a, #e27625); color: white; }
@@ -95,7 +90,6 @@
     .btn-buy { background: linear-gradient(135deg, #a855f7, #c084fc); color: white; }
     .btn-claim { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; }
 
-    #output { margin-top: 40px; display: none; }
     .success-box {
       background: rgba(34, 211, 238, 0.15);
       border: 2px solid #22d3ee;
@@ -130,7 +124,7 @@
   <div class="container">
     <h1>PULSE CHAT</h1>
     <p class="subtitle">Decentralised LoRa Mesh Communication</p>
-    
+   
     <div class="buttons">
       <button class="btn btn-flasher" onclick="window.location.href='flasher.html'">🚀 Open Web Flasher</button>
       <button class="btn btn-connect" onclick="connectDevice()">🔌 Connect Device</button>
@@ -139,15 +133,14 @@
       <button class="btn btn-buy" onclick="window.location.href='buy.html'">💎 Buy License</button>
       <button class="btn btn-claim" onclick="claimRewards()">🏆 Claim Rewards</button>
     </div>
-
     <div id="output"></div>
   </div>
 
   <script>
-    // ==================== FULL ANIMATED BACKGROUND ====================
+    // ==================== ANIMATED MESH BACKGROUND ====================
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
-   
+  
     function resize() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -168,16 +161,15 @@
     let particles = [];
     let mouse = { x: 0, y: 0, active: false };
 
-    window.addEventListener('mousemove', e => { 
-      mouse.x = e.clientX; 
-      mouse.y = e.clientY; 
-      mouse.active = true; 
+    window.addEventListener('mousemove', e => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.active = true;
     });
     window.addEventListener('mouseleave', () => mouse.active = false);
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       nodes.forEach(node => {
         if (mouse.active) {
           const dx = node.x - mouse.x;
@@ -191,7 +183,6 @@
         }
         node.x += node.vx;
         node.y += node.vy;
-
         const margin = 40;
         if (node.x < margin) { node.x = margin; node.vx *= -0.9; }
         if (node.x > canvas.width - margin) { node.x = canvas.width - margin; node.vx *= -0.9; }
@@ -218,7 +209,6 @@
               ctx.moveTo(node.x, node.y);
               ctx.lineTo(other.x, other.y);
               ctx.stroke();
-
               if (Math.random() < 0.15) {
                 particles.push({
                   x: node.x,
@@ -277,14 +267,14 @@
           if (done) break;
           buffer += new TextDecoder().decode(value);
 
-          if (buffer.includes('=== PLSCHAT_STATUS ===') && buffer.includes('=== END_STATUS ===')) {
+          if (buffer.includes('=== END_STATUS ===')) {
             clearTimeout(timeout);
 
             const mac = buffer.match(/MAC:([\w:]+)/i)?.[1] || 'Unknown';
             const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
             const claimable = buffer.match(/CLAIMABLE:([\d.]+)/i)?.[1] || '0.00000';
             const uptime = buffer.match(/UPTIME_HOURS:([\d.]+)/i)?.[1] || '0.000';
-            const rssi = buffer.match(/AVG_RSSI:(-?[\d.]+)/i)?.[1] || '-';
+            const rssi = buffer.match(/RSSI:(-?\d+)/i)?.[1] || buffer.match(/AVG_RSSI:(-?\d+)/i)?.[1] || '-85';
 
             output.innerHTML = `
               <div class="success-box">✅ Device Connected Successfully!</div>
@@ -294,8 +284,7 @@
                 <div class="info-card"><strong>Claimable Rewards</strong><br>${parseFloat(claimable).toFixed(5)} PLSC</div>
                 <div class="info-card"><strong>Uptime</strong><br>${parseFloat(uptime).toFixed(3)} hours</div>
                 <div class="info-card"><strong>Signal Strength</strong><br>${rssi} dBm</div>
-              </div>
-            `;
+              </div>`;
             break;
           }
         }
