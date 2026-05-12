@@ -84,11 +84,11 @@
     async function connectWallet() {
       const btn = document.getElementById("connectBtn");
       const info = document.getElementById("walletInfo");
-      btn.innerHTML = "⏳ Connecting...";
+      btn.innerHTML = "⏳ Connecting Wallet...";
       btn.disabled = true;
 
       try {
-        if (!window.ethereum) throw new Error("MetaMask or Ledger not found");
+        if (!window.ethereum) throw new Error("MetaMask or Ledger not detected");
         provider = new ethers.BrowserProvider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
         signer = await provider.getSigner();
@@ -105,7 +105,7 @@
 
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
-      btn.innerHTML = "⏳ Detecting device...";
+      btn.innerHTML = "⏳ Detecting device... Please wait";
       btn.disabled = true;
 
       try {
@@ -113,15 +113,17 @@
         await port.open({ baudRate: 115200 });
         const reader = port.readable.getReader();
         let buffer = '';
-        const timeout = setTimeout(() => reader.cancel(), 12000);
+        const timeout = setTimeout(() => reader.cancel(), 8000); // shorter timeout
 
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
           buffer += new TextDecoder().decode(value);
-          if (buffer.includes('=== END_STATUS ===')) {
+
+          if (buffer.includes('=== END_STATUS ===') || buffer.includes('MAC:')) {
             clearTimeout(timeout);
             reader.cancel();
+
             const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
             selectedMac = macMatch ? macMatch[1] : 'Unknown';
             const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
@@ -139,7 +141,7 @@
     }
 
     function useDetectedDevice() {
-      alert(`Device MAC ${selectedMac} selected for purchase.`);
+      alert(`MAC ${selectedMac} selected for purchase.`);
     }
 
     function selectType(type) {
@@ -151,8 +153,9 @@
     }
 
     async function buyLicense() {
-      // (purchase logic - same as before)
-      alert("Purchase flow active - full transaction code is ready.");
+      const mac = selectedMac || prompt("Enter MAC Address:");
+      if (!mac) return alert("No MAC address selected");
+      alert("Purchase flow ready (real transaction code can be added next if needed)");
     }
 
     // Mesh Background
@@ -170,8 +173,6 @@
       requestAnimationFrame(animate);
     }
     animate();
-
-    window.onload = () => {};
   </script>
 </body>
 </html>
