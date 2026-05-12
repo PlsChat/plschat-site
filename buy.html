@@ -88,9 +88,9 @@
       btn.disabled = true;
 
       try {
-        // Force connection prompt
-        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-        
+        // Force wallet prompt
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+
         const provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
@@ -99,7 +99,7 @@
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
       } catch (e) {
         info.innerHTML = "❌ Connection failed";
-        alert("Could not connect.\n\n1. Open MetaMask / Rabby\n2. Unlock Ledger if used\n3. Select the correct account\n4. Try again");
+        alert("Could not connect wallet.\n\n1. Open MetaMask or Rabby\n2. Unlock Ledger if used\n3. Select the correct account\n4. Try clicking Connect Wallet again");
       }
       btn.innerHTML = "🔗 Connect Wallet (MetaMask / Rabby / ZKX)";
       btn.disabled = false;
