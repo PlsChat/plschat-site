@@ -97,22 +97,28 @@
       btn.disabled = true;
 
       try {
+        console.log("Starting Web3Modal...");
         const instance = await web3Modal.connect();
+        console.log("Web3Modal connected successfully");
+
         const provider = new ethers.BrowserProvider(instance);
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         
         const addr = await signer.getAddress();
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
+        console.log("Wallet connected:", addr);
       } catch (e) {
-        info.innerHTML = "❌ Connection cancelled";
-        console.error(e);
+        console.error("Connection error:", e);
+        info.innerHTML = "❌ Connection failed - check console (F12)";
+        alert("Connection failed.\n\nOpen F12 (right click → Inspect) → Console tab and tell me what red errors you see.");
       }
 
       btn.innerHTML = "🔗 Connect Wallet";
       btn.disabled = false;
     }
 
+    // === Your existing functions (unchanged) ===
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
@@ -169,7 +175,7 @@
       try {
         const tx = await contract.buyLicense(mac);
         await tx.wait();
-        alert("✅ Transaction successful! License sent.");
+        alert("✅ Transaction successful!");
       } catch (err) {
         alert("Transaction failed or cancelled.");
       }
