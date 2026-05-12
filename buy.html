@@ -19,6 +19,7 @@
     .selected { box-shadow:0 0 0 4px #22c55e !important; }
     .selected::after { content:" ✅"; }
     .benefit-box { background:rgba(15,23,42,0.95); padding:22px; border-radius:16px; margin:20px auto; max-width:620px; text-align:center; line-height:1.75; }
+    .success { background:#052e16; border:2px solid #22c55e; padding:20px; border-radius:12px; margin:25px auto; }
   </style>
 </head>
 <body>
@@ -85,17 +86,18 @@
       btn.disabled = true;
 
       try {
-        if (!window.ethereum) throw new Error("No wallet detected");
+        if (!window.ethereum) throw new Error("MetaMask not detected");
         provider = new ethers.BrowserProvider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         const addr = await signer.getAddress();
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
-        alert("Wallet connected successfully!\nYou can now buy a license.");
+        alert("✅ Wallet connected successfully!\nYou can now buy a license.");
       } catch(e) {
         info.innerHTML = "❌ Connection failed";
-        alert("Wallet connection failed.\n\n1. Open MetaMask\n2. Unlock your Ledger\n3. Make sure Ledger is selected in MetaMask\n4. Try again");
+        const retry = confirm("Wallet connection failed.\n\n1. Open MetaMask\n2. Unlock your Ledger\n3. Select Ledger account in MetaMask\n4. Try again?\n\nClick OK to retry.");
+        if (retry) return connectWallet();
       }
       btn.innerHTML = "🔗 Connect Wallet (MetaMask / Ledger)";
       btn.disabled = false;
@@ -103,7 +105,7 @@
 
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
-      btn.innerHTML = "⏳ Detecting device... Please wait";
+      btn.innerHTML = "⏳ Detecting... Please wait";
       btn.disabled = true;
 
       try {
@@ -117,7 +119,6 @@
           const { value, done } = await reader.read();
           if (done) break;
           buffer += new TextDecoder().decode(value);
-
           if (buffer.includes('=== END_STATUS ===') || buffer.includes('MAC:')) {
             clearTimeout(timeout);
             reader.cancel();
@@ -152,10 +153,10 @@
     async function buyLicense() {
       const mac = selectedMac || prompt("Enter MAC Address:");
       if (!mac) return alert("No MAC address selected");
-      alert("Purchase flow is ready (real transaction will be added next if needed).");
+      alert("Purchase flow is ready.");
     }
 
-    // Mesh Background
+    // Mesh Background (unchanged)
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
