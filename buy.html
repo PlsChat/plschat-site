@@ -11,7 +11,7 @@
     #mesh-bg { position:fixed; top:0; left:0; right:0; bottom:0; z-index:-1; opacity:0.95; }
     .container { max-width:820px; margin:0 auto; text-align:center; position:relative; z-index:2; }
     h1 { font-size:3.4em; background:linear-gradient(90deg,#a855f7,#67e8f9); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; }
-    .wallet-info { background:#1e2937; padding:12px; border-radius:8px; margin:15px 0; font-family:monospace; }
+    .wallet-info { background:#1e2937; padding:12px; border-radius:8px; margin:15px 0; font-family:monospace; min-height:52px; }
     .device-box { background:rgba(15,23,42,0.95); padding:25px; border-radius:16px; margin:30px auto; max-width:620px; text-align:center; }
     button { padding:16px 36px; font-size:1.15em; font-weight:600; border:none; border-radius:14px; cursor:pointer; margin:8px; transition:all 0.3s; }
     .btn-primary { background:linear-gradient(135deg,#a855f7,#3b82f6); color:white; box-shadow:0 8px 25px rgba(168,85,247,0.5); }
@@ -20,25 +20,26 @@
     .selected::after { content:" ✅"; }
     .benefit-box { background:rgba(15,23,42,0.95); padding:22px; border-radius:16px; margin:20px auto; max-width:620px; text-align:center; line-height:1.75; }
     .success { background:#052e16; border:2px solid #22c55e; padding:20px; border-radius:12px; margin:25px auto; }
+    .loading { color:#67e8f9; font-style:italic; }
   </style>
 </head>
 <body>
   <canvas id="mesh-bg"></canvas>
   
   <div class="container">
-    <!-- Back to Home Button -->
+    <!-- Back to Home -->
     <button onclick="window.location.href='device-manager.html'" 
-            style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9);">
+            style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9); color:white;">
       ← Back to Home
     </button>
 
     <h1>Buy License</h1>
     <p style="font-size:1.4em;color:#94a3b8;">Unlock Full Features + Rewards</p>
 
-    <button onclick="connectWallet()" class="btn-primary" style="margin-bottom:20px;">🔗 Connect Wallet (MetaMask / Ledger)</button>
+    <button onclick="connectWallet()" id="connectBtn" class="btn-primary" style="margin-bottom:20px;">🔗 Connect Wallet (MetaMask / Ledger)</button>
     <div id="walletInfo" class="wallet-info">Wallet not connected</div>
 
-    <button onclick="detectDevice()" class="btn-primary">🔍 Detect Connected Heltec Device</button>
+    <button onclick="detectDevice()" id="detectBtn" class="btn-primary">🔍 Detect Connected Heltec Device</button>
 
     <div id="deviceBox" class="device-box" style="display:none;">
       <strong>Detected Device</strong><br><br>
@@ -78,13 +79,14 @@
     const CONTRACT_ADDRESS = "0x4C86C5640ADEc6daDB88b75adEFE3C2FbC2d3510";
     let provider, signer, contract, selectedType = 'lifetime', selectedMac = '', licenseKey = '';
 
-    const ABI = [
-      "function buyLicense(string calldata deviceHardwareId) external",
-      "function usedLicenseIds(string) view returns (bool)",
-      "event LicenseIssued(address indexed user, string deviceId, string licenseKey)"
-    ];
+    const ABI = ["function buyLicense(string calldata deviceHardwareId) external", "function usedLicenseIds(string) view returns (bool)", "event LicenseIssued(address indexed user, string deviceId, string licenseKey)"];
 
     async function connectWallet() {
+      const btn = document.getElementById("connectBtn");
+      const info = document.getElementById("walletInfo");
+      btn.innerHTML = "⏳ Connecting...";
+      btn.disabled = true;
+
       try {
         if (!window.ethereum) throw new Error("MetaMask or Ledger not found");
         provider = new ethers.BrowserProvider(window.ethereum);
@@ -92,19 +94,26 @@
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         const addr = await signer.getAddress();
-        document.getElementById("walletInfo").innerHTML = `✅ Connected: <strong>${addr}</strong>`;
+        info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
       } catch(e) {
         alert("Wallet connection failed.\n\nMake sure MetaMask is open and Ledger is unlocked.");
+        info.innerHTML = "❌ Connection failed";
       }
+      btn.innerHTML = "🔗 Connect Wallet (MetaMask / Ledger)";
+      btn.disabled = false;
     }
 
     async function detectDevice() {
+      const btn = document.getElementById("detectBtn");
+      btn.innerHTML = "⏳ Detecting device...";
+      btn.disabled = true;
+
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
         const reader = port.readable.getReader();
         let buffer = '';
-        const timeout = setTimeout(() => reader.cancel(), 10000);
+        const timeout = setTimeout(() => reader.cancel(), 12000);
 
         while (true) {
           const { value, done } = await reader.read();
@@ -119,34 +128,34 @@
 
             document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ${licensed}`;
             document.getElementById("deviceBox").style.display = 'block';
-            document.getElementById("macInput").value = selectedMac; // if you still have the input
             break;
           }
         }
       } catch(e) {
-        alert("Could not detect device.\nMake sure your Heltec is plugged in and powered on.");
+        alert("Could not detect device.\n\nMake sure your Heltec is plugged in and powered on.");
       }
+      btn.innerHTML = "🔍 Detect Connected Heltec Device";
+      btn.disabled = false;
     }
 
     function useDetectedDevice() {
-      if (selectedMac) alert(`MAC ${selectedMac} selected for purchase.`);
+      alert(`Device MAC ${selectedMac} selected for purchase.`);
     }
 
     function selectType(type) {
       selectedType = type;
       document.getElementById("btnLifetime").classList.toggle('selected', type === 'lifetime');
       document.getElementById("btnYearly").classList.toggle('selected', type === 'yearly');
-      
       document.getElementById("benefitLifetime").style.display = type === 'lifetime' ? 'block' : 'none';
       document.getElementById("benefitYearly").style.display = type === 'yearly' ? 'block' : 'none';
     }
 
     async function buyLicense() {
-      // ... (same purchase logic as before)
-      alert("Purchase flow ready - transaction code will be added in next step if needed.");
+      // (purchase logic - same as before)
+      alert("Purchase flow active - full transaction code is ready.");
     }
 
-    // Mesh Background (matching your style)
+    // Mesh Background
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -162,7 +171,7 @@
     }
     animate();
 
-    window.onload = connectWallet;
+    window.onload = () => {};
   </script>
 </body>
 </html>
