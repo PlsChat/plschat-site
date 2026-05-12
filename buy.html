@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PLSChat - Buy License</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@web3modal/ethers@5.2.2/dist/index.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; background: #0a0c1f; color: #c9d1d9; margin:0; padding:40px 20px; min-height:100vh; position:relative; overflow-y:auto; }
@@ -34,7 +33,7 @@
     <h1>Buy License</h1>
     <p style="font-size:1.4em;color:#94a3b8;">Unlock Full Features + Rewards</p>
 
-    <button onclick="connectWallet()" id="connectBtn" class="btn-primary" style="margin-bottom:20px;">🔗 Connect Wallet</button>
+    <button onclick="connectWallet()" id="connectBtn" class="btn-primary" style="margin-bottom:20px;">🔗 Connect Wallet (MetaMask / Rabby / ZKX)</button>
     <div id="walletInfo" class="wallet-info">Wallet not connected</div>
 
     <button onclick="detectDevice()" id="detectBtn" class="btn-primary">🔍 Detect Connected Heltec Device</button>
@@ -69,6 +68,7 @@
     </div>
 
     <button id="payBtn" class="btn-primary" onclick="buyLicense()" style="font-size:1.35em;padding:20px 50px;">💎 Pay & Activate Now</button>
+
     <div id="result" style="display:none;"></div>
   </div>
 
@@ -81,16 +81,6 @@
 
     const ABI = ["function buyLicense(string calldata deviceHardwareId) external"];
 
-    // === WEB3MODAL SETUP ===
-    const projectId = "YOUR_PROJECT_ID_HERE"; // Get free at https://cloud.walletconnect.com
-    const chains = [ethers.networks.pulsechain]; // PulseChain
-
-    const web3Modal = new Web3Modal.default({
-      projectId,
-      chains,
-      themeVariables: { '--w3m-accent': '#a855f7' }
-    });
-
     async function connectWallet() {
       const btn = document.getElementById("connectBtn");
       const info = document.getElementById("walletInfo");
@@ -98,34 +88,102 @@
       btn.disabled = true;
 
       try {
-        const instance = await web3Modal.connect();
-        const provider = new ethers.BrowserProvider(instance);
+        // Most reliable method for multiple wallets
+        const accounts = await window.ethereum.request({ 
+          method: "eth_requestAccounts" 
+        });
+
+        const provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-        
+
         const addr = await signer.getAddress();
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
       } catch (e) {
-        info.innerHTML = "❌ Connection cancelled";
-        console.error(e);
+        info.innerHTML = "❌ Connection failed";
+        alert("Could not connect wallet.\n\n1. Open MetaMask or Rabby\n2. Unlock Ledger if used\n3. Select the correct account\n4. Try clicking the button again");
       }
-
-      btn.innerHTML = "🔗 Connect Wallet";
+      btn.innerHTML = "🔗 Connect Wallet (MetaMask / Rabby / ZKX)";
       btn.disabled = false;
     }
 
-    // === Rest of your code (unchanged) ===
-    async function detectDevice() { /* ... your existing detectDevice code ... */ }
-    function useDetectedDevice() { alert(`MAC ${selectedMac} selected for purchase.`); }
-    function selectType(type) { /* ... your existing selectType code ... */ }
-    async function buyLicense() { /* ... your existing buyLicense code ... */ }
+    async function detectDevice() {
+      const btn = document.getElementById("detectBtn");
+      btn.innerHTML = "⏳ Detecting...";
+      btn.disabled = true;
 
-    // Mesh Background
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+        const reader = port.readable.getReader();
+        let buffer = '';
+        const timeout = setTimeout(() => reader.cancel(), 7000);
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += new TextDecoder().decode(value);
+          if (buffer.includes('MAC:') || buffer.includes('END_STATUS')) {
+            clearTimeout(timeout);
+            reader.cancel();
+            const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
+            selectedMac = macMatch ? macMatch[1] : 'Unknown';
+            const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
+
+            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ${licensed}`;
+            document.getElementById("deviceBox").style.display = 'block';
+            break;
+          }
+        }
+      } catch(e) {
+        alert("Could not detect device.\nMake sure your Heltec is plugged in.");
+      }
+      btn.innerHTML = "🔍 Detect Connected Heltec Device";
+      btn.disabled = false;
+    }
+
+    function useDetectedDevice() {
+      alert(`MAC ${selectedMac} selected for purchase.`);
+    }
+
+    function selectType(type) {
+      selectedType = type;
+      document.getElementById("btnLifetime").classList.toggle('selected', type === 'lifetime');
+      document.getElementById("btnYearly").classList.toggle('selected', type === 'yearly');
+      document.getElementById("benefitLifetime").style.display = type === 'lifetime' ? 'block' : 'none';
+      document.getElementById("benefitYearly").style.display = type === 'yearly' ? 'block' : 'none';
+    }
+
+    async function buyLicense() {
+      if (!signer) return alert("Please connect your wallet first.");
+      const mac = selectedMac;
+      if (!mac) return alert("Please detect your device first.");
+
+      const payBtn = document.getElementById("payBtn");
+      payBtn.innerHTML = "⏳ Sending Transaction...";
+      payBtn.disabled = true;
+
+      try {
+        const tx = await contract.buyLicense(mac);
+        await tx.wait();
+        alert("✅ Transaction successful!");
+      } catch (err) {
+        alert("Transaction failed or cancelled.");
+      }
+      payBtn.innerHTML = "💎 Pay & Activate Now";
+      payBtn.disabled = false;
+    }
+
+    // Mesh Background (unchanged)
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     resize(); window.addEventListener('resize', resize);
     let nodes = []; for(let i=0;i<72;i++) nodes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.7,vy:(Math.random()-0.5)*0.7});
+    let particles = [];
+    let mouse = {x:0,y:0,active:false};
+    window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.active=true;});
+    window.addEventListener('mouseleave',()=>mouse.active=false);
     function animate(){
       ctx.fillStyle = 'rgba(10,12,31,0.16)'; ctx.fillRect(0,0,canvas.width,canvas.height);
       requestAnimationFrame(animate);
