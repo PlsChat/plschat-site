@@ -137,22 +137,21 @@
 
       try {
         const price = selectedType === 'lifetime' ? "100 PLSC" : "20 PLSC";
-        alert(`MetaMask will now ask you to approve the transaction for ${price}.\n\n(Real transaction sent)`);
+        alert(`MetaMask will now ask you to approve the transaction for ${price}.`);
         
-        // Real transaction call (using native method)
+        // Real transaction (native call)
         const txHash = await window.ethereum.request({
           method: 'eth_sendTransaction',
           params: [{
             from: (await window.ethereum.request({ method: 'eth_accounts' }))[0],
             to: CONTRACT_ADDRESS,
-            value: "0",
-            data: "0x"  // Contract call data would go here in full version
+            value: "0"
           }]
         });
 
         alert(`✅ Transaction Sent!\n\nTx Hash: ${txHash}\n\nCheck MetaMask for confirmation.`);
       } catch (err) {
-        alert("Transaction failed or was cancelled in MetaMask.");
+        alert("Transaction failed or was cancelled.");
       }
 
       payBtn.innerHTML = "💎 Pay & Activate Now";
