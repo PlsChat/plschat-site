@@ -135,11 +135,11 @@
       payBtn.innerHTML = "⏳ Sending to MetaMask...";
       payBtn.disabled = true;
 
+      const price = selectedType === 'lifetime' ? "100 PLSC" : "20 PLSC";
+
       try {
-        const price = selectedType === 'lifetime' ? "100 PLSC" : "20 PLSC";
         alert(`MetaMask will now ask you to approve the transaction for ${price}.`);
         
-        // Real transaction (native call)
         const txHash = await window.ethereum.request({
           method: 'eth_sendTransaction',
           params: [{
@@ -149,9 +149,9 @@
           }]
         });
 
-        alert(`✅ Transaction Sent!\n\nTx Hash: ${txHash}\n\nCheck MetaMask for confirmation.`);
+        alert(`✅ Transaction Sent!\n\nTx Hash: ${txHash}\n\nYou bought a ${selectedType} license (${price}).`);
       } catch (err) {
-        alert("Transaction failed or was cancelled.");
+        alert("Transaction failed or was cancelled in MetaMask.");
       }
 
       payBtn.innerHTML = "💎 Pay & Activate Now";
