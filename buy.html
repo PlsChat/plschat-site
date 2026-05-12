@@ -19,7 +19,6 @@
     .selected { box-shadow:0 0 0 4px #22c55e !important; }
     .selected::after { content:" ✅"; }
     .benefit-box { background:rgba(15,23,42,0.95); padding:22px; border-radius:16px; margin:20px auto; max-width:620px; text-align:center; line-height:1.75; }
-    .success { background:#052e16; border:2px solid #22c55e; padding:20px; border-radius:12px; margin:25px auto; }
   </style>
 </head>
 <body>
@@ -90,7 +89,6 @@
         await provider.send("eth_requestAccounts", []);
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-
         const addr = await signer.getAddress();
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
       } catch(e) {
@@ -137,7 +135,9 @@
     }
 
     function useDetectedDevice() {
-      alert(`MAC ${selectedMac} selected.`);
+      if (selectedMac) {
+        alert(`MAC ${selectedMac} selected for purchase.`);
+      }
     }
 
     function selectType(type) {
@@ -149,8 +149,8 @@
     }
 
     async function buyLicense() {
-      const mac = selectedMac || prompt("Enter MAC Address:");
-      if (!mac) return alert("No MAC address selected");
+      const mac = selectedMac;
+      if (!mac) return alert("No MAC address selected. Please detect your device first.");
 
       const payBtn = document.getElementById("payBtn");
       payBtn.innerHTML = "⏳ Sending Transaction...";
@@ -159,21 +159,17 @@
       try {
         const tx = await contract.buyLicense(mac);
         const receipt = await tx.wait();
-
-        const event = receipt.logs.find(l => l.topics[0] === ethers.id("LicenseIssued(address,string,string)"));
-        licenseKey = event ? ethers.AbiCoder.defaultAbiCoder().decode(["address","string","string"], event.data)[2] : `PLSC-LICENSE-${Date.now()}`;
-
-        alert("✅ Transaction successful!\nLicense key generated.");
-        // You can expand this later with full success screen
+        alert("✅ Transaction successful! License purchased.");
+        // You can expand this later with full success screen + send to device
       } catch(err) {
-        alert("Transaction failed or cancelled.\n\nCheck your PLSC balance and try again.");
+        alert("Transaction failed or cancelled.");
         console.error(err);
       }
       payBtn.innerHTML = "💎 Pay & Activate Now";
       payBtn.disabled = false;
     }
 
-    // Mesh Background (unchanged)
+    // Mesh Background
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
