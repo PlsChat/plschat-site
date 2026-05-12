@@ -74,9 +74,12 @@
 
   <script>
     const CONTRACT_ADDRESS = "0x4C86C5640ADEc6daDB88b75adEFE3C2FbC2d3510";
-    let provider, signer, contract, selectedType = 'lifetime', selectedMac = '', licenseKey = '';
+    let signer = null;
+    let contract = null;
+    let selectedType = 'lifetime';
+    let selectedMac = '';
 
-    const ABI = ["function buyLicense(string calldata deviceHardwareId) external", "function usedLicenseIds(string) view returns (bool)", "event LicenseIssued(address indexed user, string deviceId, string licenseKey)"];
+    const ABI = ["function buyLicense(string calldata deviceHardwareId) external"];
 
     async function connectWallet() {
       const btn = document.getElementById("connectBtn");
@@ -85,18 +88,17 @@
       btn.disabled = true;
 
       try {
-        // Force MetaMask to show popup
-        await window.ethereum.request({ method: "eth_requestAccounts" });
+        if (!window.ethereum) throw new Error("MetaMask not found");
 
-        provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        const provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
-        const addr = await signer.getAddress();
-        info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
+        info.innerHTML = `✅ Connected: <strong>${accounts[0]}</strong>`;
       } catch (e) {
         info.innerHTML = "❌ Connection failed";
-        alert("Wallet connection failed.\n\n1. Open MetaMask\n2. Unlock Ledger\n3. Select Ledger account\n4. Click Connect Wallet again");
+        alert("Failed to connect wallet.\n\n1. Open MetaMask\n2. Unlock Ledger\n3. Select Ledger account\n4. Try again");
       }
       btn.innerHTML = "🔗 Connect Wallet (MetaMask / Ledger)";
       btn.disabled = false;
@@ -131,7 +133,7 @@
           }
         }
       } catch(e) {
-        alert("Could not detect device.\nMake sure your Heltec is plugged in and powered on.");
+        alert("Could not detect device.\nMake sure your Heltec is plugged in.");
       }
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
@@ -150,8 +152,9 @@
     }
 
     async function buyLicense() {
+      if (!signer) return alert("Please connect your wallet first.");
       const mac = selectedMac;
-      if (!mac) return alert("No MAC address selected. Please detect your device first.");
+      if (!mac) return alert("Please detect your device first.");
 
       const payBtn = document.getElementById("payBtn");
       payBtn.innerHTML = "⏳ Sending Transaction...";
@@ -162,7 +165,7 @@
         await tx.wait();
         alert("✅ Transaction successful! License purchased.");
       } catch (err) {
-        alert("Transaction failed or cancelled.\n\nCheck you have enough PLSC and try again.");
+        alert("Transaction failed or cancelled.\n\nCheck you have enough PLSC in your Ledger account.");
         console.error(err);
       }
       payBtn.innerHTML = "💎 Pay & Activate Now";
