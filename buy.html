@@ -11,7 +11,7 @@
     #mesh-bg { position:fixed; top:0; left:0; right:0; bottom:0; z-index:-1; opacity:0.95; }
     .container { max-width:820px; margin:0 auto; text-align:center; position:relative; z-index:2; }
     h1 { font-size:3.4em; background:linear-gradient(90deg,#a855f7,#67e8f9); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; }
-    .wallet-info { background:#1e2937; padding:12px; border-radius:8px; margin:15px 0; font-family:monospace; min-height:52px; }
+    .wallet-info { background:#1e2937; padding:12px; border-radius:8px; margin:15px 0; font-family:monospace; }
     .device-box { background:rgba(15,23,42,0.95); padding:25px; border-radius:16px; margin:30px auto; max-width:620px; text-align:center; }
     button { padding:16px 36px; font-size:1.15em; font-weight:600; border:none; border-radius:14px; cursor:pointer; margin:8px; transition:all 0.3s; }
     .btn-primary { background:linear-gradient(135deg,#a855f7,#3b82f6); color:white; box-shadow:0 8px 25px rgba(168,85,247,0.5); }
@@ -19,6 +19,8 @@
     .selected { box-shadow:0 0 0 4px #22c55e !important; }
     .selected::after { content:" ✅"; }
     .benefit-box { background:rgba(15,23,42,0.95); padding:22px; border-radius:16px; margin:20px auto; max-width:620px; text-align:center; line-height:1.75; }
+    .success { background:#052e16; border:2px solid #22c55e; padding:20px; border-radius:12px; margin:25px auto; }
+    .tx-row { display:flex; align-items:center; gap:12px; background:#1e2937; padding:10px; border-radius:8px; margin:12px 0; }
   </style>
 </head>
 <body>
@@ -74,36 +76,36 @@
 
   <script>
     const CONTRACT_ADDRESS = "0x4C86C5640ADEc6daDB88b75adEFE3C2FbC2d3510";
-    let provider, signer, contract, selectedType = 'lifetime', selectedMac = '', licenseKey = '';
+    let provider, signer, contract, selectedType = 'lifetime', selectedMac = '', licenseKey = '', txHash = '';
 
-    const ABI = ["function buyLicense(string calldata deviceHardwareId) external", "function usedLicenseIds(string) view returns (bool)", "event LicenseIssued(address indexed user, string deviceId, string licenseKey)"];
+    const ABI = [
+      "function buyLicense(string calldata deviceHardwareId) external",
+      "function usedLicenseIds(string) view returns (bool)",
+      "event LicenseIssued(address indexed user, string deviceId, string licenseKey)"
+    ];
 
     async function connectWallet() {
       const btn = document.getElementById("connectBtn");
       const info = document.getElementById("walletInfo");
-      btn.innerHTML = "⏳ Connecting to MetaMask...";
+      btn.innerHTML = "⏳ Connecting...";
       btn.disabled = true;
 
       try {
-        // More aggressive prompt
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        
+        if (!window.ethereum) throw new Error("MetaMask not found");
         provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-
         const addr = await signer.getAddress();
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
-        alert("✅ Wallet connected successfully!");
       } catch(e) {
         info.innerHTML = "❌ Connection failed";
-        alert("Wallet connection failed.\n\n1. Open MetaMask\n2. Unlock your Ledger\n3. Make sure Ledger is selected in MetaMask\n4. Click the button again");
+        alert("Wallet connection failed.\n\n1. Open MetaMask\n2. Unlock your Ledger\n3. Make sure Ledger is selected\n4. Try again");
       }
       btn.innerHTML = "🔗 Connect Wallet (MetaMask / Ledger)";
       btn.disabled = false;
     }
 
-    // Rest of the code (detectDevice, benefit boxes, etc.) remains exactly the same as your last perfect version
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
@@ -133,13 +135,15 @@
           }
         }
       } catch(e) {
-        alert("Could not detect device.\nMake sure your Heltec is plugged in and powered on.");
+        alert("Could not detect device.\nMake sure your Heltec is plugged in.");
       }
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
     }
 
-    function useDetectedDevice() { alert(`MAC ${selectedMac} selected.`); }
+    function useDetectedDevice() {
+      alert(`MAC ${selectedMac} selected.`);
+    }
 
     function selectType(type) {
       selectedType = type;
@@ -152,7 +156,60 @@
     async function buyLicense() {
       const mac = selectedMac || prompt("Enter MAC Address:");
       if (!mac) return alert("No MAC address selected");
-      alert("Purchase flow ready.");
+
+      const payBtn = document.getElementById("payBtn");
+      payBtn.innerHTML = "⏳ Sending Transaction...";
+      payBtn.disabled = true;
+
+      try {
+        const tx = await contract.buyLicense(mac);
+        txHash = tx.hash;
+
+        const receipt = await tx.wait();
+        const event = receipt.logs.find(l => l.topics[0] === ethers.id("LicenseIssued(address,string,string)"));
+        licenseKey = event ? ethers.AbiCoder.defaultAbiCoder().decode(["address","string","string"], event.data)[2] : `PLSC-LICENSE-${Date.now()}`;
+
+        showSuccess();
+      } catch(err) {
+        alert("Transaction failed or cancelled.");
+        console.error(err);
+      }
+      payBtn.innerHTML = "💎 Pay & Activate Now";
+      payBtn.disabled = false;
+    }
+
+    function showSuccess() {
+      document.getElementById("result").innerHTML = `
+        <div class="success">
+          <strong style="color:#22c55e">✅ License Purchased Successfully!</strong><br><br>
+          <strong>License Key:</strong><br>
+          <code style="background:#1e2937;padding:12px;border-radius:8px;display:block;margin:12px 0;">${licenseKey}</code><br>
+          
+          <strong>Transaction Hash:</strong><br>
+          <div class="tx-row">
+            <code style="flex:1;">${txHash}</code>
+            <button onclick="copyTX()" style="padding:8px 16px;">📋 Copy TX</button>
+          </div>
+          
+          <button onclick="sendLicenseToDevice()" style="background:#22d3ee;color:#0a0c1f;padding:16px 40px;border-radius:12px;margin-top:15px;">📲 Send License to Device Now</button>
+        </div>`;
+      document.getElementById("result").style.display = "block";
+    }
+
+    function copyTX() {
+      navigator.clipboard.writeText(txHash).then(() => alert("✅ TX Hash copied!"));
+    }
+
+    async function sendLicenseToDevice() {
+      if (!licenseKey) return;
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+        const writer = port.writable.getWriter();
+        await writer.write(new TextEncoder().encode(`LICENSE:${licenseKey}\n`));
+        writer.releaseLock();
+        alert("✅ License sent to device!");
+      } catch(e) { alert("Failed to send to device."); }
     }
 
     // Mesh Background
