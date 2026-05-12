@@ -13,10 +13,11 @@
     h1 { font-size:3.4em; background:linear-gradient(90deg,#a855f7,#67e8f9); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; }
     .wallet-info { background:#1e2937; padding:12px; border-radius:8px; margin:15px 0; font-family:monospace; }
     .device-box { background:rgba(15,23,42,0.95); padding:25px; border-radius:16px; margin:30px auto; max-width:620px; text-align:center; }
-    button { padding:16px 36px; font-size:1.15em; font-weight:600; border:none; border-radius:14px; cursor:pointer; margin:8px; transition:all 0.3s; }
+    button { padding:16px 36px; font-size:1.15em; font-weight:600; border:none; border-radius:14px; cursor:pointer; margin:8px; transition:all 0.3s; position:relative; }
     .btn-primary { background:linear-gradient(135deg,#a855f7,#3b82f6); color:white; box-shadow:0 8px 25px rgba(168,85,247,0.5); }
     .btn-primary:hover { transform:translateY(-4px); }
     .selected { box-shadow:0 0 0 4px #22c55e !important; }
+    .selected::after { content:" ✅"; }
     .success { background:#052e16; border:2px solid #22c55e; padding:20px; border-radius:12px; margin:25px auto; }
   </style>
 </head>
@@ -28,7 +29,7 @@
     <p style="font-size:1.4em;color:#94a3b8;">Unlock Full Features + Rewards</p>
 
     <!-- Connect Wallet -->
-    <button onclick="connectWallet()" class="btn-primary" style="margin-bottom:20px;">🔗 Connect Wallet</button>
+    <button onclick="connectWallet()" class="btn-primary" style="margin-bottom:20px;">🔗 Connect Wallet (MetaMask / Ledger)</button>
     <div id="walletInfo" class="wallet-info">Wallet not connected</div>
 
     <!-- Detect Device -->
@@ -65,16 +66,20 @@
 
     async function connectWallet() {
       try {
+        if (!window.ethereum) throw new Error("MetaMask or Ledger not detected");
         provider = new ethers.BrowserProvider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         const addr = await signer.getAddress();
         document.getElementById("walletInfo").innerHTML = `✅ Connected: <strong>${addr}</strong>`;
-      } catch(e) { alert("Wallet connection failed"); }
+      } catch(e) {
+        alert("Wallet connection failed: " + e.message + "\n\nMake sure MetaMask is open and Ledger is unlocked.");
+      }
     }
 
-    async function detectDevice() {
+    async function detectDevice() { /* same as before */ 
+      // (I'll keep it short here - copy from previous version if needed)
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
@@ -92,16 +97,13 @@
             selectedMac = macMatch ? macMatch[1] : 'Unknown';
             const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
 
-            document.getElementById("deviceDetails").innerHTML = `
-              <strong>MAC:</strong> ${selectedMac}<br>
-              <strong>Status:</strong> ${licensed}
-            `;
+            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ${licensed}`;
             document.getElementById("deviceBox").style.display = 'block';
             document.getElementById("macInput").value = selectedMac;
             break;
           }
         }
-      } catch(e) { alert("Device detection failed — is it plugged in?"); }
+      } catch(e) { alert("Device detection failed. Is your Heltec plugged in?"); }
     }
 
     function useDetectedDevice() {
@@ -118,15 +120,13 @@
       const mac = document.getElementById("macInput").value.trim();
       if (!mac) return alert("Please detect a device first");
 
-      // Check if already licensed
       try {
         const alreadyLicensed = await contract.usedLicenseIds(mac);
-        if (alreadyLicensed) return alert("❌ This device is already licensed!\nYou cannot buy another license for the same MAC.");
+        if (alreadyLicensed) return alert("❌ This device is already licensed!");
       } catch(e) {}
 
-      const price = selectedType === 'lifetime' ? 100 : 20;
       const payBtn = document.getElementById("payBtn");
-      payBtn.innerHTML = "⏳ Sending...";
+      payBtn.innerHTML = "⏳ Sending Transaction...";
       payBtn.disabled = true;
 
       try {
@@ -137,7 +137,7 @@
 
         showSuccess();
       } catch(err) {
-        alert("Transaction failed: " + err.message);
+        alert("Transaction failed: " + (err.message || err));
       }
       payBtn.innerHTML = "💎 Pay & Activate Now";
       payBtn.disabled = false;
@@ -162,11 +162,11 @@
         const writer = port.writable.getWriter();
         await writer.write(new TextEncoder().encode(`LICENSE:${licenseKey}\n`));
         writer.releaseLock();
-        alert("✅ License sent to device successfully!");
-      } catch(e) { alert("Could not send to device — make sure it is connected."); }
+        alert("✅ License successfully sent to device!");
+      } catch(e) { alert("Failed to send to device. Make sure it's connected."); }
     }
 
-    // Mesh background (matching your screenshots)
+    // Mesh Background
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -178,7 +178,6 @@
     window.addEventListener('mouseleave',()=>mouse.active=false);
     function animate(){
       ctx.fillStyle = 'rgba(10,12,31,0.16)'; ctx.fillRect(0,0,canvas.width,canvas.height);
-      // (full node/line/particle animation — same as your other pages)
       requestAnimationFrame(animate);
     }
     animate();
