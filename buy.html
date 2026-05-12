@@ -88,35 +88,68 @@
       btn.disabled = true;
 
       try {
-        // Try to get any available provider (MetaMask, Rabby, ZKX)
-        if (!window.ethereum) throw new Error("No wallet found");
-
-        const accounts = await window.ethereum.request({ 
-          method: "eth_requestAccounts" 
-        });
-
+        // Force connection prompt
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        
         const provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
         const addr = await signer.getAddress();
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
-        alert("✅ Wallet connected successfully!");
       } catch (e) {
         info.innerHTML = "❌ Connection failed";
-        alert("Could not connect wallet.\n\nPlease make sure one of these is open:\n• MetaMask\n• Rabby Wallet\n• ZKX\n\nThen try again.");
+        alert("Could not connect.\n\n1. Open MetaMask / Rabby\n2. Unlock Ledger if used\n3. Select the correct account\n4. Try again");
       }
       btn.innerHTML = "🔗 Connect Wallet (MetaMask / Rabby / ZKX)";
       btn.disabled = false;
     }
 
-    // Rest of the code (detectDevice, buyLicense, etc.) stays the same as your preferred version
     async function detectDevice() {
-      // ... (same as before)
+      const btn = document.getElementById("detectBtn");
+      btn.innerHTML = "⏳ Detecting...";
+      btn.disabled = true;
+
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+        const reader = port.readable.getReader();
+        let buffer = '';
+        const timeout = setTimeout(() => reader.cancel(), 7000);
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += new TextDecoder().decode(value);
+          if (buffer.includes('MAC:') || buffer.includes('END_STATUS')) {
+            clearTimeout(timeout);
+            reader.cancel();
+            const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
+            selectedMac = macMatch ? macMatch[1] : 'Unknown';
+            const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
+
+            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ${licensed}`;
+            document.getElementById("deviceBox").style.display = 'block';
+            break;
+          }
+        }
+      } catch(e) {
+        alert("Could not detect device.\nMake sure your Heltec is plugged in.");
+      }
+      btn.innerHTML = "🔍 Detect Connected Heltec Device";
+      btn.disabled = false;
+    }
+
+    function useDetectedDevice() {
+      alert(`MAC ${selectedMac} selected for purchase.`);
     }
 
     function selectType(type) {
-      // ... (same as before)
+      selectedType = type;
+      document.getElementById("btnLifetime").classList.toggle('selected', type === 'lifetime');
+      document.getElementById("btnYearly").classList.toggle('selected', type === 'yearly');
+      document.getElementById("benefitLifetime").style.display = type === 'lifetime' ? 'block' : 'none';
+      document.getElementById("benefitYearly").style.display = type === 'yearly' ? 'block' : 'none';
     }
 
     async function buyLicense() {
