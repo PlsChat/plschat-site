@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PLSChat - Buy License</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@web3modal/ethers@5.2.2/dist/index.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; background: #0a0c1f; color: #c9d1d9; margin:0; padding:40px 20px; min-height:100vh; position:relative; overflow-y:auto; }
@@ -81,15 +80,6 @@
 
     const ABI = ["function buyLicense(string calldata deviceHardwareId) external"];
 
-    // === YOUR PROJECT ID ===
-    const projectId = "2e00ae8db09d0f86a5805ebf581d4db8";
-
-    const web3Modal = new Web3Modal.default({
-      projectId,
-      chains: [ethers.networks.pulsechain],
-      themeVariables: { '--w3m-accent': '#a855f7' }
-    });
-
     async function connectWallet() {
       const btn = document.getElementById("connectBtn");
       const info = document.getElementById("walletInfo");
@@ -97,28 +87,31 @@
       btn.disabled = true;
 
       try {
-        console.log("Starting Web3Modal...");
-        const instance = await web3Modal.connect();
-        console.log("Web3Modal connected successfully");
+        if (!window.ethereum) {
+          throw new Error("No wallet detected");
+        }
 
-        const provider = new ethers.BrowserProvider(instance);
+        // Force account request
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+
+        const provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-        
+
         const addr = await signer.getAddress();
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
-        console.log("Wallet connected:", addr);
+        console.log("✅ Wallet connected successfully:", addr);
       } catch (e) {
-        console.error("Connection error:", e);
-        info.innerHTML = "❌ Connection failed - check console (F12)";
-        alert("Connection failed.\n\nOpen F12 (right click → Inspect) → Console tab and tell me what red errors you see.");
+        console.error("❌ Wallet connection error:", e);
+        info.innerHTML = "❌ Connection failed";
+        alert("Connection failed.\n\nPlease check the Console (F12) for red errors and tell me what they say.");
       }
 
       btn.innerHTML = "🔗 Connect Wallet";
       btn.disabled = false;
     }
 
-    // === Your existing functions (unchanged) ===
+    // === Your other functions (unchanged) ===
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
