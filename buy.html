@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PLSChat - Buy License</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; background: #0a0c1f; color: #c9d1d9; margin:0; padding:40px 20px; min-height:100vh; position:relative; overflow-y:auto; }
@@ -22,32 +23,26 @@
 </head>
 <body>
   <canvas id="mesh-bg"></canvas>
-  
+ 
   <div class="container">
-    <button onclick="window.location.href='device-manager.html'" 
+    <button onclick="window.location.href='device-manager.html'"
             style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9); color:white;">
       ← Back to Home
     </button>
-
     <h1>Buy License</h1>
     <p style="font-size:1.4em;color:#94a3b8;">Unlock Full Features + Rewards</p>
-
     <button onclick="connectWallet()" id="connectBtn" class="btn-primary" style="margin-bottom:20px;">🔗 Connect MetaMask</button>
     <div id="walletInfo" class="wallet-info">Wallet not connected</div>
-
     <button onclick="detectDevice()" id="detectBtn" class="btn-primary">🔍 Detect Connected Heltec Device</button>
-
     <div id="deviceBox" class="device-box" style="display:none;">
       <strong>Detected Device</strong><br><br>
       <div id="deviceDetails" style="font-size:1.1em;"></div>
       <button onclick="useDetectedDevice()" class="btn-primary" style="margin-top:15px;">✅ Use This Device</button>
     </div>
-
     <div style="margin:40px 0;">
       <button onclick="selectType('lifetime')" id="btnLifetime" class="btn-primary">Lifetime — 100 PLSC</button>
       <button onclick="selectType('yearly')" id="btnYearly" class="btn-primary">Yearly — 20 PLSC</button>
     </div>
-
     <div id="benefitLifetime" class="benefit-box" style="display:none;">
       <strong>Lifetime License includes:</strong><br>
       • Full Repeater Mode<br>
@@ -56,7 +51,6 @@
       • Earn PLSC Rewards<br>
       • Lifetime access — no renewal ever
     </div>
-
     <div id="benefitYearly" class="benefit-box" style="display:none;">
       <strong>Yearly License includes:</strong><br>
       • Full Repeater Mode<br>
@@ -65,39 +59,34 @@
       • Earn PLSC Rewards<br>
       • Valid for 365 days
     </div>
-
     <button id="payBtn" class="btn-primary" onclick="buyLicense()" style="font-size:1.35em;padding:20px 50px;">💎 Pay & Activate Now</button>
   </div>
-
   <script>
+    const CONTRACT_ADDRESS = "0x4C86C5640ADEc6daDB88b75adEFE3C2FbC2d3510";
     let signer = null;
+    let contract = null;
     let selectedType = 'lifetime';
     let selectedMac = '';
+
+    const ABI = ["function buyLicense(string calldata deviceHardwareId) external"];
 
     async function connectWallet() {
       const btn = document.getElementById("connectBtn");
       const info = document.getElementById("walletInfo");
       btn.innerHTML = "⏳ Connecting to MetaMask...";
       btn.disabled = true;
-
       try {
         if (!window.ethereum) throw new Error("MetaMask not found");
-
         await window.ethereum.request({ method: "eth_requestAccounts" });
-
-        // Simple test - we can add ethers later once basic connection works
-        const accounts = await window.ethereum.request({ method: "eth_accounts" });
-        const addr = accounts[0];
-
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        const addr = await signer.getAddress();
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
-        alert("✅ MetaMask Connected Successfully!");
-        signer = true; // flag for testing
       } catch (e) {
         console.error(e);
         info.innerHTML = "❌ Connection failed";
-        alert("Failed to connect.\n\n1. Unlock MetaMask\n2. Try again");
       }
-
       btn.innerHTML = "🔗 Connect MetaMask";
       btn.disabled = false;
     }
@@ -147,7 +136,22 @@
     async function buyLicense() {
       if (!signer) return alert("Please connect your wallet first.");
       if (!selectedMac) return alert("Please detect your device first.");
-      alert("✅ Test successful - wallet connection works!");
+
+      const payBtn = document.getElementById("payBtn");
+      payBtn.innerHTML = "⏳ Sending Transaction...";
+      payBtn.disabled = true;
+
+      try {
+        const tx = await contract.buyLicense(selectedMac);
+        await tx.wait();
+        alert(`✅ Transaction Successful!\n\nYou purchased a ${selectedType.toUpperCase()} license.`);
+      } catch (err) {
+        console.error(err);
+        alert("Transaction failed or was cancelled in MetaMask.");
+      }
+
+      payBtn.innerHTML = "💎 Pay & Activate Now";
+      payBtn.disabled = false;
     }
 
     // Mesh Background
