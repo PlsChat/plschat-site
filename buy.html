@@ -81,8 +81,8 @@
 
     const ABI = ["function buyLicense(string calldata deviceHardwareId) external"];
 
-    // === PUT YOUR PROJECT ID HERE ===
-    const projectId = "PASTE_YOUR_PROJECT_ID_HERE";
+    // === YOUR PROJECT ID ===
+    const projectId = "2e00ae8db09d0f86a5805ebf581d4db8";
 
     const web3Modal = new Web3Modal.default({
       projectId,
@@ -105,7 +105,7 @@
         const addr = await signer.getAddress();
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
       } catch (e) {
-        info.innerHTML = "❌ Connection cancelled or failed";
+        info.innerHTML = "❌ Connection cancelled";
         console.error(e);
       }
 
@@ -113,7 +113,6 @@
       btn.disabled = false;
     }
 
-    // === YOUR EXISTING FUNCTIONS (unchanged) ===
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
@@ -140,7 +139,7 @@
           }
         }
       } catch(e) {
-        alert("Could not detect device.\nMake sure your Heltec is plugged in and in normal mode.");
+        alert("Could not detect device.\nMake sure your Heltec is plugged in.");
       }
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
