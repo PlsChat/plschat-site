@@ -84,25 +84,32 @@
     async function connectWallet() {
       const btn = document.getElementById("connectBtn");
       const info = document.getElementById("walletInfo");
-      btn.innerHTML = "⏳ Connecting...";
+      btn.innerHTML = "⏳ Connecting to MetaMask...";
       btn.disabled = true;
 
       try {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
+        // Force MetaMask to open
+        await window.ethereum.request({ 
+          method: "eth_requestAccounts",
+          params: []
+        });
+
         const provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
         const addr = await signer.getAddress();
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
+        alert("✅ Wallet connected successfully!");
       } catch (e) {
         info.innerHTML = "❌ Connection failed";
-        alert("Wallet connection failed.\n\n1. Open MetaMask\n2. Unlock your Ledger\n3. Select Ledger account\n4. Try again");
+        alert("Could not connect to MetaMask.\n\nPlease make sure:\n1. MetaMask is open\n2. Ledger is unlocked and selected\n3. Try clicking the button again");
       }
       btn.innerHTML = "🔗 Connect Wallet (MetaMask / Ledger)";
       btn.disabled = false;
     }
 
+    // Rest of the functions (detectDevice, selectType, buyLicense, etc.) remain the same as your last working version
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
