@@ -88,8 +88,10 @@
       btn.disabled = true;
 
       try {
-        // Force prompt
-        await window.ethereum.request({ method: "eth_requestAccounts" });
+        // Most reliable method for multiple wallets
+        const accounts = await window.ethereum.request({ 
+          method: "eth_requestAccounts" 
+        });
 
         const provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
@@ -99,7 +101,7 @@
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
       } catch (e) {
         info.innerHTML = "❌ Connection failed";
-        alert("Could not connect.\n\n1. Open MetaMask / Rabby\n2. Unlock Ledger if used\n3. Select the correct account\n4. Try again");
+        alert("Could not connect wallet.\n\n1. Open MetaMask or Rabby\n2. Unlock Ledger if used\n3. Select the correct account\n4. Try clicking the button again");
       }
       btn.innerHTML = "🔗 Connect Wallet (MetaMask / Rabby / ZKX)";
       btn.disabled = false;
@@ -172,7 +174,7 @@
       payBtn.disabled = false;
     }
 
-    // Mesh Background
+    // Mesh Background (unchanged)
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
