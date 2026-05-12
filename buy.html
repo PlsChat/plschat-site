@@ -88,17 +88,18 @@
       btn.disabled = true;
 
       try {
-        if (!window.ethereum) throw new Error("MetaMask not found");
+        // Force MetaMask popup
+        await window.ethereum.request({ method: "eth_requestAccounts" });
 
-        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
         const provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
-        info.innerHTML = `✅ Connected: <strong>${accounts[0]}</strong>`;
+        const addr = await signer.getAddress();
+        info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
       } catch (e) {
         info.innerHTML = "❌ Connection failed";
-        alert("Failed to connect wallet.\n\n1. Open MetaMask\n2. Unlock Ledger\n3. Select Ledger account\n4. Try again");
+        alert("Connection failed.\n\n1. Open MetaMask\n2. Unlock Ledger\n3. Select your Ledger account\n4. Click Connect Wallet again");
       }
       btn.innerHTML = "🔗 Connect Wallet (MetaMask / Ledger)";
       btn.disabled = false;
@@ -163,10 +164,9 @@
       try {
         const tx = await contract.buyLicense(mac);
         await tx.wait();
-        alert("✅ Transaction successful! License purchased.");
+        alert("✅ Transaction successful!");
       } catch (err) {
-        alert("Transaction failed or cancelled.\n\nCheck you have enough PLSC in your Ledger account.");
-        console.error(err);
+        alert("Transaction failed or cancelled.\n\nMake sure you have enough PLSC and try again.");
       }
       payBtn.innerHTML = "💎 Pay & Activate Now";
       payBtn.disabled = false;
