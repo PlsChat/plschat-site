@@ -19,15 +19,12 @@
     .selected { box-shadow:0 0 0 4px #22c55e !important; }
     .selected::after { content:" ✅"; }
     .benefit-box { background:rgba(15,23,42,0.95); padding:22px; border-radius:16px; margin:20px auto; max-width:620px; text-align:center; line-height:1.75; }
-    .success { background:#052e16; border:2px solid #22c55e; padding:20px; border-radius:12px; margin:25px auto; }
-    .loading { color:#67e8f9; font-style:italic; }
   </style>
 </head>
 <body>
   <canvas id="mesh-bg"></canvas>
   
   <div class="container">
-    <!-- Back to Home -->
     <button onclick="window.location.href='device-manager.html'" 
             style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9); color:white;">
       ← Back to Home
@@ -84,20 +81,21 @@
     async function connectWallet() {
       const btn = document.getElementById("connectBtn");
       const info = document.getElementById("walletInfo");
-      btn.innerHTML = "⏳ Connecting Wallet...";
+      btn.innerHTML = "⏳ Connecting...";
       btn.disabled = true;
 
       try {
-        if (!window.ethereum) throw new Error("MetaMask or Ledger not detected");
+        if (!window.ethereum) throw new Error("No wallet detected");
         provider = new ethers.BrowserProvider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         const addr = await signer.getAddress();
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
+        alert("Wallet connected successfully!\nYou can now buy a license.");
       } catch(e) {
-        alert("Wallet connection failed.\n\nMake sure MetaMask is open and Ledger is unlocked.");
         info.innerHTML = "❌ Connection failed";
+        alert("Wallet connection failed.\n\n1. Open MetaMask\n2. Unlock your Ledger\n3. Make sure Ledger is selected in MetaMask\n4. Try again");
       }
       btn.innerHTML = "🔗 Connect Wallet (MetaMask / Ledger)";
       btn.disabled = false;
@@ -113,7 +111,7 @@
         await port.open({ baudRate: 115200 });
         const reader = port.readable.getReader();
         let buffer = '';
-        const timeout = setTimeout(() => reader.cancel(), 8000); // shorter timeout
+        const timeout = setTimeout(() => reader.cancel(), 8000);
 
         while (true) {
           const { value, done } = await reader.read();
@@ -123,7 +121,6 @@
           if (buffer.includes('=== END_STATUS ===') || buffer.includes('MAC:')) {
             clearTimeout(timeout);
             reader.cancel();
-
             const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
             selectedMac = macMatch ? macMatch[1] : 'Unknown';
             const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
@@ -155,7 +152,7 @@
     async function buyLicense() {
       const mac = selectedMac || prompt("Enter MAC Address:");
       if (!mac) return alert("No MAC address selected");
-      alert("Purchase flow ready (real transaction code can be added next if needed)");
+      alert("Purchase flow is ready (real transaction will be added next if needed).");
     }
 
     // Mesh Background
