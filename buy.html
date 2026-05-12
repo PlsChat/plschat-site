@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PLSChat - Buy License</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.min.js"></script>
+  <!-- Using a more reliable ethers CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; background: #0a0c1f; color: #c9d1d9; margin:0; padding:40px 20px; min-height:100vh; position:relative; overflow-y:auto; }
@@ -86,6 +87,8 @@
       btn.disabled = true;
 
       try {
+        if (typeof ethers === "undefined") throw new Error("Ethers library not loaded");
+
         if (!window.ethereum) throw new Error("MetaMask not found");
 
         await window.ethereum.request({ method: "eth_requestAccounts" });
@@ -96,17 +99,18 @@
 
         const addr = await signer.getAddress();
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
-        alert("✅ Successfully connected to MetaMask!");
+        alert("✅ Wallet connected successfully!");
       } catch (e) {
         console.error(e);
         info.innerHTML = "❌ Connection failed";
-        alert("Failed to connect.\n\n1. Make sure MetaMask is unlocked\n2. Try clicking again");
+        alert("Failed to connect.\n\nMake sure MetaMask is unlocked and try again.");
       }
 
       btn.innerHTML = "🔗 Connect MetaMask";
       btn.disabled = false;
     }
 
+    // Rest of your functions (unchanged)
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
@@ -152,7 +156,7 @@
     async function buyLicense() {
       if (!signer) return alert("Please connect your wallet first.");
       if (!selectedMac) return alert("Please detect your device first.");
-      alert("✅ Test successful - wallet is connected and ready for real transaction.");
+      alert("✅ Test successful - wallet is connected!");
     }
 
     // Mesh Background
