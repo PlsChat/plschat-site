@@ -137,9 +137,7 @@
       btn.disabled = false;
     }
 
-    function useDetectedDevice() {
-      alert(`MAC ${selectedMac} selected for purchase.`);
-    }
+    function useDetectedDevice() { alert(`MAC ${selectedMac} selected.`); }
 
     function selectType(type) {
       selectedType = type;
@@ -159,13 +157,11 @@
 
       try {
         const tx = await contract.buyLicense(selectedMac);
-        const receipt = await tx.wait();
-        
-        alert(`✅ Transaction Successful!\n\nTx Hash: ${receipt.hash}\n\nLicense should now be sent to your device.`);
-        console.log("Transaction receipt:", receipt);
+        await tx.wait();
+        alert(`✅ Transaction Successful!\n\nYou bought a ${selectedType} license for your device.`);
       } catch (err) {
         console.error(err);
-        alert("Transaction failed or was cancelled.");
+        alert("Transaction failed or was cancelled in MetaMask.");
       }
 
       payBtn.innerHTML = "💎 Pay & Activate Now";
