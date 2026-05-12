@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PLSChat - Buy License</title>
-  <!-- Using a more reliable ethers CDN -->
+  <!-- More reliable ethers CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -87,9 +87,12 @@
       btn.disabled = true;
 
       try {
-        if (typeof ethers === "undefined") throw new Error("Ethers library not loaded");
-
-        if (!window.ethereum) throw new Error("MetaMask not found");
+        if (typeof ethers === "undefined") {
+          throw new Error("Ethers library failed to load");
+        }
+        if (!window.ethereum) {
+          throw new Error("MetaMask not found");
+        }
 
         await window.ethereum.request({ method: "eth_requestAccounts" });
 
@@ -103,14 +106,13 @@
       } catch (e) {
         console.error(e);
         info.innerHTML = "❌ Connection failed";
-        alert("Failed to connect.\n\nMake sure MetaMask is unlocked and try again.");
+        alert("Failed to connect.\n\n1. Make sure MetaMask is unlocked\n2. Try again");
       }
 
       btn.innerHTML = "🔗 Connect MetaMask";
       btn.disabled = false;
     }
 
-    // Rest of your functions (unchanged)
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
