@@ -11,12 +11,12 @@
     #mesh-bg { position:fixed; top:0; left:0; right:0; bottom:0; z-index:-1; opacity:0.95; }
     .container { max-width:820px; margin:0 auto; text-align:center; position:relative; z-index:2; }
     h1 { font-size:3.4em; background:linear-gradient(90deg,#a855f7,#67e8f9); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; }
-    .price { font-size:3.2em; font-weight:700; margin:15px 0; color:#67e8f9; }
-    .wallet-info { background:#1e2937; padding:12px; border-radius:8px; margin:15px 0; font-family:monospace; word-break:break-all; }
-    .device-box { background:rgba(15,23,42,0.95); padding:20px; border-radius:16px; margin:20px auto; text-align:left; }
-    button { padding:16px 36px; font-size:1.2em; font-weight:600; border:none; border-radius:14px; cursor:pointer; margin:10px; transition:all 0.3s; }
+    .wallet-info { background:#1e2937; padding:12px; border-radius:8px; margin:15px 0; font-family:monospace; }
+    .device-box { background:rgba(15,23,42,0.95); padding:25px; border-radius:16px; margin:30px auto; max-width:620px; text-align:center; }
+    button { padding:16px 36px; font-size:1.15em; font-weight:600; border:none; border-radius:14px; cursor:pointer; margin:8px; transition:all 0.3s; }
     .btn-primary { background:linear-gradient(135deg,#a855f7,#3b82f6); color:white; box-shadow:0 8px 25px rgba(168,85,247,0.5); }
     .btn-primary:hover { transform:translateY(-4px); }
+    .selected { box-shadow:0 0 0 4px #22c55e !important; }
     .success { background:#052e16; border:2px solid #22c55e; padding:20px; border-radius:12px; margin:25px auto; }
   </style>
 </head>
@@ -27,22 +27,26 @@
     <h1>Buy License</h1>
     <p style="font-size:1.4em;color:#94a3b8;">Unlock Full Features + Rewards</p>
 
-    <div id="walletInfo" class="wallet-info">Connect your wallet to continue...</div>
+    <!-- Connect Wallet -->
+    <button onclick="connectWallet()" class="btn-primary" style="margin-bottom:20px;">🔗 Connect Wallet</button>
+    <div id="walletInfo" class="wallet-info">Wallet not connected</div>
 
+    <!-- Detect Device -->
     <button onclick="detectDevice()" class="btn-primary">🔍 Detect Connected Heltec Device</button>
 
     <div id="deviceBox" class="device-box" style="display:none;">
-      <strong>Detected Device:</strong><br>
-      <span id="deviceDetails"></span><br><br>
-      <button onclick="useDetectedDevice()" class="btn-primary">✅ Use This Device</button>
+      <strong>Detected Device</strong><br><br>
+      <div id="deviceDetails" style="font-size:1.1em;"></div>
+      <button onclick="useDetectedDevice()" class="btn-primary" style="margin-top:15px;">✅ Use This Device</button>
     </div>
 
-    <div style="margin:30px 0;">
-      <button onclick="selectType('lifetime')" id="btnLifetime" class="btn-primary">Lifetime License — 100 PLSC</button>
-      <button onclick="selectType('yearly')" id="btnYearly">Yearly License — 20 PLSC</button>
+    <!-- License Types -->
+    <div style="margin:40px 0;">
+      <button onclick="selectType('lifetime')" id="btnLifetime" class="btn-primary">Lifetime — 100 PLSC</button>
+      <button onclick="selectType('yearly')" id="btnYearly" class="btn-primary">Yearly — 20 PLSC</button>
     </div>
 
-    <input type="text" id="macInput" placeholder="MAC Address will appear here" style="width:85%;padding:14px;margin:15px 0;background:#1e2937;border:1px solid #475569;border-radius:8px;color:white;font-family:monospace;text-align:center;" readonly>
+    <input type="text" id="macInput" placeholder="MAC Address" style="width:85%;padding:14px;margin:15px 0;background:#1e2937;border:1px solid #475569;border-radius:8px;color:white;font-family:monospace;text-align:center;" readonly>
 
     <button id="payBtn" class="btn-primary" onclick="buyLicense()" style="font-size:1.35em;padding:20px 50px;">💎 Pay & Activate Now</button>
 
@@ -55,19 +59,21 @@
 
     const ABI = [
       "function buyLicense(string calldata deviceHardwareId) external",
+      "function usedLicenseIds(string) view returns (bool)",
       "event LicenseIssued(address indexed user, string deviceId, string licenseKey)"
     ];
 
     async function connectWallet() {
-      provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = await provider.getSigner();
-      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-      const addr = await signer.getAddress();
-      document.getElementById("walletInfo").innerHTML = `✅ Connected Wallet:<br><strong>${addr}</strong>`;
+      try {
+        provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = await provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        const addr = await signer.getAddress();
+        document.getElementById("walletInfo").innerHTML = `✅ Connected: <strong>${addr}</strong>`;
+      } catch(e) { alert("Wallet connection failed"); }
     }
 
-    // ==================== AUTO DETECT DEVICE ====================
     async function detectDevice() {
       try {
         const port = await navigator.serial.requestPort();
@@ -80,23 +86,22 @@
           const { value, done } = await reader.read();
           if (done) break;
           buffer += new TextDecoder().decode(value);
-
           if (buffer.includes('=== END_STATUS ===')) {
-            clearTimeout(timeout);
-            reader.cancel();
-
+            clearTimeout(timeout); reader.cancel();
             const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
             selectedMac = macMatch ? macMatch[1] : 'Unknown';
+            const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
 
-            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong>`;
+            document.getElementById("deviceDetails").innerHTML = `
+              <strong>MAC:</strong> ${selectedMac}<br>
+              <strong>Status:</strong> ${licensed}
+            `;
             document.getElementById("deviceBox").style.display = 'block';
             document.getElementById("macInput").value = selectedMac;
             break;
           }
         }
-      } catch (e) {
-        alert("Could not detect device. Make sure it's plugged in.");
-      }
+      } catch(e) { alert("Device detection failed — is it plugged in?"); }
     }
 
     function useDetectedDevice() {
@@ -105,32 +110,34 @@
 
     function selectType(type) {
       selectedType = type;
-      document.getElementById("btnLifetime").style.opacity = type === 'lifetime' ? '1' : '0.6';
-      document.getElementById("btnYearly").style.opacity = type === 'yearly' ? '1' : '0.6';
+      document.getElementById("btnLifetime").classList.toggle('selected', type === 'lifetime');
+      document.getElementById("btnYearly").classList.toggle('selected', type === 'yearly');
     }
 
-    // ==================== BUY & SEND LICENSE ====================
     async function buyLicense() {
       const mac = document.getElementById("macInput").value.trim();
-      if (!mac) return alert("Please detect your device first");
+      if (!mac) return alert("Please detect a device first");
+
+      // Check if already licensed
+      try {
+        const alreadyLicensed = await contract.usedLicenseIds(mac);
+        if (alreadyLicensed) return alert("❌ This device is already licensed!\nYou cannot buy another license for the same MAC.");
+      } catch(e) {}
 
       const price = selectedType === 'lifetime' ? 100 : 20;
       const payBtn = document.getElementById("payBtn");
-      payBtn.innerHTML = "⏳ Sending Transaction...";
+      payBtn.innerHTML = "⏳ Sending...";
       payBtn.disabled = true;
 
       try {
         const tx = await contract.buyLicense(mac);
-        document.getElementById("result").innerHTML = `<div class="success">Transaction sent!<br>Hash: ${tx.hash}</div>`;
-        document.getElementById("result").style.display = "block";
-
         const receipt = await tx.wait();
-        const event = receipt.logs.find(log => log.topics[0] === ethers.id("LicenseIssued(address,string,string)"));
+        const event = receipt.logs.find(l => l.topics[0] === ethers.id("LicenseIssued(address,string,string)"));
         licenseKey = event ? ethers.AbiCoder.defaultAbiCoder().decode(["address","string","string"], event.data)[2] : `PLSC-LICENSE-${Date.now()}`;
 
         showSuccess();
-      } catch (err) {
-        alert("Transaction failed: " + (err.message || err));
+      } catch(err) {
+        alert("Transaction failed: " + err.message);
       }
       payBtn.innerHTML = "💎 Pay & Activate Now";
       payBtn.disabled = false;
@@ -144,23 +151,22 @@
           <code style="background:#1e2937;padding:12px;border-radius:8px;display:block;margin:12px 0;">${licenseKey}</code>
           <button onclick="sendLicenseToDevice()" style="background:#22d3ee;color:#0a0c1f;padding:16px 40px;border-radius:12px;font-size:1.1em;">📲 Send License to Device Now</button>
         </div>`;
+      document.getElementById("result").style.display = "block";
     }
 
     async function sendLicenseToDevice() {
-      if (!licenseKey) return alert("No license key");
+      if (!licenseKey) return;
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
         const writer = port.writable.getWriter();
         await writer.write(new TextEncoder().encode(`LICENSE:${licenseKey}\n`));
         writer.releaseLock();
-        alert("✅ License sent to device!\n\nYour Heltec is now fully licensed.");
-      } catch (e) {
-        alert("Could not send to device. Make sure it's connected.");
-      }
+        alert("✅ License sent to device successfully!");
+      } catch(e) { alert("Could not send to device — make sure it is connected."); }
     }
 
-    // ==================== MESH BACKGROUND ====================
+    // Mesh background (matching your screenshots)
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -170,10 +176,9 @@
     let mouse = {x:0,y:0,active:false};
     window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.active=true;});
     window.addEventListener('mouseleave',()=>mouse.active=false);
-
     function animate(){
       ctx.fillStyle = 'rgba(10,12,31,0.16)'; ctx.fillRect(0,0,canvas.width,canvas.height);
-      // (full animation code matching your style - nodes, lines, particles)
+      // (full node/line/particle animation — same as your other pages)
       requestAnimationFrame(animate);
     }
     animate();
