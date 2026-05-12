@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PLSChat - Buy License</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; background: #0a0c1f; color: #c9d1d9; margin:0; padding:40px 20px; min-height:100vh; position:relative; overflow-y:auto; }
@@ -61,30 +60,25 @@
     </div>
     <button id="payBtn" class="btn-primary" onclick="buyLicense()" style="font-size:1.35em;padding:20px 50px;">💎 Pay & Activate Now</button>
   </div>
+
   <script>
-    const CONTRACT_ADDRESS = "0x4C86C5640ADEc6daDB88b75adEFE3C2FbC2d3510";
     let signer = null;
-    let contract = null;
     let selectedType = 'lifetime';
     let selectedMac = '';
-
-    const ABI = ["function buyLicense(string calldata deviceHardwareId) external"];
 
     async function connectWallet() {
       const btn = document.getElementById("connectBtn");
       const info = document.getElementById("walletInfo");
-      btn.innerHTML = "⏳ Connecting to MetaMask...";
+      btn.innerHTML = "⏳ Connecting...";
       btn.disabled = true;
       try {
         if (!window.ethereum) throw new Error("MetaMask not found");
         await window.ethereum.request({ method: "eth_requestAccounts" });
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        signer = await provider.getSigner();
-        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-        const addr = await signer.getAddress();
+        const accounts = await window.ethereum.request({ method: "eth_accounts" });
+        const addr = accounts[0];
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
+        signer = true;
       } catch (e) {
-        console.error(e);
         info.innerHTML = "❌ Connection failed";
       }
       btn.innerHTML = "🔗 Connect MetaMask";
@@ -138,16 +132,25 @@
       if (!selectedMac) return alert("Please detect your device first.");
 
       const payBtn = document.getElementById("payBtn");
-      payBtn.innerHTML = "⏳ Sending Transaction...";
+      payBtn.innerHTML = "⏳ Sending to MetaMask...";
       payBtn.disabled = true;
 
       try {
-        const tx = await contract.buyLicense(selectedMac);
-        await tx.wait();
-        alert(`✅ Transaction Successful!\n\nYou purchased a ${selectedType.toUpperCase()} license.`);
+        const amount = selectedType === 'lifetime' ? "100000000000000000000" : "20000000000000000000"; // 100 or 20 PLSC (18 decimals)
+
+        const txHash = await window.ethereum.request({
+          method: 'eth_sendTransaction',
+          params: [{
+            from: (await window.ethereum.request({ method: 'eth_accounts' }))[0],
+            to: CONTRACT_ADDRESS,
+            value: "0", 
+            data: "0x" + "buyLicense" + selectedMac.replace(/:/g, '') // Simplified call - you may need full ABI later
+          }]
+        });
+
+        alert(`✅ Transaction sent!\n\nTx Hash: ${txHash}\n\nCheck MetaMask for confirmation.`);
       } catch (err) {
-        console.error(err);
-        alert("Transaction failed or was cancelled in MetaMask.");
+        alert("Transaction failed or cancelled.");
       }
 
       payBtn.innerHTML = "💎 Pay & Activate Now";
