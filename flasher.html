@@ -7,11 +7,45 @@
   <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; background: #0a0c1f; color: #c9d1d9; margin:0; padding:40px 20px; text-align:center; min-height:100vh; }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: #0a0c1f; 
+      color: #c9d1d9; 
+      margin:0; 
+      padding:40px 20px; 
+      text-align:center; 
+      min-height:100vh; 
+    }
     .container { max-width: 800px; margin: 0 auto; }
-    h1 { font-size: 3em; background: linear-gradient(90deg, #a855f7, #67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+    h1 { 
+      font-size: 3em; 
+      background: linear-gradient(90deg, #a855f7, #67e8f9); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent; 
+      margin-bottom: 10px; 
+    }
     p { font-size: 1.2em; color: #94a3b8; max-width: 600px; margin: 20px auto; }
-    .license-box { background: rgba(30,30,50,0.9); padding: 20px; border-radius: 12px; margin: 30px auto; max-width: 600px; text-align:left; }
+    
+    .license-box { 
+      background: rgba(30,30,50,0.95); 
+      padding: 25px; 
+      border-radius: 16px; 
+      margin: 30px auto; 
+      max-width: 600px; 
+      text-align: left; 
+      border: 2px solid #22c55e;
+    }
+    .license-box h3 { color: #67e8f9; margin-top: 0; }
+    .license-key { 
+      font-family: monospace; 
+      background: #111; 
+      padding: 12px; 
+      border-radius: 8px; 
+      word-break: break-all; 
+      font-size: 1.1em; 
+    }
+    
+    esp-web-install-button { margin: 40px auto; display: block; }
   </style>
 </head>
 <body>
@@ -21,16 +55,18 @@
 
     <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
 
-    <div class="license-box" id="licenseInfo" style="display:none;">
-      <strong>✅ Licence Auto-loaded for this device</strong><br><br>
-      <div id="licenseDisplay" style="font-family:monospace; background:#111; padding:10px; border-radius:6px;"></div>
+    <!-- Licence Display Box -->
+    <div class="license-box" id="licenseBox" style="display:none;">
+      <h3>✅ Licence Loaded for this Device</h3>
+      <div id="licenseDisplay" class="license-key"></div>
+      <small style="color:#94a3b8;">This licence will be flashed with the firmware.</small>
     </div>
 
     <div class="instructions" style="background:rgba(30,30,50,0.8); padding:20px; border-radius:12px; text-align:left; max-width:600px; margin:30px auto;">
       <strong>📋 How to Flash:</strong><br><br>
       1. Plug in your Heltec V4 via USB<br>
       2. Hold the <strong>BOOT button</strong> while plugging in<br>
-      3. Click <strong>Install / Connect</strong><br>
+      3. Click <strong>Connect / Install</strong><br>
       4. Release BOOT button when uploading starts
     </div>
   </div>
@@ -38,16 +74,18 @@
   <script>
     let selectedMac = '';
 
-    async function detectDevice() {
+    async function detectAndLoadLicense() {
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
         const reader = port.readable.getReader();
         let buffer = '';
+
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
           buffer += new TextDecoder().decode(value);
+
           const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
           if (macMatch) {
             selectedMac = macMatch[1];
@@ -55,21 +93,33 @@
             break;
           }
         }
-      } catch(e) {}
+      } catch (e) {
+        console.log("Serial detection failed");
+      }
 
       if (selectedMac) {
         const licenses = JSON.parse(localStorage.getItem('licenses') || '{}');
         const savedKey = licenses[selectedMac];
+
         if (savedKey) {
-          document.getElementById("licenseInfo").style.display = 'block';
-          document.getElementById("licenseDisplay").innerHTML = `<strong>MAC:</strong> ${selectedMac}<br><strong>Key:</strong> ${savedKey}`;
+          document.getElementById("licenseBox").style.display = 'block';
+          document.getElementById("licenseDisplay").innerHTML = `
+            <strong>MAC:</strong> ${selectedMac}<br>
+            <strong>Licence Key:</strong> ${savedKey}
+          `;
+        } else {
+          document.getElementById("licenseBox").style.display = 'block';
+          document.getElementById("licenseDisplay").innerHTML = `
+            <strong>MAC:</strong> ${selectedMac}<br>
+            <span style="color:#f87171;">No licence found for this device.</span>
+          `;
         }
       }
     }
 
-    // Auto detect when page loads
+    // Auto-run when page loads
     window.onload = () => {
-      setTimeout(detectDevice, 800);
+      setTimeout(detectAndLoadLicense, 1000);
     };
   </script>
 </body>
