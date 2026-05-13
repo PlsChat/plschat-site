@@ -18,31 +18,50 @@
     .btn-primary:hover { transform:translateY(-4px); }
     .selected { box-shadow:0 0 0 4px #22c55e !important; }
     .selected::after { content:" ✅"; }
-    .benefit-box { background:rgba(15,23,42,0.95); padding:22px; border-radius:16px; margin:20px auto; max-width:620px; text-align:center; line-height:1.75; }
+    .benefit-box, .token-selector { background:rgba(15,23,42,0.95); padding:22px; border-radius:16px; margin:20px auto; max-width:620px; text-align:center; }
+    select { padding:12px; font-size:1.1em; background:#1e2937; color:white; border-radius:8px; width:100%; max-width:400px; }
   </style>
 </head>
 <body>
   <canvas id="mesh-bg"></canvas>
  
   <div class="container">
-    <button onclick="window.location.href='device-manager.html'"
-            style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9); color:white;">
+    <button onclick="window.location.href='device-manager.html'" style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9); color:white;">
       ← Back to Home
     </button>
     <h1>Buy License</h1>
     <p style="font-size:1.4em;color:#94a3b8;">Unlock Full Features + Rewards</p>
+
     <button onclick="connectWallet()" id="connectBtn" class="btn-primary" style="margin-bottom:20px;">🔗 Connect MetaMask</button>
     <div id="walletInfo" class="wallet-info">Wallet not connected</div>
+
     <button onclick="detectDevice()" id="detectBtn" class="btn-primary">🔍 Detect Connected Heltec Device</button>
+
     <div id="deviceBox" class="device-box" style="display:none;">
       <strong>Detected Device</strong><br><br>
       <div id="deviceDetails" style="font-size:1.1em;"></div>
       <button onclick="useDetectedDevice()" class="btn-primary" style="margin-top:15px;">✅ Use This Device</button>
     </div>
+
     <div style="margin:40px 0;">
       <button onclick="selectType('lifetime')" id="btnLifetime" class="btn-primary">Lifetime — 100 PLSC</button>
       <button onclick="selectType('yearly')" id="btnYearly" class="btn-primary">Yearly — 20 PLSC</button>
     </div>
+
+    <!-- Token Selector -->
+    <div class="token-selector">
+      <strong>Pay with:</strong><br><br>
+      <select id="paymentToken" onchange="updateSelectedToken()">
+        <option value="PLSC">PLSC (£0.75)</option>
+        <option value="PLS">PLS</option>
+        <option value="PLSX">PLSX</option>
+        <option value="pDAI">pDAI</option>
+        <option value="pCOCK">pCOCK</option>
+        <option value="WBTC">WBTC</option>
+      </select>
+      <div id="equivalentPrice" style="margin-top:15px; font-size:1.1em; color:#67e8f9;"></div>
+    </div>
+
     <div id="benefitLifetime" class="benefit-box" style="display:none;">
       <strong>Lifetime License includes:</strong><br>
       • Full Repeater Mode<br>
@@ -59,14 +78,27 @@
       • Earn PLSC Rewards<br>
       • Valid for 365 days
     </div>
+
     <button id="payBtn" class="btn-primary" onclick="buyLicense()" style="font-size:1.35em;padding:20px 50px;">💎 Pay & Activate Now</button>
   </div>
+
   <script>
     const CONTRACT_ADDRESS = "0x4C86C5640ADEc6daDB88b75adEFE3C2FbC2d3510";
     let signer = null;
     let contract = null;
     let selectedType = 'lifetime';
     let selectedMac = '';
+    let selectedToken = 'PLSC';
+
+    // Approximate prices in £ (update these or fetch live later)
+    const prices = {
+      PLSC: 0.75,
+      PLS: 0.0000077,
+      PLSX: 0.000005,
+      pDAI: 0.0015,
+      pCOCK: 0.0008,
+      WBTC: 65000
+    };
 
     const ABI = ["function buyLicense(string calldata deviceHardwareId) external"];
 
@@ -130,6 +162,19 @@
       document.getElementById("btnYearly").classList.toggle('selected', type === 'yearly');
       document.getElementById("benefitLifetime").style.display = type === 'lifetime' ? 'block' : 'none';
       document.getElementById("benefitYearly").style.display = type === 'yearly' ? 'block' : 'none';
+      updateEquivalentPrice();
+    }
+
+    function updateSelectedToken() {
+      selectedToken = document.getElementById("paymentToken").value;
+      updateEquivalentPrice();
+    }
+
+    function updateEquivalentPrice() {
+      const pricePLSC = selectedType === 'lifetime' ? 100 : 20;
+      const tokenPrice = prices[selectedToken] || 0.75;
+      const equivalent = (pricePLSC * 0.75 / tokenPrice).toFixed(4);
+      document.getElementById("equivalentPrice").innerHTML = `Equivalent to <strong>${equivalent} ${selectedToken}</strong>`;
     }
 
     async function buyLicense() {
@@ -144,7 +189,7 @@
         const tx = await contract.buyLicense(selectedMac);
         await tx.wait();
         const price = selectedType === 'lifetime' ? "100 PLSC" : "20 PLSC";
-        alert(`✅ Transaction Successful!\n\nYou bought a ${selectedType} license (${price})`);
+        alert(`✅ Transaction Successful!\n\nYou purchased a ${selectedType} license (${price})`);
       } catch (err) {
         console.error(err);
         alert("Transaction failed or was cancelled.");
@@ -165,6 +210,9 @@
       requestAnimationFrame(animate);
     }
     animate();
+
+    // Initial price display
+    window.onload = () => updateEquivalentPrice();
   </script>
 </body>
 </html>
