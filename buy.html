@@ -69,6 +69,17 @@
   <script>
     const TREASURY = "0xe160d657c7d98f5c7e14fdc38b9b03911538fe70".toLowerCase();
     const PLSC_CONTRACT = "0x17B46bB02DF36E57B2b5015C4e289b984915EfE5".toLowerCase();
+
+    // Add the contract addresses for the other tokens here (replace if needed)
+    const TOKEN_CONTRACTS = {
+      PLS: null,                    // native
+      PLSC: PLSC_CONTRACT,
+      PLSX: "0x95b303987a60c71504d99aa1b13b4da07b0790ab".toLowerCase(),
+      pDAI: "0x6b175474e89094c44da98b954eedeac495271d0f".toLowerCase(),
+      pCOCK: "0xc10a4ed9b4042222d69ff0b374eddd47ed90fc1f".toLowerCase(),
+      WBTC: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599".toLowerCase()
+    };
+
     let walletAddress = null;
     let selectedMac = '';
     let selectedType = 'lifetime';
@@ -160,14 +171,28 @@
       const basePLSC = selectedType === 'lifetime' ? 100 : 20;
       const amount = basePLSC * 0.75 / (tokenPricesGBP[token] || 0.75);
 
+      const payBtn = document.getElementById("payBtn");
+      payBtn.innerHTML = "⏳ Opening MetaMask...";
+      payBtn.disabled = true;
+
       try {
         let txHash;
-        if (token === "PLSC") {
+        const contractAddr = TOKEN_CONTRACTS[token];
+
+        if (contractAddr) {
+          // ERC20 token transfer
           const data = "0xa9059cbb" + TREASURY.slice(2).padStart(64, '0') + (BigInt(Math.floor(amount * 1e18)).toString(16)).padStart(64, '0');
-          txHash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: "0x17B46bB02DF36E57B2b5015C4e289b984915EfE5", data: data, gas: "0x7A120" }] });
+          txHash = await window.ethereum.request({
+            method: 'eth_sendTransaction',
+            params: [{ from: walletAddress, to: contractAddr, data: data, gas: "0x7A120" }]
+          });
         } else {
+          // Native PLS
           const valueWei = (BigInt(Math.floor(amount * 1e18))).toString(16);
-          txHash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: TREASURY, value: "0x" + valueWei, gas: "0x7A120" }] });
+          txHash = await window.ethereum.request({
+            method: 'eth_sendTransaction',
+            params: [{ from: walletAddress, to: TREASURY, value: "0x" + valueWei, gas: "0x7A120" }]
+          });
         }
 
         document.getElementById("txSection").style.display = 'block';
@@ -176,6 +201,9 @@
       } catch (err) {
         alert("Transaction cancelled.");
       }
+
+      payBtn.innerHTML = "💎 Send Exact Amount via MetaMask";
+      payBtn.disabled = false;
     }
 
     async function verifyAndGenerateLicense() {
@@ -190,11 +218,10 @@
           return alert("Transaction is not confirmed yet or failed.");
         }
 
-        // Check if it was a PLSC transfer to treasury or native PLS to treasury
-        const isCorrectRecipient = receipt.to.toLowerCase() === TREASURY || 
-                                  (receipt.to.toLowerCase() === "0x17B46bB02DF36E57B2b5015C4e289b984915EfE5".toLowerCase());
+        const isCorrect = receipt.to.toLowerCase() === TREASURY || 
+                         receipt.to.toLowerCase() === PLSC_CONTRACT;
 
-        if (!isCorrectRecipient) {
+        if (!isCorrect) {
           return alert("Wrong recipient wallet. This TX did not go to the treasury.");
         }
 
@@ -202,7 +229,7 @@
         alert(`✅ Licence Generated Successfully!\n\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nGo to the Flash page and use this key.`);
 
       } catch (e) {
-        alert("Could not verify transaction on the blockchain.");
+        alert("Could not verify transaction.");
       }
     }
 
