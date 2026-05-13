@@ -167,8 +167,12 @@
       const basePLSC = selectedType === 'lifetime' ? 100 : 20;
       const amount = (basePLSC * 0.75 / (tokenPricesGBP[token] || 0.75)).toFixed(4);
 
-      const msg = `Please send exactly ${amount} ${token} to:\n\n${TREASURY}\n\nAfter the transaction is confirmed on PulseChain, come back here and click "I Have Paid" to generate your licence.`;
-      alert(msg);
+      const msg = `Send exactly ${amount} ${token} to:\n\n${TREASURY}\n\nAfter payment is confirmed, paste the TX hash below to generate your licence.`;
+      const txHash = prompt(msg);
+      if (txHash) {
+        const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
+        alert(`✅ Licence Generated!\n\nMAC: ${selectedMac}\nLicence Key: ${licenseKey}\n\nYou can now go to the Flash page and use this key.`);
+      }
     }
 
     // Mesh Background
