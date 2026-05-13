@@ -51,15 +51,15 @@
     <!-- Token Selector -->
     <div class="token-selector">
       <strong>Pay with:</strong><br><br>
-      <select id="paymentToken" onchange="updateSelectedToken()">
-        <option value="PLSC">PLSC (£0.75)</option>
+      <select id="paymentToken" onchange="updateEquivalentPrice()">
+        <option value="PLSC">PLSC</option>
         <option value="PLS">PLS</option>
         <option value="PLSX">PLSX</option>
         <option value="pDAI">pDAI</option>
         <option value="pCOCK">pCOCK</option>
         <option value="WBTC">WBTC</option>
       </select>
-      <div id="equivalentPrice" style="margin-top:15px; font-size:1.1em; color:#67e8f9;"></div>
+      <div id="equivalentPrice" style="margin-top:15px; font-size:1.1em; color:#67e8f9; font-weight:600;"></div>
     </div>
 
     <div id="benefitLifetime" class="benefit-box" style="display:none;">
@@ -90,12 +90,12 @@
     let selectedMac = '';
     let selectedToken = 'PLSC';
 
-    // Approximate prices in £ (update these or fetch live later)
-    const prices = {
+    // Approximate £ prices (we can make this live later)
+    const tokenPrices = {
       PLSC: 0.75,
       PLS: 0.0000077,
       PLSX: 0.000005,
-      pDAI: 0.0015,
+      pDAI: 1.00,
       pCOCK: 0.0008,
       WBTC: 65000
     };
@@ -171,9 +171,9 @@
     }
 
     function updateEquivalentPrice() {
-      const pricePLSC = selectedType === 'lifetime' ? 100 : 20;
-      const tokenPrice = prices[selectedToken] || 0.75;
-      const equivalent = (pricePLSC * 0.75 / tokenPrice).toFixed(4);
+      const basePLSC = selectedType === 'lifetime' ? 100 : 20;
+      const tokenPriceGBP = tokenPrices[selectedToken] || 0.75;
+      const equivalent = (basePLSC * 0.75 / tokenPriceGBP).toFixed(4);
       document.getElementById("equivalentPrice").innerHTML = `Equivalent to <strong>${equivalent} ${selectedToken}</strong>`;
     }
 
@@ -211,8 +211,8 @@
     }
     animate();
 
-    // Initial price display
-    window.onload = () => updateEquivalentPrice();
+    // Initial price update
+    window.onload = updateEquivalentPrice;
   </script>
 </body>
 </html>
