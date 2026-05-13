@@ -54,7 +54,7 @@
 
     <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
 
-    <!-- Licence Box -->
+    <!-- Licence Display -->
     <div class="license-box" id="licenseBox">
       <h3>✅ Licence Auto-loaded for this Device</h3>
       <div id="licenseDisplay" class="license-key"></div>
@@ -88,7 +88,6 @@
             const mac = macMatch[1];
             reader.cancel();
 
-            // Load licence from localStorage
             const licenses = JSON.parse(localStorage.getItem('licenses') || '{}');
             const savedKey = licenses[mac];
 
@@ -99,20 +98,20 @@
               display.innerHTML = `<strong>MAC:</strong> ${mac}<br><strong>Key:</strong> ${savedKey}`;
               box.style.display = 'block';
             } else {
-              display.innerHTML = `<strong>MAC:</strong> ${mac}<br><span style="color:#f87171;">No licence found for this device.</span>`;
+              display.innerHTML = `<strong>MAC:</strong> ${mac}<br><span style="color:#f87171;">No licence found for this MAC.</span>`;
               box.style.display = 'block';
             }
             break;
           }
         }
       } catch (e) {
-        console.log("Device detection failed or cancelled");
+        console.log("Serial detection failed or cancelled");
       }
     }
 
-    // Run detection when page loads
+    // Run detection automatically when page loads
     window.onload = () => {
-      setTimeout(detectDeviceAndLoadLicense, 800);
+      setTimeout(detectDeviceAndLoadLicense, 1000);
     };
   </script>
 </body>
