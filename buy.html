@@ -120,10 +120,8 @@
       try {
         if (!window.ethereum) throw new Error("MetaMask not found");
         const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        signer = await provider.getSigner();
-        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-        info.innerHTML = `✅ Connected: <strong>${accounts[0]}</strong>`;
+        signer = accounts[0];
+        info.innerHTML = `✅ Connected: <strong>${signer}</strong>`;
       } catch (e) {
         info.innerHTML = "❌ Connection failed";
       }
@@ -183,7 +181,6 @@
       document.getElementById("equivalentPrice").innerHTML = `Equivalent to <strong>${basePLSC} PLSC = ${equivalent} ${token}</strong>`;
     }
 
-    // ====================== REAL TRANSACTION ======================
     async function buyLicense() {
       if (!signer) return alert("Please connect your wallet first.");
       if (!selectedMac) return alert("Please detect your device first.");
@@ -195,8 +192,7 @@
       try {
         const tx = await contract.buyLicense(selectedMac);
         await tx.wait();
-
-        alert(`✅ Transaction Successful!\n\nYou purchased a ${selectedType} license!\n\nTransaction Hash:\n${tx.hash}\n\nYou can view it on PulseChain Explorer.`);
+        alert(`✅ Transaction Successful!\n\nYou purchased a ${selectedType} license for MAC: ${selectedMac}`);
       } catch (err) {
         console.error(err);
         alert("Transaction failed or was cancelled.");
