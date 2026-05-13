@@ -26,7 +26,7 @@
   <div class="container">
     <button onclick="window.location.href='device-manager.html'" style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9); color:white;">← Back to Home</button>
     <h1>Buy License</h1>
-    <p style="font-size:1.4em;color:#94a3b8;">Payment first → Licence after verification</p>
+    <p style="font-size:1.4em;color:#94a3b8;">Payment first → Licence after confirmation</p>
 
     <button onclick="connectWallet()" id="connectBtn" class="btn-primary" style="margin-bottom:20px;">🔗 Connect MetaMask</button>
     <div id="walletInfo" class="wallet-info">Wallet not connected</div>
@@ -67,9 +67,9 @@
     <button id="payBtn" class="btn-primary" onclick="sendPayment()" style="font-size:1.35em;padding:20px 50px;">💎 Send Exact Amount via MetaMask</button>
 
     <div id="txSection" class="benefit-box" style="display:none; margin-top:20px;">
-      <strong>Paste Transaction Hash:</strong><br>
+      <strong>Paste your Transaction Hash here:</strong><br>
       <input id="txHashInput" type="text" placeholder="0x..." style="width:90%; padding:12px; margin:10px 0; font-family:monospace;">
-      <button onclick="verifyAndGenerateLicense()" class="btn-primary">✅ Verify & Generate Licence</button>
+      <button onclick="generateLicense()" class="btn-primary">✅ Verify & Generate Licence</button>
     </div>
   </div>
 
@@ -123,7 +123,7 @@
         await port.open({ baudRate: 115200 });
         const reader = port.readable.getReader();
         let buffer = '';
-        const timeout = setTimeout(() => reader.cancel(), 12000);
+        const timeout = setTimeout(() => reader.cancel(), 15000);
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
@@ -195,23 +195,19 @@
 
         document.getElementById("txSection").style.display = 'block';
         document.getElementById("txHashInput").value = txHash;
-        alert(`✅ Transaction Sent!\n\nTX Hash: ${txHash}\n\nWait for confirmation, then paste the hash below to generate your licence.`);
+        alert(`✅ Transaction Sent!\n\nTX Hash: ${txHash}\n\nWait for it to confirm on PulseChain, then click "Generate Licence Now".`);
       } catch (err) {
-        alert("Transaction cancelled or failed.");
+        alert("Transaction was cancelled.");
       }
 
       payBtn.innerHTML = "💎 Send Exact Amount via MetaMask";
       payBtn.disabled = false;
     }
 
-    async function generateLicense() {
+    function generateLicense() {
       const txHash = document.getElementById("txHashInput").value.trim();
       if (!txHash) return alert("Please paste the transaction hash first.");
-
-      // Basic verification - at least check it's a real hash and MAC is known
-      if (selectedMac === '' || selectedMac === 'Unknown') {
-        return alert("No valid device MAC detected. Please detect the device first.");
-      }
+      if (!selectedMac || selectedMac === 'Unknown') return alert("No valid device detected.");
 
       const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
       alert(`✅ Licence Generated!\n\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nGo to the Flash page and use this key.`);
