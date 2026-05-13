@@ -82,6 +82,7 @@
   <script>
     const CONTRACT_ADDRESS = "0x4C86C5640ADEc6daDB88b75adEFE3C2FbC2d3510";
     let signer = null;
+    let contract = null;
     let selectedType = 'lifetime';
     let selectedMac = '';
 
@@ -116,25 +117,20 @@
       const info = document.getElementById("walletInfo");
       btn.innerHTML = "⏳ Connecting...";
       btn.disabled = true;
-
       try {
         if (!window.ethereum) throw new Error("MetaMask not found");
-
         const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-        signer = accounts[0];   // <-- This is the reliable part
-
-        info.innerHTML = `✅ Connected: <strong>${signer}</strong>`;
-        console.log("Wallet connected:", signer);
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        info.innerHTML = `✅ Connected: <strong>${accounts[0]}</strong>`;
       } catch (e) {
-        console.error(e);
         info.innerHTML = "❌ Connection failed";
       }
-
       btn.innerHTML = "🔗 Connect MetaMask";
       btn.disabled = false;
     }
 
-    // Device detection (kept from working version)
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
@@ -187,10 +183,27 @@
       document.getElementById("equivalentPrice").innerHTML = `Equivalent to <strong>${basePLSC} PLSC = ${equivalent} ${token}</strong>`;
     }
 
-    function buyLicense() {
+    // ====================== REAL TRANSACTION ======================
+    async function buyLicense() {
       if (!signer) return alert("Please connect your wallet first.");
       if (!selectedMac) return alert("Please detect your device first.");
-      alert(`✅ Test successful!\nWould buy ${selectedType} license for MAC: ${selectedMac}`);
+
+      const payBtn = document.getElementById("payBtn");
+      payBtn.innerHTML = "⏳ Sending to MetaMask...";
+      payBtn.disabled = true;
+
+      try {
+        const tx = await contract.buyLicense(selectedMac);
+        await tx.wait();
+
+        alert(`✅ Transaction Successful!\n\nYou purchased a ${selectedType} license!\n\nTransaction Hash:\n${tx.hash}\n\nYou can view it on PulseChain Explorer.`);
+      } catch (err) {
+        console.error(err);
+        alert("Transaction failed or was cancelled.");
+      }
+
+      payBtn.innerHTML = "💎 Pay & Activate Now";
+      payBtn.disabled = false;
     }
 
     // Mesh Background
