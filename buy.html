@@ -26,7 +26,7 @@
   <div class="container">
     <button onclick="window.location.href='device-manager.html'" style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9); color:white;">← Back to Home</button>
     <h1>Buy License</h1>
-    <p style="font-size:1.4em;color:#94a3b8;">Payment first → Licence instantly after confirmation</p>
+    <p style="font-size:1.4em;color:#94a3b8;">Payment first → Licence after confirmation</p>
 
     <button onclick="connectWallet()" id="connectBtn" class="btn-primary" style="margin-bottom:20px;">🔗 Connect MetaMask</button>
     <div id="walletInfo" class="wallet-info">Wallet not connected</div>
@@ -66,10 +66,9 @@
 
     <button id="payBtn" class="btn-primary" onclick="showPaymentInstructions()" style="font-size:1.35em;padding:20px 50px;">💎 Send Exact Amount to Treasury</button>
 
-    <!-- Persistent TX hash section -->
     <div id="txSection" class="benefit-box" style="display:none; margin-top:20px;">
-      <strong>Paste Transaction Hash here after sending payment:</strong><br>
-      <input id="txHashInput" type="text" placeholder="0x..." style="width:100%; max-width:500px; padding:12px; margin:10px 0; font-family:monospace; font-size:1.1em;">
+      <strong>Paste Transaction Hash after sending:</strong><br>
+      <input id="txHashInput" type="text" placeholder="0x..." style="width:90%; padding:12px; margin:10px 0; font-family:monospace;">
       <button onclick="generateLicense()" class="btn-primary">✅ Generate Licence Now</button>
     </div>
   </div>
@@ -124,7 +123,7 @@
         await port.open({ baudRate: 115200 });
         const reader = port.readable.getReader();
         let buffer = '';
-        const timeout = setTimeout(() => reader.cancel(), 8000);
+        const timeout = setTimeout(() => reader.cancel(), 10000);
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
@@ -141,7 +140,7 @@
           }
         }
       } catch(e) {
-        alert("Could not detect device.\nTip: Hold BOOT button while plugging in.");
+        alert("Could not detect device.\n\nTip: Hold the BOOT button while plugging in the Heltec.");
       }
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
@@ -169,13 +168,12 @@
 
     function showPaymentInstructions() {
       if (!selectedMac) return alert("Please detect your device first.");
-
       const token = document.getElementById("paymentToken").value;
       const basePLSC = selectedType === 'lifetime' ? 100 : 20;
       const amount = (basePLSC * 0.75 / (tokenPricesGBP[token] || 0.75)).toFixed(4);
 
       document.getElementById("txSection").style.display = 'block';
-      alert(`Send exactly ${amount} ${token} to:\n\n${TREASURY}\n\nThen paste the TX hash below to generate your licence instantly.`);
+      alert(`Send exactly ${amount} ${token} to:\n\n${TREASURY}\n\nAfter sending, paste the TX hash in the box below to generate your licence.`);
     }
 
     function generateLicense() {
@@ -183,7 +181,7 @@
       if (!txHash) return alert("Please paste the transaction hash first.");
 
       const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
-      alert(`✅ Licence Generated!\n\nMAC: ${selectedMac}\nLicence Key: ${licenseKey}\n\nYou can now go to the Flash page and use this key.`);
+      alert(`✅ Licence Generated Successfully!\n\nMAC: ${selectedMac}\nLicence Key: ${licenseKey}\n\nGo to the Flash page and use this key.`);
     }
 
     // Mesh Background
