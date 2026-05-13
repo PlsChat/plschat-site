@@ -24,17 +24,20 @@
       -webkit-text-fill-color: transparent; 
     }
     button { 
-      padding:16px 32px; 
-      font-size:1.1em; 
-      margin:10px; 
-      border:none; 
-      border-radius:12px; 
-      cursor:pointer; 
-      font-weight:600; 
-      background: linear-gradient(135deg, #3b82f6, #60a5fa);
-      color: white;
+      padding: 14px 28px; 
+      font-size: 1.1em; 
+      margin: 10px; 
+      border: none; 
+      border-radius: 12px; 
+      cursor: pointer; 
+      font-weight: 600; 
+      background: linear-gradient(135deg, #3b82f6, #60a5fa); 
+      color: white; 
     }
-    .btn-send { background: #22c55e; color: #000; }
+    .btn-send { 
+      background: linear-gradient(135deg, #22c55e, #4ade80); 
+      color: #000; 
+    }
     .license-box { 
       background: rgba(34,197,94,0.15); 
       border: 2px solid #22c55e; 
@@ -60,8 +63,7 @@
     <h1>PLSChat Web Flasher</h1>
     <p>Flash firmware + apply your purchased licence</p>
 
-    <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
-
+    <button onclick="document.querySelector('esp-web-install-button').click()">🔌 Connect Device</button>
     <button onclick="detectAndLoadLicense()">🔄 Refresh / Detect Licence</button>
 
     <div class="license-box" id="licenseBox">
@@ -74,7 +76,7 @@
     <div style="background:rgba(30,30,50,0.8); padding:20px; border-radius:12px; max-width:600px; margin:30px auto; text-align:left;">
       <strong>Instructions:</strong><br><br>
       1. Hold BOOT button while plugging in<br>
-      2. Flash the firmware using the Connect button above<br>
+      2. Click "Connect Device" to flash firmware<br>
       3. Click "Refresh / Detect Licence"<br>
       4. Click "Send Licence to Device"
     </div>
@@ -122,7 +124,7 @@
           }
         }
       } catch (e) {
-        alert("Could not detect device.\nHold BOOT button and try again.");
+        alert("Could not detect device.\nHold BOOT button and try 'Refresh / Detect Licence' again.");
       }
     }
 
@@ -130,17 +132,14 @@
       if (!currentLicenseKey) return alert("No licence found.");
 
       try {
-        const port = await navigator.serial.requestPort();  // Fresh connection
+        const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
         const writer = port.writable.getWriter();
-        
         await writer.write(new TextEncoder().encode(`LICENSE:${currentLicenseKey}\n`));
         writer.releaseLock();
-        
         alert("✅ Licence successfully sent to device!");
       } catch (err) {
-        console.error(err);
-        alert("Failed to send licence.\n\nTips:\n• Device must be plugged in\n• Hold BOOT button if needed\n• Try clicking 'Refresh / Detect Licence' first");
+        alert("Failed to send licence.\n\nMake sure:\n• Device is plugged in\n• You are holding the BOOT button if needed\n• Try clicking 'Refresh / Detect Licence' first");
       }
     }
 
@@ -151,7 +150,7 @@
       }
     }
 
-    window.onload = () => setTimeout(detectAndLoadLicense, 2000);
+    window.onload = () => setTimeout(detectAndLoadLicense, 1500);
   </script>
 </body>
 </html>
