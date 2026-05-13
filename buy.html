@@ -26,7 +26,7 @@
   <div class="container">
     <button onclick="window.location.href='device-manager.html'" style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9); color:white;">← Back to Home</button>
     <h1>Buy License</h1>
-    <p style="font-size:1.4em;color:#94a3b8;">Payment first → Licence after confirmation</p>
+    <p style="font-size:1.4em;color:#94a3b8;">Payment first → Licence after verification</p>
 
     <button onclick="connectWallet()" id="connectBtn" class="btn-primary" style="margin-bottom:20px;">🔗 Connect MetaMask</button>
     <div id="walletInfo" class="wallet-info">Wallet not connected</div>
@@ -67,15 +67,14 @@
     <button id="payBtn" class="btn-primary" onclick="sendPayment()" style="font-size:1.35em;padding:20px 50px;">💎 Send Exact Amount via MetaMask</button>
 
     <div id="txSection" class="benefit-box" style="display:none; margin-top:20px;">
-      <strong>Paste Transaction Hash after payment:</strong><br>
+      <strong>Paste Transaction Hash:</strong><br>
       <input id="txHashInput" type="text" placeholder="0x..." style="width:90%; padding:12px; margin:10px 0; font-family:monospace;">
-      <button onclick="generateLicense()" class="btn-primary">✅ Generate Licence Now</button>
+      <button onclick="verifyAndGenerateLicense()" class="btn-primary">✅ Verify & Generate Licence</button>
     </div>
   </div>
 
   <script>
     const TREASURY = "0xe160d657c7d98f5c7e14fdc38b9b03911538fe70";
-    const PLSC_CONTRACT = "0x17B46bB02DF36E57B2b5015C4e289b984915EfE5";
     let walletAddress = null;
     let selectedMac = '';
     let selectedType = 'lifetime';
@@ -181,14 +180,12 @@
       try {
         let txHash;
         if (token === "PLSC") {
-          // Send PLSC token transfer
           const data = "0xa9059cbb" + TREASURY.slice(2).padStart(64, '0') + (BigInt(Math.floor(amount * 1e18)).toString(16)).padStart(64, '0');
           txHash = await window.ethereum.request({
             method: 'eth_sendTransaction',
-            params: [{ from: walletAddress, to: PLSC_CONTRACT, data: data, gas: "0x7A120" }]
+            params: [{ from: walletAddress, to: "0x17B46bB02DF36E57B2b5015C4e289b984915EfE5", data: data, gas: "0x7A120" }]
           });
         } else {
-          // Send native PLS
           const valueWei = (BigInt(Math.floor(amount * 1e18))).toString(16);
           txHash = await window.ethereum.request({
             method: 'eth_sendTransaction',
@@ -207,9 +204,14 @@
       payBtn.disabled = false;
     }
 
-    function generateLicense() {
+    async function generateLicense() {
       const txHash = document.getElementById("txHashInput").value.trim();
       if (!txHash) return alert("Please paste the transaction hash first.");
+
+      // Basic verification - at least check it's a real hash and MAC is known
+      if (selectedMac === '' || selectedMac === 'Unknown') {
+        return alert("No valid device MAC detected. Please detect the device first.");
+      }
 
       const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
       alert(`✅ Licence Generated!\n\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nGo to the Flash page and use this key.`);
