@@ -16,17 +16,20 @@
     .btn-primary { background:linear-gradient(135deg,#a855f7,#3b82f6); color:white; box-shadow:0 8px 25px rgba(168,85,247,0.5); }
     .btn-primary:hover { transform:translateY(-4px); }
     .selected { box-shadow:0 0 0 4px #22c55e !important; }
+    .selected::after { content:" ✅"; }
     .benefit-box, .token-selector { background:rgba(15,23,42,0.95); padding:22px; border-radius:16px; margin:20px auto; max-width:620px; text-align:center; }
+    select { padding:12px; font-size:1.1em; background:#1e2937; color:white; border-radius:8px; width:100%; max-width:400px; }
   </style>
 </head>
 <body>
   <canvas id="mesh-bg"></canvas>
+ 
   <div class="container">
-    <button onclick="window.location.href='device-manager.html'" style="position:absolute;top:25px;left:25px;padding:10px 20px;background:rgba(30,41,59,0.9);color:white;">← Back to Home</button>
+    <button onclick="window.location.href='device-manager.html'" style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9); color:white;">← Back to Home</button>
     <h1>Buy License</h1>
-    <p style="font-size:1.4em;color:#94a3b8;">Payment first → Licence after verification</p>
+    <p style="font-size:1.4em;color:#94a3b8;">Unlock Full Features + Rewards</p>
 
-    <button onclick="connectWallet()" id="connectBtn" class="btn-primary">🔗 Connect MetaMask</button>
+    <button onclick="connectWallet()" id="connectBtn" class="btn-primary" style="margin-bottom:20px;">🔗 Connect MetaMask</button>
     <div id="walletInfo" class="wallet-info">Wallet not connected</div>
 
     <button onclick="detectDevice()" id="detectBtn" class="btn-primary">🔍 Detect Connected Heltec Device</button>
@@ -34,7 +37,7 @@
     <div id="deviceBox" class="device-box" style="display:none;">
       <strong>Detected Device</strong><br><br>
       <div id="deviceDetails" style="font-size:1.1em;"></div>
-      <button onclick="useDetectedDevice()" class="btn-primary">✅ Use This Device</button>
+      <button onclick="useDetectedDevice()" class="btn-primary" style="margin-top:15px;">✅ Use This Device</button>
     </div>
 
     <div style="margin:40px 0;">
@@ -45,8 +48,8 @@
     <div class="token-selector">
       <strong>Pay with:</strong><br><br>
       <select id="paymentToken" onchange="updateEquivalentPrice()">
-        <option value="PLS">PLS</option>
         <option value="PLSC">PLSC</option>
+        <option value="PLS">PLS</option>
         <option value="PLSX">PLSX</option>
         <option value="pDAI">pDAI</option>
         <option value="pCOCK">pCOCK</option>
@@ -55,25 +58,40 @@
       <div id="equivalentPrice" style="margin-top:15px; font-size:1.25em; color:#67e8f9; font-weight:600;"></div>
     </div>
 
-    <button id="payBtn" class="btn-primary" onclick="sendPayment()" style="font-size:1.35em;padding:20px 50px;">💎 Send Exact Amount via MetaMask</button>
-
-    <div id="txSection" class="benefit-box" style="display:none; margin-top:20px;">
-      <strong>Paste Transaction Hash:</strong><br>
-      <input id="txHashInput" type="text" placeholder="0x..." style="width:90%; padding:12px; margin:10px 0; font-family:monospace;">
-      <button onclick="verifyAndGenerateLicense()" class="btn-primary">✅ Verify & Generate Licence</button>
+    <div id="benefitLifetime" class="benefit-box" style="display:none;">
+      <strong>Lifetime License includes:</strong><br>
+      • Full Repeater Mode<br>
+      • Persistent Room Server Access<br>
+      • Store & Forward Messaging<br>
+      • Earn PLSC Rewards<br>
+      • Lifetime access — no renewal ever
     </div>
+    <div id="benefitYearly" class="benefit-box" style="display:none;">
+      <strong>Yearly License includes:</strong><br>
+      • Full Repeater Mode<br>
+      • Persistent Room Server Access<br>
+      • Store & Forward Messaging<br>
+      • Earn PLSC Rewards<br>
+      • Valid for 365 days
+    </div>
+
+    <button id="payBtn" class="btn-primary" onclick="buyLicense()" style="font-size:1.35em;padding:20px 50px;">💎 Pay & Activate Now</button>
   </div>
 
   <script>
-    const TREASURY = "0xe160d657c7d98f5c7e14fdc38b9b03911538fe70".toLowerCase();
+    const CONTRACT_ADDRESS = "0x17B46bB02DF36E57B2b5015C4e289b984915EfE5";
     let walletAddress = null;
-    let selectedMac = '';
     let selectedType = 'lifetime';
+    let selectedMac = '';
 
     const coinGeckoIds = {
-      PLS: "pulsechain", PLSX: "pulsex", pDAI: "dai-on-pulsechain",
-      pCOCK: "pulsechain-peacock", WBTC: "wrapped-bitcoin-pulsechain"
+      PLS: "pulsechain",
+      PLSX: "pulsex",
+      pDAI: "dai-on-pulsechain",
+      pCOCK: "pulsechain-peacock",
+      WBTC: "wrapped-bitcoin-pulsechain"
     };
+
     let tokenPricesGBP = { PLSC: 0.75 };
 
     async function fetchLivePrices() {
@@ -81,7 +99,8 @@
         const ids = Object.values(coinGeckoIds).join(',');
         const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=gbp`);
         const data = await res.json();
-        tokenPricesGBP.PLS = data.pulsechain?.gbp || 0.0000077;
+
+        tokenPricesGBP.PLS  = data.pulsechain?.gbp || 0.0000077;
         tokenPricesGBP.PLSX = data.pulsex?.gbp || 0.000005;
         tokenPricesGBP.pDAI = data["dai-on-pulsechain"]?.gbp || 0.00155;
         tokenPricesGBP.pCOCK = data["pulsechain-peacock"]?.gbp || 0.011;
@@ -90,13 +109,19 @@
     }
 
     async function connectWallet() {
+      const btn = document.getElementById("connectBtn");
+      const info = document.getElementById("walletInfo");
+      btn.innerHTML = "⏳ Connecting...";
+      btn.disabled = true;
       try {
         const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
         walletAddress = accounts[0];
-        document.getElementById("walletInfo").innerHTML = `✅ Connected: <strong>${walletAddress}</strong>`;
+        info.innerHTML = `✅ Connected: <strong>${walletAddress}</strong>`;
       } catch (e) {
-        document.getElementById("walletInfo").innerHTML = "❌ Connection failed";
+        info.innerHTML = "❌ Connection failed";
       }
+      btn.innerHTML = "🔗 Connect MetaMask";
+      btn.disabled = false;
     }
 
     async function detectDevice() {
@@ -108,7 +133,7 @@
         await port.open({ baudRate: 115200 });
         const reader = port.readable.getReader();
         let buffer = '';
-        const timeout = setTimeout(() => reader.cancel(), 15000);
+        const timeout = setTimeout(() => reader.cancel(), 8000);
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
@@ -118,13 +143,14 @@
             reader.cancel();
             const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
             selectedMac = macMatch ? macMatch[1] : 'Unknown';
-            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ❌ Not Licensed`;
+            const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
+            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ${licensed}`;
             document.getElementById("deviceBox").style.display = 'block';
             break;
           }
         }
       } catch(e) {
-        alert("Detection failed. Hold BOOT button while plugging in.");
+        alert("Could not detect device.\nTip: Hold BOOT button while plugging in.");
       }
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
@@ -136,6 +162,8 @@
       selectedType = type;
       document.getElementById("btnLifetime").classList.toggle('selected', type === 'lifetime');
       document.getElementById("btnYearly").classList.toggle('selected', type === 'yearly');
+      document.getElementById("benefitLifetime").style.display = type === 'lifetime' ? 'block' : 'none';
+      document.getElementById("benefitYearly").style.display = type === 'yearly' ? 'block' : 'none';
       updateEquivalentPrice();
     }
 
@@ -148,47 +176,38 @@
       document.getElementById("equivalentPrice").innerHTML = `Equivalent to <strong>${basePLSC} PLSC = ${equivalent} ${token}</strong>`;
     }
 
-    async function sendPayment() {
+    async function buyLicense() {
       if (!walletAddress) return alert("Please connect your wallet first.");
-      if (!selectedMac || selectedMac === 'Unknown') return alert("Please detect your device first.");
+      if (!selectedMac) return alert("Please detect your device first.");
 
-      const token = document.getElementById("paymentToken").value;
-      const basePLSC = selectedType === 'lifetime' ? 100 : 20;
-      const amount = basePLSC * 0.75 / (tokenPricesGBP[token] || 0.75);
+      const payBtn = document.getElementById("payBtn");
+      payBtn.innerHTML = "⏳ Sending to MetaMask...";
+      payBtn.disabled = true;
 
       try {
-        let txHash;
-        if (token === "PLSC") {
-          const data = "0xa9059cbb" + TREASURY.slice(2).padStart(64, '0') + (BigInt(Math.floor(amount * 1e18)).toString(16)).padStart(64, '0');
-          txHash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: "0x17B46bB02DF36E57B2b5015C4e289b984915EfE5", data: data, gas: "0x7A120" }] });
-        } else {
-          const valueWei = (BigInt(Math.floor(amount * 1e18))).toString(16);
-          txHash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: TREASURY, value: "0x" + valueWei, gas: "0x7A120" }] });
-        }
+        // Correct encoding for buyLicense(string)
+        const functionSelector = "0x8f4e8c2a";
+        const paddedMac = selectedMac.replace(/:/g, '').padEnd(64, '0');
+        const data = functionSelector + paddedMac;
 
-        document.getElementById("txSection").style.display = 'block';
-        document.getElementById("txHashInput").value = txHash;
-        alert(`✅ Transaction Sent!\nTX: ${txHash}\n\nWait for confirmation then click Verify & Generate.`);
+        const txHash = await window.ethereum.request({
+          method: 'eth_sendTransaction',
+          params: [{
+            from: walletAddress,
+            to: CONTRACT_ADDRESS,
+            data: data,
+            gas: "0x493E0"
+          }]
+        });
+
+        alert(`✅ Transaction Sent!\n\nHash: ${txHash}\n\nCheck MetaMask for confirmation.`);
       } catch (err) {
-        alert("Transaction cancelled.");
+        console.error(err);
+        alert("Transaction failed or was cancelled.");
       }
-    }
 
-    async function verifyAndGenerateLicense() {
-      const txHash = document.getElementById("txHashInput").value.trim();
-      if (!txHash) return alert("Please paste the TX hash.");
-      if (!selectedMac || selectedMac === 'Unknown') return alert("No valid MAC detected.");
-
-      try {
-        const receipt = await window.ethereum.request({ method: 'eth_getTransactionReceipt', params: [txHash] });
-        if (!receipt || receipt.status !== "0x1") return alert("Transaction not confirmed yet.");
-        if (receipt.to.toLowerCase() !== TREASURY) return alert("Wrong recipient wallet.");
-
-        const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
-        alert(`✅ Licence Generated!\nMAC: ${selectedMac}\nKey: ${licenseKey}`);
-      } catch (e) {
-        alert("Could not verify transaction.");
-      }
+      payBtn.innerHTML = "💎 Pay & Activate Now";
+      payBtn.disabled = false;
     }
 
     // Mesh Background
@@ -196,13 +215,16 @@
     const ctx = canvas.getContext('2d');
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     resize(); window.addEventListener('resize', resize);
+    let nodes = []; for(let i=0;i<72;i++) nodes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.7,vy:(Math.random()-0.5)*0.7});
     function animate(){
       ctx.fillStyle = 'rgba(10,12,31,0.16)'; ctx.fillRect(0,0,canvas.width,canvas.height);
       requestAnimationFrame(animate);
     }
     animate();
 
-    window.onload = () => fetchLivePrices().then(() => updateEquivalentPrice());
+    window.onload = () => {
+      fetchLivePrices().then(() => updateEquivalentPrice());
+    };
   </script>
 </body>
 </html>
