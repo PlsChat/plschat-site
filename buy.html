@@ -16,7 +16,9 @@
     .btn-primary { background:linear-gradient(135deg,#a855f7,#3b82f6); color:white; box-shadow:0 8px 25px rgba(168,85,247,0.5); }
     .btn-primary:hover { transform:translateY(-4px); }
     .selected { box-shadow:0 0 0 4px #22c55e !important; }
+    .selected::after { content:" ✅"; }
     .benefit-box, .token-selector { background:rgba(15,23,42,0.95); padding:22px; border-radius:16px; margin:20px auto; max-width:620px; text-align:center; }
+    select { padding:12px; font-size:1.1em; background:#1e2937; color:white; border-radius:8px; width:100%; max-width:400px; }
   </style>
 </head>
 <body>
@@ -34,7 +36,7 @@
     <div id="deviceBox" class="device-box" style="display:none;">
       <strong>Detected Device</strong><br><br>
       <div id="deviceDetails" style="font-size:1.1em;"></div>
-      <button onclick="useDetectedDevice()" class="btn-primary">✅ Use This Device</button>
+      <button onclick="useDetectedDevice()" class="btn-primary" style="margin-top:15px;">✅ Use This Device</button>
     </div>
 
     <div style="margin:40px 0;">
@@ -53,6 +55,13 @@
         <option value="WBTC">WBTC</option>
       </select>
       <div id="equivalentPrice" style="margin-top:15px; font-size:1.25em; color:#67e8f9; font-weight:600;"></div>
+    </div>
+
+    <div id="benefitLifetime" class="benefit-box" style="display:none;">
+      <strong>Lifetime License includes:</strong><br>• Full Repeater Mode<br>• Persistent Room Server<br>• Store & Forward<br>• Earn PLSC Rewards<br>• Lifetime access
+    </div>
+    <div id="benefitYearly" class="benefit-box" style="display:none;">
+      <strong>Yearly License includes:</strong><br>• Full Repeater Mode<br>• Persistent Room Server<br>• Store & Forward<br>• Earn PLSC Rewards<br>• 365 days access
     </div>
 
     <button id="payBtn" class="btn-primary" onclick="sendPayment()" style="font-size:1.35em;padding:20px 50px;">💎 Send Exact Amount via MetaMask</button>
@@ -118,13 +127,14 @@
             reader.cancel();
             const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
             selectedMac = macMatch ? macMatch[1] : 'Unknown';
-            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ❌ Not Licensed`;
+            const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
+            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ${licensed}`;
             document.getElementById("deviceBox").style.display = 'block';
             break;
           }
         }
       } catch(e) {
-        alert("Detection failed. Hold BOOT button while plugging in.");
+        alert("Could not detect device.\nHold BOOT button while plugging in.");
       }
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
@@ -168,7 +178,7 @@
 
         document.getElementById("txSection").style.display = 'block';
         document.getElementById("txHashInput").value = txHash;
-        alert(`✅ Transaction Sent!\nTX: ${txHash}\n\nWait for confirmation then click Verify & Generate.`);
+        alert(`✅ Transaction Sent!\nTX: ${txHash}\n\nWait for confirmation, then click "Verify & Generate Licence".`);
       } catch (err) {
         alert("Transaction cancelled.");
       }
@@ -176,7 +186,7 @@
 
     async function verifyAndGenerateLicense() {
       const txHash = document.getElementById("txHashInput").value.trim();
-      if (!txHash) return alert("Please paste the TX hash.");
+      if (!txHash) return alert("Please paste the transaction hash.");
       if (!selectedMac || selectedMac === 'Unknown') return alert("No valid MAC detected.");
 
       try {
@@ -185,7 +195,7 @@
         if (receipt.to.toLowerCase() !== TREASURY) return alert("Wrong recipient wallet.");
 
         const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
-        alert(`✅ Licence Generated!\nMAC: ${selectedMac}\nKey: ${licenseKey}`);
+        alert(`✅ Licence Generated!\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nGo to the Flash page and use this key.`);
       } catch (e) {
         alert("Could not verify transaction.");
       }
