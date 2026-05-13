@@ -98,7 +98,90 @@
 
     const ABI = ["function buyLicense(string calldata deviceHardwareId) external"];
 
-    // ... (keep the fetchLivePrices, connectWallet, detectDevice, selectType, updateEquivalentPrice functions from the previous working version)
+    async function fetchLivePrices() {
+      try {
+        const ids = Object.values(coinGeckoIds).join(',');
+        const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=gbp`);
+        const data = await res.json();
+
+        tokenPricesGBP.PLS  = data.pulsechain?.gbp || 0.0000077;
+        tokenPricesGBP.PLSX = data.pulsex?.gbp || 0.000005;
+        tokenPricesGBP.pDAI = data["dai-on-pulsechain"]?.gbp || 0.00155;
+        tokenPricesGBP.pCOCK = data["pulsechain-peacock"]?.gbp || 0.011;
+        tokenPricesGBP.WBTC = data["wrapped-bitcoin-pulsechain"]?.gbp || 65000;
+      } catch(e) {}
+    }
+
+    async function connectWallet() {
+      const btn = document.getElementById("connectBtn");
+      const info = document.getElementById("walletInfo");
+      btn.innerHTML = "⏳ Connecting...";
+      btn.disabled = true;
+      try {
+        if (!window.ethereum) throw new Error("MetaMask not found");
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        info.innerHTML = `✅ Connected: <strong>${accounts[0]}</strong>`;
+      } catch (e) {
+        info.innerHTML = "❌ Connection failed";
+      }
+      btn.innerHTML = "🔗 Connect MetaMask";
+      btn.disabled = false;
+    }
+
+    async function detectDevice() {
+      const btn = document.getElementById("detectBtn");
+      btn.innerHTML = "⏳ Detecting...";
+      btn.disabled = true;
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+        const reader = port.readable.getReader();
+        let buffer = '';
+        const timeout = setTimeout(() => reader.cancel(), 8000);
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += new TextDecoder().decode(value);
+          if (buffer.includes('MAC:') || buffer.includes('END_STATUS')) {
+            clearTimeout(timeout);
+            reader.cancel();
+            const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
+            selectedMac = macMatch ? macMatch[1] : 'Unknown';
+            const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
+            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ${licensed}`;
+            document.getElementById("deviceBox").style.display = 'block';
+            break;
+          }
+        }
+      } catch(e) {
+        alert("Could not detect device.\nTip: Hold BOOT button while plugging in.");
+      }
+      btn.innerHTML = "🔍 Detect Connected Heltec Device";
+      btn.disabled = false;
+    }
+
+    function useDetectedDevice() { alert(`MAC ${selectedMac} selected.`); }
+
+    function selectType(type) {
+      selectedType = type;
+      document.getElementById("btnLifetime").classList.toggle('selected', type === 'lifetime');
+      document.getElementById("btnYearly").classList.toggle('selected', type === 'yearly');
+      document.getElementById("benefitLifetime").style.display = type === 'lifetime' ? 'block' : 'none';
+      document.getElementById("benefitYearly").style.display = type === 'yearly' ? 'block' : 'none';
+      updateEquivalentPrice();
+    }
+
+    async function updateEquivalentPrice() {
+      await fetchLivePrices();
+      const basePLSC = selectedType === 'lifetime' ? 100 : 20;
+      const token = document.getElementById("paymentToken").value;
+      const priceGBP = tokenPricesGBP[token] || 0.75;
+      const equivalent = (basePLSC * 0.75 / priceGBP).toFixed(4);
+      document.getElementById("equivalentPrice").innerHTML = `Equivalent to <strong>${basePLSC} PLSC = ${equivalent} ${token}</strong>`;
+    }
 
     async function buyLicense() {
       if (!signer) return alert("Please connect your wallet first.");
@@ -109,21 +192,19 @@
       payBtn.disabled = true;
 
       try {
-        console.log("Sending buyLicense for MAC:", selectedMac);
         const tx = await contract.buyLicense(selectedMac);
-        console.log("Transaction sent:", tx.hash);
         await tx.wait();
-        alert(`✅ Transaction Successful!\n\nTX Hash: ${tx.hash}`);
+        alert(`✅ Transaction Successful!\n\nYou purchased a ${selectedType} license for MAC: ${selectedMac}\n\nTX: ${tx.hash}`);
       } catch (err) {
-        console.error("Transaction error:", err);
-        alert("Transaction failed.\n\nCheck console (F12) for details.");
+        console.error(err);
+        alert("Transaction failed or was cancelled.");
       }
 
       payBtn.innerHTML = "💎 Pay & Activate Now";
       payBtn.disabled = false;
     }
 
-    // (Keep the rest of the code - mesh background, onload, etc.)
+    // Mesh Background
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
