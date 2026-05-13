@@ -69,7 +69,6 @@
   <script>
     const TREASURY = "0xe160d657c7d98f5c7e14fdc38b9b03911538fe70".toLowerCase();
     const PLSC_CONTRACT = "0x17B46bB02DF36E57B2b5015C4e289b984915EfE5".toLowerCase();
-
     let walletAddress = null;
     let selectedMac = '';
     let selectedType = 'lifetime';
@@ -107,35 +106,45 @@
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
       btn.disabled = true;
+
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
         const reader = port.readable.getReader();
         let buffer = '';
-        const timeout = setTimeout(() => reader.cancel(), 15000);
+        const timeout = setTimeout(() => reader.cancel(), 20000); // Long timeout
+
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
           buffer += new TextDecoder().decode(value);
-          if (buffer.includes('MAC:') || buffer.includes('END_STATUS')) {
+
+          const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
+          if (macMatch) {
             clearTimeout(timeout);
             reader.cancel();
-            const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
-            selectedMac = macMatch ? macMatch[1] : 'Unknown';
+            selectedMac = macMatch[1];
+
             const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
-            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ${licensed}`;
+            document.getElementById("deviceDetails").innerHTML = `
+              <strong>MAC:</strong> ${selectedMac}<br>
+              <strong>Status:</strong> ${licensed}
+            `;
             document.getElementById("deviceBox").style.display = 'block';
             break;
           }
         }
       } catch(e) {
-        alert("Could not detect device.\nHold BOOT button while plugging in.");
+        alert("Could not detect device.\n\nHold the BOOT button while plugging in the Heltec.");
       }
+
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
     }
 
-    function useDetectedDevice() { alert(`MAC ${selectedMac} selected.`); }
+    function useDetectedDevice() {
+      if (selectedMac) alert(`✅ MAC ${selectedMac} selected for licensing.`);
+    }
 
     function selectType(type) {
       selectedType = type;
@@ -161,22 +170,38 @@
       const basePLSC = selectedType === 'lifetime' ? 100 : 20;
       const amount = basePLSC * 0.75 / (tokenPricesGBP[token] || 0.75);
 
+      const payBtn = document.getElementById("payBtn");
+      payBtn.innerHTML = "⏳ Sending to MetaMask...";
+      payBtn.disabled = true;
+
       try {
         let txHash;
         if (token === "PLSC") {
-          const data = "0xa9059cbb" + TREASURY.slice(2).padStart(64, '0') + (BigInt(Math.floor(amount * 1e18)).toString(16)).padStart(64, '0');
-          txHash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: PLSC_CONTRACT, data: data, gas: "0x7A120" }] });
+          const data = "0xa9059cbb" + TREASURY.slice(2).padStart(64, '0') + 
+                       (BigInt(Math.floor(amount * 1e18)).toString(16)).padStart(64, '0');
+          txHash = await window.ethereum.request({
+            method: 'eth_sendTransaction',
+            params: [{ from: walletAddress, to: PLSC_CONTRACT, data: data, gas: "0x7A120" }]
+          });
         } else {
           const valueWei = (BigInt(Math.floor(amount * 1e18))).toString(16);
-          txHash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: TREASURY, value: "0x" + valueWei, gas: "0x7A120" }] });
+          txHash = await window.ethereum.request({
+            method: 'eth_sendTransaction',
+            params: [{ from: walletAddress, to: TREASURY, value: "0x" + valueWei, gas: "0x7A120" }]
+          });
         }
 
         document.getElementById("txSection").style.display = 'block';
         document.getElementById("txHashInput").value = txHash;
         alert(`✅ Transaction Sent!\n\nTX: ${txHash}\n\nWait for confirmation, then click "Verify & Generate Licence".`);
+
       } catch (err) {
-        alert("Transaction cancelled.");
+        console.error(err);
+        alert("Transaction cancelled or failed.");
       }
+
+      payBtn.innerHTML = "💎 Send Exact Amount via MetaMask";
+      payBtn.disabled = false;
     }
 
     async function verifyAndGenerateLicense() {
@@ -186,26 +211,15 @@
 
       try {
         const receipt = await window.ethereum.request({ method: 'eth_getTransactionReceipt', params: [txHash] });
-
-        if (!receipt || receipt.status !== "0x1") {
-          return alert("Transaction is not confirmed yet or failed.");
-        }
-
-        const isCorrect = receipt.to.toLowerCase() === TREASURY || receipt.to.toLowerCase() === PLSC_CONTRACT;
-        if (!isCorrect) return alert("Wrong recipient wallet.");
+        if (!receipt || receipt.status !== "0x1") return alert("Transaction not confirmed yet.");
 
         const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
-
-        // Save for flash page
         let licenses = JSON.parse(localStorage.getItem('licenses') || '{}');
         licenses[selectedMac] = licenseKey;
         localStorage.setItem('licenses', JSON.stringify(licenses));
 
-        // Auto copy
         await navigator.clipboard.writeText(licenseKey);
-
-        alert(`✅ Licence Generated Successfully!\n\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nKey copied to clipboard and saved for Flash page.`);
-
+        alert(`✅ Licence Generated!\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nCopied to clipboard!`);
       } catch (e) {
         alert("Could not verify transaction.");
       }
