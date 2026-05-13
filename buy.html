@@ -58,7 +58,7 @@
         <option value="pCOCK">pCOCK</option>
         <option value="WBTC">WBTC</option>
       </select>
-      <div id="equivalentPrice" style="margin-top:15px; font-size:1.2em; color:#67e8f9; font-weight:600;"></div>
+      <div id="equivalentPrice" style="margin-top:15px; font-size:1.25em; color:#67e8f9; font-weight:600;"></div>
     </div>
 
     <div id="benefitLifetime" class="benefit-box" style="display:none;">
@@ -88,15 +88,6 @@
     let selectedType = 'lifetime';
     let selectedMac = '';
     let selectedToken = 'PLSC';
-
-    const tokenAddresses = {
-      "PLSC": "0xe160d657c7d98f5c7e14fdc38b9b03911538fe70",
-      "PLS": null, // Native
-      "PLSX": "0x95b303987a60c71504d99aa1b13b4da07b0790ab",
-      "pDAI": "0x6b175474e89094c44da98b954eedeac495271d0f",
-      "pCOCK": "0xc10a4ed9b4042222d69ff0b374eddd47ed90fc1f",
-      "WBTC": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
-    };
 
     const tokenPricesGBP = {
       PLSC: 0.75,
@@ -190,17 +181,10 @@
       payBtn.disabled = true;
 
       try {
-        const tokenSymbol = document.getElementById("paymentToken").value;
-        const basePLSC = selectedType === 'lifetime' ? 100 : 20;
-        const priceGBP = tokenPricesGBP[tokenSymbol] || 0.75;
-        const amount = (basePLSC * 0.75 / priceGBP).toFixed(4);
-
-        alert(`MetaMask will now ask you to approve ${amount} ${tokenSymbol} for your ${selectedType} license.`);
-
         const tx = await contract.buyLicense(selectedMac);
         await tx.wait();
-
-        alert(`✅ Transaction Successful!\n\nYou purchased a ${selectedType} license using ${amount} ${tokenSymbol}`);
+        const price = selectedType === 'lifetime' ? "100 PLSC" : "20 PLSC";
+        alert(`✅ Transaction Successful!\n\nYou purchased a ${selectedType} license (${price})`);
       } catch (err) {
         console.error(err);
         alert("Transaction failed or was cancelled.");
