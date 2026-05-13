@@ -48,7 +48,6 @@
       <button onclick="selectType('yearly')" id="btnYearly" class="btn-primary">Yearly — 20 PLSC</button>
     </div>
 
-    <!-- Token Selector -->
     <div class="token-selector">
       <strong>Pay with:</strong><br><br>
       <select id="paymentToken" onchange="updateEquivalentPrice()">
@@ -90,7 +89,7 @@
     let selectedMac = '';
     let selectedToken = 'PLSC';
 
-    // Approximate £ prices (fallback)
+    // Approximate £ prices
     const tokenPrices = {
       PLSC: 0.75,
       PLS: 0.0000077,
@@ -165,25 +164,13 @@
       updateEquivalentPrice();
     }
 
-    async function updateEquivalentPrice() {
+    function updateEquivalentPrice() {
       const basePLSC = selectedType === 'lifetime' ? 100 : 20;
       const token = document.getElementById("paymentToken").value;
-      const equivalentDiv = document.getElementById("equivalentPrice");
-
-      let priceGBP = tokenPrices[token] || 0.75;
-
-      try {
-        // Live price attempt (CoinGecko)
-        const ids = token === "PLS" ? "pulsechain" : token === "PLSX" ? "pulsex" : token === "pDAI" ? "dai" : "";
-        if (ids) {
-          const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
-          const data = await res.json();
-          priceGBP = data[ids]?.usd || priceGBP;
-        }
-      } catch(e) {}
-
+      const priceGBP = tokenPrices[token] || 0.75;
       const equivalent = (basePLSC * 0.75 / priceGBP).toFixed(4);
-      equivalentDiv.innerHTML = `Equivalent to <strong>${basePLSC} PLSC = ${equivalent} ${token}</strong>`;
+
+      document.getElementById("equivalentPrice").innerHTML = `Equivalent to <strong>${basePLSC} PLSC = ${equivalent} ${token}</strong>`;
     }
 
     async function buyLicense() {
