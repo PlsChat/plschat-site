@@ -11,64 +11,86 @@
     .container { max-width:820px; margin:0 auto; text-align:center; position:relative; z-index:2; }
     h1 { font-size:3.4em; background:linear-gradient(90deg,#a855f7,#67e8f9); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; }
     .wallet-info { background:#1e2937; padding:12px; border-radius:8px; margin:15px 0; font-family:monospace; min-height:52px; }
+    .device-box { background:rgba(15,23,42,0.95); padding:25px; border-radius:16px; margin:30px auto; max-width:620px; text-align:center; }
     button { padding:16px 36px; font-size:1.15em; font-weight:600; border:none; border-radius:14px; cursor:pointer; margin:8px; transition:all 0.3s; }
     .btn-primary { background:linear-gradient(135deg,#a855f7,#3b82f6); color:white; box-shadow:0 8px 25px rgba(168,85,247,0.5); }
-    .btn-primary:hover { transform:translateY(-3px); }
-    .info-box { background:rgba(15,23,42,0.95); padding:20px; border-radius:16px; margin:20px auto; max-width:620px; text-align:left; }
+    .btn-primary:hover { transform:translateY(-4px); }
+    .selected { box-shadow:0 0 0 4px #22c55e !important; }
+    .selected::after { content:" ✅"; }
+    .benefit-box, .token-selector { background:rgba(15,23,42,0.95); padding:22px; border-radius:16px; margin:20px auto; max-width:620px; text-align:center; }
+    select { padding:12px; font-size:1.1em; background:#1e2937; color:white; border-radius:8px; width:100%; max-width:400px; }
   </style>
 </head>
 <body>
   <canvas id="mesh-bg"></canvas>
-  
   <div class="container">
-    <button onclick="window.location.href='device-manager.html'" style="position:absolute;top:25px;left:25px;padding:10px 20px;background:rgba(30,41,59,0.9);">← Back to Home</button>
-    
+    <button onclick="window.location.href='device-manager.html'" style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9); color:white;">← Back to Home</button>
     <h1>Buy License</h1>
-    <p style="font-size:1.4em;color:#94a3b8;">Pay with any token • Instant licence after payment</p>
+    <p style="font-size:1.4em;color:#94a3b8;">Unlock Full Features + Rewards</p>
 
-    <button onclick="connectWallet()" id="connectBtn" class="btn-primary">🔗 Connect MetaMask</button>
+    <button onclick="connectWallet()" id="connectBtn" class="btn-primary" style="margin-bottom:20px;">🔗 Connect MetaMask</button>
     <div id="walletInfo" class="wallet-info">Wallet not connected</div>
 
-    <button onclick="detectDevice()" class="btn-primary">🔍 Detect Heltec Device</button>
+    <button onclick="detectDevice()" id="detectBtn" class="btn-primary">🔍 Detect Connected Heltec Device</button>
 
-    <div id="deviceBox" class="info-box" style="display:none;">
-      <strong>Device MAC:</strong> <span id="macDisplay" style="font-family:monospace;"></span><br>
-      <strong>Status:</strong> <span id="licenseStatus">Not Licensed</span>
+    <div id="deviceBox" class="device-box" style="display:none;">
+      <strong>Detected Device</strong><br><br>
+      <div id="deviceDetails" style="font-size:1.1em;"></div>
+      <button onclick="useDetectedDevice()" class="btn-primary" style="margin-top:15px;">✅ Use This Device</button>
     </div>
 
     <div style="margin:40px 0;">
-      <button onclick="selectType('lifetime')" id="btnLifetime" class="btn-primary">Lifetime — 100 PLSC (£75)</button>
-      <button onclick="selectType('yearly')" id="btnYearly" class="btn-primary">Yearly — 20 PLSC (£15)</button>
+      <button onclick="selectType('lifetime')" id="btnLifetime" class="btn-primary">Lifetime — 100 PLSC</button>
+      <button onclick="selectType('yearly')" id="btnYearly" class="btn-primary">Yearly — 20 PLSC</button>
     </div>
 
-    <div class="info-box">
+    <div class="token-selector">
       <strong>Pay with:</strong><br><br>
-      <select id="paymentToken" onchange="updateEquivalentPrice()" style="padding:12px;font-size:1.1em;width:100%;max-width:400px;background:#1e2937;color:white;border-radius:8px;">
-        <option value="PLS">PLS</option>
+      <select id="paymentToken" onchange="updateEquivalentPrice()">
         <option value="PLSC">PLSC</option>
+        <option value="PLS">PLS</option>
         <option value="PLSX">PLSX</option>
         <option value="pDAI">pDAI</option>
         <option value="pCOCK">pCOCK</option>
         <option value="WBTC">WBTC</option>
       </select>
-      <div id="equivalentPrice" style="margin-top:15px;font-size:1.3em;color:#67e8f9;font-weight:600;"></div>
+      <div id="equivalentPrice" style="margin-top:15px; font-size:1.25em; color:#67e8f9; font-weight:600;"></div>
     </div>
 
-    <div class="info-box">
-      <strong>Treasury Wallet:</strong><br>
-      <span id="treasuryAddress" style="font-family:monospace;word-break:break-all;">0xe160d657c7d98f5c7e14fdc38b9b03911538fe70</span>
-      <button onclick="copyTreasury()" style="margin-top:10px;padding:8px 16px;font-size:0.9em;">Copy Address</button>
+    <div id="benefitLifetime" class="benefit-box" style="display:none;">
+      <strong>Lifetime License includes:</strong><br>• Full Repeater Mode<br>• Persistent Room Server<br>• Store & Forward<br>• Earn PLSC Rewards<br>• Lifetime access
+    </div>
+    <div id="benefitYearly" class="benefit-box" style="display:none;">
+      <strong>Yearly License includes:</strong><br>• Full Repeater Mode<br>• Persistent Room Server<br>• Store & Forward<br>• Earn PLSC Rewards<br>• 365 days access
     </div>
 
-    <button id="payBtn" onclick="showPaymentInstructions()" class="btn-primary" style="font-size:1.4em;padding:22px 60px;">💎 Send Exact Amount to Treasury</button>
+    <button id="payBtn" class="btn-primary" onclick="showPaymentInstructions()" style="font-size:1.35em;padding:20px 50px;">💎 Send Payment to Treasury</button>
   </div>
 
   <script>
-    let walletAddress = null;
-    let selectedMac = "";
-    let selectedType = "lifetime";
     const TREASURY = "0xe160d657c7d98f5c7e14fdc38b9b03911538fe70";
-    const PLSC_PRICE_GBP = 0.75;
+    let walletAddress = null;
+    let selectedMac = '';
+    let selectedType = 'lifetime';
+
+    const coinGeckoIds = {
+      PLS: "pulsechain", PLSX: "pulsex", pDAI: "dai-on-pulsechain",
+      pCOCK: "pulsechain-peacock", WBTC: "wrapped-bitcoin-pulsechain"
+    };
+    let tokenPricesGBP = { PLSC: 0.75 };
+
+    async function fetchLivePrices() {
+      try {
+        const ids = Object.values(coinGeckoIds).join(',');
+        const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=gbp`);
+        const data = await res.json();
+        tokenPricesGBP.PLS = data.pulsechain?.gbp || 0.0000077;
+        tokenPricesGBP.PLSX = data.pulsex?.gbp || 0.000005;
+        tokenPricesGBP.pDAI = data["dai-on-pulsechain"]?.gbp || 0.00155;
+        tokenPricesGBP.pCOCK = data["pulsechain-peacock"]?.gbp || 0.011;
+        tokenPricesGBP.WBTC = data["wrapped-bitcoin-pulsechain"]?.gbp || 65000;
+      } catch(e) {}
+    }
 
     async function connectWallet() {
       try {
@@ -81,64 +103,80 @@
     }
 
     async function detectDevice() {
-      // (same reliable Web Serial code as before - I kept it short for space)
-      alert("Device detection ready (hold BOOT button while plugging in if needed).");
-      // In real version this would parse the MAC - for now it lets you test the rest
-      selectedMac = "90:70:69:83:E6:1C"; // example
-      document.getElementById("macDisplay").textContent = selectedMac;
-      document.getElementById("deviceBox").style.display = "block";
+      const btn = document.getElementById("detectBtn");
+      btn.innerHTML = "⏳ Detecting..."; btn.disabled = true;
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+        const reader = port.readable.getReader();
+        let buffer = '';
+        const timeout = setTimeout(() => reader.cancel(), 10000);
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += new TextDecoder().decode(value);
+          if (buffer.includes('MAC:') || buffer.includes('END_STATUS')) {
+            clearTimeout(timeout);
+            const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
+            selectedMac = macMatch ? macMatch[1] : 'Unknown';
+            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ❌ Not Licensed`;
+            document.getElementById("deviceBox").style.display = 'block';
+            break;
+          }
+        }
+      } catch(e) {
+        alert("Device detection failed.\nHold BOOT button while plugging in.");
+      }
+      btn.innerHTML = "🔍 Detect Connected Heltec Device";
+      btn.disabled = false;
     }
+
+    function useDetectedDevice() { alert(`Device MAC ${selectedMac} selected for licensing.`); }
 
     function selectType(type) {
       selectedType = type;
-      document.getElementById("btnLifetime").classList.toggle("selected", type === "lifetime");
-      document.getElementById("btnYearly").classList.toggle("selected", type === "yearly");
+      document.getElementById("btnLifetime").classList.toggle('selected', type === 'lifetime');
+      document.getElementById("btnYearly").classList.toggle('selected', type === 'yearly');
+      document.getElementById("benefitLifetime").style.display = type === 'lifetime' ? 'block' : 'none';
+      document.getElementById("benefitYearly").style.display = type === 'yearly' ? 'block' : 'none';
       updateEquivalentPrice();
     }
 
     async function updateEquivalentPrice() {
-      const basePLSC = selectedType === "lifetime" ? 100 : 20;
+      await fetchLivePrices();
+      const basePLSC = selectedType === 'lifetime' ? 100 : 20;
       const token = document.getElementById("paymentToken").value;
-      // Live prices would go here - for now we use placeholders
-      let priceGBP = 0.75; // fallback
-      if (token === "PLS") priceGBP = 0.0000077;
-      if (token === "PLSX") priceGBP = 0.000005;
-      if (token === "pDAI") priceGBP = 0.00155;
-      if (token === "pCOCK") priceGBP = 0.011;
-      if (token === "WBTC") priceGBP = 65000;
-
-      const amount = (basePLSC * PLSC_PRICE_GBP / priceGBP).toFixed(4);
-      document.getElementById("equivalentPrice").innerHTML = `You will send <strong>${amount} ${token}</strong> to the treasury`;
-    }
-
-    function copyTreasury() {
-      navigator.clipboard.writeText(TREASURY);
-      alert("Treasury address copied!");
+      const priceGBP = tokenPricesGBP[token] || 0.75;
+      const equivalent = (basePLSC * 0.75 / priceGBP).toFixed(4);
+      document.getElementById("equivalentPrice").innerHTML = `Equivalent to <strong>${basePLSC} PLSC = ${equivalent} ${token}</strong>`;
     }
 
     function showPaymentInstructions() {
       if (!selectedMac) return alert("Please detect your device first.");
       const token = document.getElementById("paymentToken").value;
-      const basePLSC = selectedType === "lifetime" ? 100 : 20;
-      const amount = (basePLSC * PLSC_PRICE_GBP / 0.75).toFixed(4); // placeholder - update with live price later
+      const basePLSC = selectedType === 'lifetime' ? 100 : 20;
+      const amount = (basePLSC * 0.75 / (tokenPricesGBP[token] || 0.75)).toFixed(4);
 
-      const msg = `Send exactly ${amount} ${token} to:\n\n${TREASURY}\n\nAfter sending, come back and click "I have paid" to generate your licence instantly.`;
-      alert(msg);
-      // In next version we can add a real "I have paid" button that generates the licence key
+      const msg = `Send exactly ${amount} ${token} to:\n\n${TREASURY}\n\nOnce paid, return here and click "I Have Paid" to generate your licence instantly.`;
+      if (confirm(msg)) {
+        const licenseKey = "PLSC-LICENSE-" + selectedMac.replace(/:/g,'') + "-" + Date.now();
+        alert(`✅ Licence Generated!\n\nKey: ${licenseKey}\n\nSave this key and flash it to your device.`);
+      }
     }
 
-    // Mesh background (kept simple)
+    // Mesh Background
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     resize(); window.addEventListener('resize', resize);
+    let nodes = []; for(let i=0;i<72;i++) nodes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.7,vy:(Math.random()-0.5)*0.7});
     function animate(){
-      ctx.fillStyle = 'rgba(10,12,31,0.2)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = 'rgba(10,12,31,0.16)'; ctx.fillRect(0,0,canvas.width,canvas.height);
       requestAnimationFrame(animate);
     }
     animate();
 
-    window.onload = updateEquivalentPrice;
+    window.onload = () => { fetchLivePrices().then(() => updateEquivalentPrice()); };
   </script>
 </body>
 </html>
