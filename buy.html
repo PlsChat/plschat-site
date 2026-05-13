@@ -134,7 +134,7 @@
           }
         }
       } catch(e) {
-        alert("Could not detect device.\nHold BOOT button while plugging in.");
+        alert("Could not detect device.\nHold the BOOT button while plugging in.");
       }
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
@@ -178,7 +178,7 @@
 
         document.getElementById("txSection").style.display = 'block';
         document.getElementById("txHashInput").value = txHash;
-        alert(`✅ Transaction Sent!\nTX: ${txHash}\n\nWait for confirmation, then click "Verify & Generate Licence".`);
+        alert(`✅ Transaction Sent!\n\nTX Hash: ${txHash}\n\nWait for confirmation, then click "Verify & Generate Licence".`);
       } catch (err) {
         alert("Transaction cancelled.");
       }
@@ -186,18 +186,25 @@
 
     async function verifyAndGenerateLicense() {
       const txHash = document.getElementById("txHashInput").value.trim();
-      if (!txHash) return alert("Please paste the transaction hash.");
+      if (!txHash) return alert("Please paste the transaction hash first.");
       if (!selectedMac || selectedMac === 'Unknown') return alert("No valid MAC detected.");
 
       try {
         const receipt = await window.ethereum.request({ method: 'eth_getTransactionReceipt', params: [txHash] });
-        if (!receipt || receipt.status !== "0x1") return alert("Transaction not confirmed yet.");
-        if (receipt.to.toLowerCase() !== TREASURY) return alert("Wrong recipient wallet.");
+
+        if (!receipt || receipt.status !== "0x1") {
+          return alert("Transaction is not confirmed yet or failed. Please wait.");
+        }
+
+        if (receipt.to.toLowerCase() !== TREASURY) {
+          return alert("Wrong recipient wallet. This TX did not go to the treasury.");
+        }
 
         const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
-        alert(`✅ Licence Generated!\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nGo to the Flash page and use this key.`);
+        alert(`✅ Licence Generated Successfully!\n\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nGo to the Flash page and use this key.`);
+
       } catch (e) {
-        alert("Could not verify transaction.");
+        alert("Could not verify transaction on the blockchain.");
       }
     }
 
