@@ -16,15 +16,17 @@
     .btn-primary { background:linear-gradient(135deg,#a855f7,#3b82f6); color:white; box-shadow:0 8px 25px rgba(168,85,247,0.5); }
     .btn-primary:hover { transform:translateY(-4px); }
     .selected { box-shadow:0 0 0 4px #22c55e !important; }
+    .selected::after { content:" ✅"; }
     .benefit-box, .token-selector { background:rgba(15,23,42,0.95); padding:22px; border-radius:16px; margin:20px auto; max-width:620px; text-align:center; }
+    select { padding:12px; font-size:1.1em; background:#1e2937; color:white; border-radius:8px; width:100%; max-width:400px; }
   </style>
 </head>
 <body>
   <canvas id="mesh-bg"></canvas>
   <div class="container">
-    <button onclick="window.location.href='device-manager.html'" style="position:absolute;top:25px;left:25px;padding:10px 20px;background:rgba(30,41,59,0.9);color:white;">← Back to Home</button>
+    <button onclick="window.location.href='device-manager.html'" style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9); color:white;">← Back to Home</button>
     <h1>Buy License</h1>
-    <p style="font-size:1.4em;color:#94a3b8;">Payment first → Licence after verification</p>
+    <p style="font-size:1.4em;color:#94a3b8;">Payment must be confirmed before licence is issued</p>
 
     <button onclick="connectWallet()" id="connectBtn" class="btn-primary" style="margin-bottom:20px;">🔗 Connect MetaMask</button>
     <div id="walletInfo" class="wallet-info">Wallet not connected</div>
@@ -45,7 +47,7 @@
     <div class="token-selector">
       <strong>Pay with:</strong><br><br>
       <select id="paymentToken" onchange="updateEquivalentPrice()">
-        <option value="PLS">PLS</option>
+        <option value="PLS">PLS (Recommended)</option>
         <option value="PLSC">PLSC</option>
         <option value="PLSX">PLSX</option>
         <option value="pDAI">pDAI</option>
@@ -60,7 +62,7 @@
     <div id="txSection" class="benefit-box" style="display:none; margin-top:20px;">
       <strong>Paste Transaction Hash:</strong><br>
       <input id="txHashInput" type="text" placeholder="0x..." style="width:90%; padding:12px; margin:10px 0; font-family:monospace;">
-      <button onclick="generateLicense()" class="btn-primary">✅ Generate Licence Now</button>
+      <button onclick="verifyAndGenerateLicense()" class="btn-primary">✅ Verify & Generate Licence</button>
     </div>
   </div>
 
@@ -115,12 +117,10 @@
         const reader = port.readable.getReader();
         let buffer = '';
         const timeout = setTimeout(() => reader.cancel(), 15000);
-
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
           buffer += new TextDecoder().decode(value);
-
           if (buffer.includes('MAC:') || buffer.includes('END_STATUS')) {
             clearTimeout(timeout);
             reader.cancel();
@@ -133,7 +133,7 @@
           }
         }
       } catch(e) {
-        alert("Detection failed.\nHold BOOT button while plugging in.");
+        alert("Could not detect device.\nHold the BOOT button while plugging in.");
       }
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
@@ -145,6 +145,8 @@
       selectedType = type;
       document.getElementById("btnLifetime").classList.toggle('selected', type === 'lifetime');
       document.getElementById("btnYearly").classList.toggle('selected', type === 'yearly');
+      document.getElementById("benefitLifetime").style.display = type === 'lifetime' ? 'block' : 'none';
+      document.getElementById("benefitYearly").style.display = type === 'yearly' ? 'block' : 'none';
       updateEquivalentPrice();
     }
 
@@ -164,7 +166,6 @@
       const token = document.getElementById("paymentToken").value;
       const basePLSC = selectedType === 'lifetime' ? 100 : 20;
       const amount = basePLSC * 0.75 / (tokenPricesGBP[token] || 0.75);
-
       const payBtn = document.getElementById("payBtn");
       payBtn.innerHTML = "⏳ Opening MetaMask...";
       payBtn.disabled = true;
@@ -173,30 +174,54 @@
         let txHash;
         if (token === "PLSC") {
           const data = "0xa9059cbb" + TREASURY.slice(2).padStart(64, '0') + (BigInt(Math.floor(amount * 1e18)).toString(16)).padStart(64, '0');
-          txHash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: "0x17B46bB02DF36E57B2b5015C4e289b984915EfE5", data: data, gas: "0x7A120" }] });
+          txHash = await window.ethereum.request({
+            method: 'eth_sendTransaction',
+            params: [{ from: walletAddress, to: "0x17B46bB02DF36E57B2b5015C4e289b984915EfE5", data: data, gas: "0x7A120" }]
+          });
         } else {
           const valueWei = (BigInt(Math.floor(amount * 1e18))).toString(16);
-          txHash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: TREASURY, value: "0x" + valueWei, gas: "0x7A120" }] });
+          txHash = await window.ethereum.request({
+            method: 'eth_sendTransaction',
+            params: [{ from: walletAddress, to: TREASURY, value: "0x" + valueWei, gas: "0x7A120" }]
+          });
         }
 
         document.getElementById("txSection").style.display = 'block';
         document.getElementById("txHashInput").value = txHash;
-        alert(`✅ Transaction Sent!\n\nTX Hash: ${txHash}\n\nWait for confirmation, then paste it below.`);
+        alert(`✅ Transaction Sent!\n\nTX Hash: ${txHash}\n\nWait for confirmation on PulseChain, then click "Verify & Generate Licence".`);
       } catch (err) {
-        alert("Transaction cancelled.");
+        alert("Transaction cancelled or failed.");
       }
 
       payBtn.innerHTML = "💎 Send Exact Amount via MetaMask";
       payBtn.disabled = false;
     }
 
-    function generateLicense() {
+    async function verifyAndGenerateLicense() {
       const txHash = document.getElementById("txHashInput").value.trim();
-      if (!txHash) return alert("Please paste the transaction hash.");
-      if (!selectedMac || selectedMac === 'Unknown') return alert("No valid MAC detected.");
+      if (!txHash) return alert("Please paste the transaction hash first.");
+      if (!selectedMac || selectedMac === 'Unknown') return alert("No valid device MAC detected.");
 
-      const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
-      alert(`✅ Licence Generated!\n\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nGo to Flash page and use this key.`);
+      try {
+        const receipt = await window.ethereum.request({
+          method: 'eth_getTransactionReceipt',
+          params: [txHash]
+        });
+
+        if (!receipt || receipt.status !== "0x1") {
+          return alert("Transaction not confirmed yet. Please wait and try again.");
+        }
+
+        if (receipt.to.toLowerCase() !== TREASURY.toLowerCase()) {
+          return alert("This transaction was not sent to the correct treasury wallet.");
+        }
+
+        const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
+        alert(`✅ Licence Generated Successfully!\n\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nGo to the Flash page and use this key.`);
+
+      } catch (e) {
+        alert("Could not verify transaction. Please try again later.");
+      }
     }
 
     // Mesh Background
@@ -204,13 +229,16 @@
     const ctx = canvas.getContext('2d');
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     resize(); window.addEventListener('resize', resize);
+    let nodes = []; for(let i=0;i<72;i++) nodes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.7,vy:(Math.random()-0.5)*0.7});
     function animate(){
       ctx.fillStyle = 'rgba(10,12,31,0.16)'; ctx.fillRect(0,0,canvas.width,canvas.height);
       requestAnimationFrame(animate);
     }
     animate();
 
-    window.onload = () => fetchLivePrices().then(() => updateEquivalentPrice());
+    window.onload = () => {
+      fetchLivePrices().then(() => updateEquivalentPrice());
+    };
   </script>
 </body>
 </html>
