@@ -26,9 +26,7 @@
   <canvas id="mesh-bg"></canvas>
  
   <div class="container">
-    <button onclick="window.location.href='device-manager.html'" style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9); color:white;">
-      ← Back to Home
-    </button>
+    <button onclick="window.location.href='device-manager.html'" style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9); color:white;">← Back to Home</button>
     <h1>Buy License</h1>
     <p style="font-size:1.4em;color:#94a3b8;">Unlock Full Features + Rewards</p>
 
@@ -87,18 +85,35 @@
     let contract = null;
     let selectedType = 'lifetime';
     let selectedMac = '';
-    let selectedToken = 'PLSC';
 
-    const tokenPricesGBP = {
-      PLSC: 0.75,
-      PLS: 0.0000077,
-      PLSX: 0.000005,
-      pDAI: 1.00,
-      pCOCK: 0.0008,
-      WBTC: 65000
+    // CoinGecko IDs for PulseChain tokens
+    const coinGeckoIds = {
+      PLS: "pulsechain",
+      PLSX: "pulsex",
+      pDAI: "dai",
+      pCOCK: "pulsechain-cock",   // fallback if not listed
+      WBTC: "wrapped-bitcoin"
     };
 
+    let tokenPricesGBP = { PLSC: 0.75 }; // PLSC is fixed
+
     const ABI = ["function buyLicense(string calldata deviceHardwareId) external"];
+
+    async function fetchLivePrices() {
+      try {
+        const ids = Object.values(coinGeckoIds).join(',');
+        const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=gbp`);
+        const data = await res.json();
+
+        tokenPricesGBP.PLS = data.pulsechain?.gbp || 0.0000077;
+        tokenPricesGBP.PLSX = data.pulsex?.gbp || 0.000005;
+        tokenPricesGBP.pDAI = data.dai?.gbp || 0.00155;
+        tokenPricesGBP.WBTC = data['wrapped-bitcoin']?.gbp || 65000;
+        // pCOCK may not be on CG yet - keep fallback
+      } catch(e) {
+        console.log("CoinGecko fetch failed - using fallbacks");
+      }
+    }
 
     async function connectWallet() {
       const btn = document.getElementById("connectBtn");
@@ -146,7 +161,7 @@
           }
         }
       } catch(e) {
-        alert("Could not detect device.");
+        alert("Could not detect device. Make sure Heltec is plugged in and in BOOT mode.");
       }
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
@@ -163,7 +178,8 @@
       updateEquivalentPrice();
     }
 
-    function updateEquivalentPrice() {
+    async function updateEquivalentPrice() {
+      await fetchLivePrices(); // get latest prices
       const basePLSC = selectedType === 'lifetime' ? 100 : 20;
       const token = document.getElementById("paymentToken").value;
       const priceGBP = tokenPricesGBP[token] || 0.75;
@@ -206,7 +222,10 @@
     }
     animate();
 
-    window.onload = updateEquivalentPrice;
+    // Initial load
+    window.onload = () => {
+      fetchLivePrices().then(() => updateEquivalentPrice());
+    };
   </script>
 </body>
 </html>
