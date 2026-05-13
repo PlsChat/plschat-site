@@ -63,7 +63,7 @@
     <h1>PLSChat Web Flasher</h1>
     <p>Flash firmware + apply your purchased licence</p>
 
-    <button onclick="document.querySelector('esp-web-install-button').click()">🔌 Connect Device</button>
+    <button onclick="document.querySelector('esp-web-install-button').click()">🔌 Flash Device</button>
     <button onclick="detectAndLoadLicense()">🔄 Refresh / Detect Licence</button>
 
     <div class="license-box" id="licenseBox">
@@ -76,9 +76,9 @@
     <div style="background:rgba(30,30,50,0.8); padding:20px; border-radius:12px; max-width:600px; margin:30px auto; text-align:left;">
       <strong>Instructions:</strong><br><br>
       1. Hold BOOT button while plugging in<br>
-      2. Click "Connect Device" to flash firmware<br>
-      3. Click "Refresh / Detect Licence"<br>
-      4. Click "Send Licence to Device"
+      2. Click "<strong>Flash Device</strong>" to flash firmware<br>
+      3. Click "<strong>Refresh / Detect Licence</strong>"<br>
+      4. Click "<strong>Send Licence to Device</strong>"
     </div>
   </div>
 
@@ -124,7 +124,7 @@
           }
         }
       } catch (e) {
-        alert("Could not detect device.\nHold BOOT button and try 'Refresh / Detect Licence' again.");
+        alert("Could not detect device.\nHold BOOT button and try again.");
       }
     }
 
@@ -139,18 +139,16 @@
         writer.releaseLock();
         alert("✅ Licence successfully sent to device!");
       } catch (err) {
-        alert("Failed to send licence.\n\nMake sure:\n• Device is plugged in\n• You are holding the BOOT button if needed\n• Try clicking 'Refresh / Detect Licence' first");
+        alert("Failed to send licence.\n\nMake sure:\n• Device is plugged in\n• Hold BOOT button if needed\n• Try clicking 'Refresh / Detect Licence' first");
       }
     }
 
     function copyLicense() {
       if (currentLicenseKey) {
         navigator.clipboard.writeText(currentLicenseKey);
-        alert("Licence key copied!");
+        alert("Copied to clipboard!");
       }
     }
-
-    window.onload = () => setTimeout(detectAndLoadLicense, 1500);
   </script>
 </body>
 </html>
