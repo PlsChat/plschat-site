@@ -34,18 +34,17 @@
       max-width: 600px; 
       text-align: left; 
       border: 2px solid #22c55e;
+      display: none;
     }
-    .license-box h3 { color: #67e8f9; margin-top: 0; }
     .license-key { 
       font-family: monospace; 
       background: #111; 
       padding: 12px; 
       border-radius: 8px; 
       word-break: break-all; 
-      font-size: 1.1em; 
+      font-size: 1.05em; 
+      margin: 10px 0;
     }
-    
-    esp-web-install-button { margin: 40px auto; display: block; }
   </style>
 </head>
 <body>
@@ -55,14 +54,14 @@
 
     <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
 
-    <!-- Licence Display Box -->
-    <div class="license-box" id="licenseBox" style="display:none;">
-      <h3>✅ Licence Loaded for this Device</h3>
+    <!-- Licence Box -->
+    <div class="license-box" id="licenseBox">
+      <h3>✅ Licence Auto-loaded for this Device</h3>
       <div id="licenseDisplay" class="license-key"></div>
-      <small style="color:#94a3b8;">This licence will be flashed with the firmware.</small>
+      <small style="color:#67e8f9;">This licence key will be included when you flash the firmware.</small>
     </div>
 
-    <div class="instructions" style="background:rgba(30,30,50,0.8); padding:20px; border-radius:12px; text-align:left; max-width:600px; margin:30px auto;">
+    <div style="background:rgba(30,30,50,0.8); padding:20px; border-radius:12px; text-align:left; max-width:600px; margin:30px auto;">
       <strong>📋 How to Flash:</strong><br><br>
       1. Plug in your Heltec V4 via USB<br>
       2. Hold the <strong>BOOT button</strong> while plugging in<br>
@@ -72,9 +71,7 @@
   </div>
 
   <script>
-    let selectedMac = '';
-
-    async function detectAndLoadLicense() {
+    async function detectDeviceAndLoadLicense() {
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
@@ -88,38 +85,34 @@
 
           const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
           if (macMatch) {
-            selectedMac = macMatch[1];
+            const mac = macMatch[1];
             reader.cancel();
+
+            // Load licence from localStorage
+            const licenses = JSON.parse(localStorage.getItem('licenses') || '{}');
+            const savedKey = licenses[mac];
+
+            const box = document.getElementById("licenseBox");
+            const display = document.getElementById("licenseDisplay");
+
+            if (savedKey) {
+              display.innerHTML = `<strong>MAC:</strong> ${mac}<br><strong>Key:</strong> ${savedKey}`;
+              box.style.display = 'block';
+            } else {
+              display.innerHTML = `<strong>MAC:</strong> ${mac}<br><span style="color:#f87171;">No licence found for this device.</span>`;
+              box.style.display = 'block';
+            }
             break;
           }
         }
       } catch (e) {
-        console.log("Serial detection failed");
-      }
-
-      if (selectedMac) {
-        const licenses = JSON.parse(localStorage.getItem('licenses') || '{}');
-        const savedKey = licenses[selectedMac];
-
-        if (savedKey) {
-          document.getElementById("licenseBox").style.display = 'block';
-          document.getElementById("licenseDisplay").innerHTML = `
-            <strong>MAC:</strong> ${selectedMac}<br>
-            <strong>Licence Key:</strong> ${savedKey}
-          `;
-        } else {
-          document.getElementById("licenseBox").style.display = 'block';
-          document.getElementById("licenseDisplay").innerHTML = `
-            <strong>MAC:</strong> ${selectedMac}<br>
-            <span style="color:#f87171;">No licence found for this device.</span>
-          `;
-        }
+        console.log("Device detection failed or cancelled");
       }
     }
 
-    // Auto-run when page loads
+    // Run detection when page loads
     window.onload = () => {
-      setTimeout(detectAndLoadLicense, 1000);
+      setTimeout(detectDeviceAndLoadLicense, 800);
     };
   </script>
 </body>
