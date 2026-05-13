@@ -35,7 +35,7 @@
 
     <div id="deviceBox" class="device-box" style="display:none;">
       <strong>Detected Device</strong><br><br>
-      <div id="deviceDetails" style="font-size:1.1em;"></div>
+      <div id="deviceDetails" style="font-size:1.1em; line-height:1.6;"></div>
       <button onclick="useDetectedDevice()" class="btn-primary" style="margin-top:15px;">✅ Use This Device</button>
     </div>
 
@@ -57,19 +57,12 @@
       <div id="equivalentPrice" style="margin-top:15px; font-size:1.25em; color:#67e8f9; font-weight:600;"></div>
     </div>
 
-    <div id="benefitLifetime" class="benefit-box" style="display:none;">
-      <strong>Lifetime License includes:</strong><br>• Full Repeater Mode<br>• Persistent Room Server<br>• Store & Forward<br>• Earn PLSC Rewards<br>• Lifetime access
-    </div>
-    <div id="benefitYearly" class="benefit-box" style="display:none;">
-      <strong>Yearly License includes:</strong><br>• Full Repeater Mode<br>• Persistent Room Server<br>• Store & Forward<br>• Earn PLSC Rewards<br>• 365 days access
-    </div>
-
     <button id="payBtn" class="btn-primary" onclick="sendPayment()" style="font-size:1.35em;padding:20px 50px;">💎 Send Exact Amount via MetaMask</button>
 
     <div id="txSection" class="benefit-box" style="display:none; margin-top:20px;">
-      <strong>Paste your Transaction Hash here:</strong><br>
+      <strong>Paste Transaction Hash:</strong><br>
       <input id="txHashInput" type="text" placeholder="0x..." style="width:90%; padding:12px; margin:10px 0; font-family:monospace;">
-      <button onclick="generateLicense()" class="btn-primary">✅ Verify & Generate Licence</button>
+      <button onclick="generateLicense()" class="btn-primary">✅ Generate Licence Now</button>
     </div>
   </div>
 
@@ -123,11 +116,14 @@
         await port.open({ baudRate: 115200 });
         const reader = port.readable.getReader();
         let buffer = '';
-        const timeout = setTimeout(() => reader.cancel(), 15000);
+        const timeout = setTimeout(() => { reader.cancel(); alert("Timeout - check Serial Monitor"); }, 15000);
+
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
           buffer += new TextDecoder().decode(value);
+          console.log("Serial data:", buffer); // for debugging
+
           if (buffer.includes('MAC:') || buffer.includes('END_STATUS')) {
             clearTimeout(timeout);
             reader.cancel();
@@ -140,7 +136,7 @@
           }
         }
       } catch(e) {
-        alert("Could not detect device.\nHold the BOOT button while plugging in.");
+        alert("Device detection failed.\n\n1. Hold BOOT button while plugging in\n2. Check Arduino Serial Monitor for output");
       }
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
@@ -168,7 +164,7 @@
 
     async function sendPayment() {
       if (!walletAddress) return alert("Please connect your wallet first.");
-      if (!selectedMac || selectedMac === 'Unknown') return alert("Please detect your device first.");
+      if (!selectedMac || selectedMac === 'Unknown') return alert("Please detect your device first (MAC required).");
 
       const token = document.getElementById("paymentToken").value;
       const basePLSC = selectedType === 'lifetime' ? 100 : 20;
@@ -195,9 +191,9 @@
 
         document.getElementById("txSection").style.display = 'block';
         document.getElementById("txHashInput").value = txHash;
-        alert(`✅ Transaction Sent!\n\nTX Hash: ${txHash}\n\nWait for it to confirm on PulseChain, then click "Generate Licence Now".`);
+        alert(`✅ Transaction Sent!\n\nTX Hash: ${txHash}\n\nWait for confirmation, then paste the hash below.`);
       } catch (err) {
-        alert("Transaction was cancelled.");
+        alert("Transaction cancelled or failed.");
       }
 
       payBtn.innerHTML = "💎 Send Exact Amount via MetaMask";
@@ -207,7 +203,7 @@
     function generateLicense() {
       const txHash = document.getElementById("txHashInput").value.trim();
       if (!txHash) return alert("Please paste the transaction hash first.");
-      if (!selectedMac || selectedMac === 'Unknown') return alert("No valid device detected.");
+      if (!selectedMac || selectedMac === 'Unknown') return alert("No valid MAC detected.");
 
       const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
       alert(`✅ Licence Generated!\n\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nGo to the Flash page and use this key.`);
