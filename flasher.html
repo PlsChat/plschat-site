@@ -34,7 +34,6 @@
 
     <button onclick="detectAndLoadLicense()" style="margin:20px;padding:12px 24px;background:#3b82f6;color:white;">🔄 Refresh / Detect Licence</button>
 
-    <!-- Licence Box -->
     <div class="license-box" id="licenseBox">
       <h3>✅ Licence Found for this Device</h3>
       <div id="licenseDisplay" class="key"></div>
@@ -46,8 +45,8 @@
       <strong>Instructions:</strong><br><br>
       1. Hold BOOT button while plugging in<br>
       2. Flash the firmware<br>
-      3. Click <strong>Refresh / Detect Licence</strong><br>
-      4. Click <strong>Send Licence to Device</strong>
+      3. Click "Refresh / Detect Licence"<br>
+      4. Click "Send Licence to Device"
     </div>
   </div>
 
@@ -57,7 +56,6 @@
 
     async function detectAndLoadLicense() {
       const box = document.getElementById("licenseBox");
-      const display = document.getElementById("licenseDisplay");
       box.style.display = 'none';
 
       try {
@@ -82,47 +80,48 @@
             const licenses = JSON.parse(localStorage.getItem('licenses') || '{}');
             currentLicenseKey = licenses[currentMAC];
 
+            const display = document.getElementById("licenseDisplay");
             if (currentLicenseKey) {
               display.innerHTML = `<strong>MAC:</strong> ${currentMAC}<br><strong>Key:</strong> ${currentLicenseKey}`;
               box.style.display = 'block';
             } else {
-              display.innerHTML = `<strong>MAC:</strong> ${currentMAC}<br><span style="color:#f87171;">No licence found for this MAC.</span>`;
+              display.innerHTML = `<strong>MAC:</strong> ${currentMAC}<br><span style="color:#f87171;">No licence saved for this MAC.</span>`;
               box.style.display = 'block';
             }
             break;
           }
         }
       } catch (e) {
-        alert("Could not detect device. Make sure it's plugged in and try clicking 'Refresh / Detect Licence' again.");
+        alert("Could not detect device. Hold BOOT button and try again.");
       }
     }
 
     async function sendLicenseToDevice() {
       if (!currentLicenseKey) return alert("No licence found.");
-      
+
       try {
-        const port = await navigator.serial.requestPort();
+        const port = await navigator.serial.requestPort();   // Fresh port every time
         await port.open({ baudRate: 115200 });
         const writer = port.writable.getWriter();
+        
         await writer.write(new TextEncoder().encode(`LICENSE:${currentLicenseKey}\n`));
         writer.releaseLock();
+        
         alert("✅ Licence successfully sent to device!");
       } catch (err) {
-        alert("Failed to send. Make sure device is connected.");
+        console.error(err);
+        alert("Failed to send.\n\nMake sure:\n• Device is plugged in\n• You hold BOOT button if needed\n• Try clicking Refresh first");
       }
     }
 
     function copyLicense() {
       if (currentLicenseKey) {
         navigator.clipboard.writeText(currentLicenseKey);
-        alert("Licence key copied!");
+        alert("Copied to clipboard!");
       }
     }
 
-    // Auto try on page load
-    window.onload = () => {
-      setTimeout(detectAndLoadLicense, 2000);
-    };
+    window.onload = () => setTimeout(detectAndLoadLicense, 1500);
   </script>
 </body>
 </html>
