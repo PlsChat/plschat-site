@@ -33,10 +33,10 @@
 
     <div style="background:rgba(30,30,50,0.8); padding:20px; border-radius:12px; max-width:600px; margin:30px auto; text-align:left;">
       <strong>Instructions:</strong><br><br>
-      1. Hold BOOT button while plugging in the Heltec<br>
-      2. Click "<strong>Flash Device</strong>" to flash firmware<br>
-      3. Click "<strong>Refresh / Detect Licence</strong>"<br>
-      4. Click "<strong>Send Licence to Device</strong>" (you may be asked to connect again — this is normal)
+      1. Hold BOOT button while plugging in<br>
+      2. Click "Flash Device" to flash firmware<br>
+      3. Click "Refresh / Detect Licence"<br>
+      4. Click "Send Licence to Device" (you may be asked to connect again — this is normal)
     </div>
   </div>
 
@@ -79,7 +79,7 @@
           }
         }
       } catch (e) {
-        alert("Could not detect device.\nHold BOOT button and try again.");
+        alert("Could not detect device. Hold BOOT button and try again.");
       }
     }
 
@@ -87,14 +87,17 @@
       if (!currentLicenseKey) return alert("No licence found.");
 
       try {
-        const port = await navigator.serial.requestPort();
+        const port = await navigator.serial.requestPort();   // Always fresh port for sending
         await port.open({ baudRate: 115200 });
         const writer = port.writable.getWriter();
+        
         await writer.write(new TextEncoder().encode(`LICENSE:${currentLicenseKey}\n`));
         writer.releaseLock();
+        
         alert("✅ Licence successfully sent to device!");
       } catch (err) {
-        alert("Failed to send.\n\nMake sure the device is still plugged in and try again.");
+        console.error(err);
+        alert("Failed to send.\n\nMake sure:\n• Device is still plugged in\n• Hold BOOT button if needed\n• Try 'Refresh / Detect Licence' first");
       }
     }
 
