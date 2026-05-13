@@ -26,7 +26,7 @@
   <div class="container">
     <button onclick="window.location.href='device-manager.html'" style="position:absolute; top:25px; left:25px; padding:10px 20px; background:rgba(30,41,59,0.9); color:white;">← Back to Home</button>
     <h1>Buy License</h1>
-    <p style="font-size:1.4em;color:#94a3b8;">Payment first → Licence after confirmation</p>
+    <p style="font-size:1.4em;color:#94a3b8;">Payment must be confirmed before licence is issued</p>
 
     <button onclick="connectWallet()" id="connectBtn" class="btn-primary" style="margin-bottom:20px;">🔗 Connect MetaMask</button>
     <div id="walletInfo" class="wallet-info">Wallet not connected</div>
@@ -35,7 +35,7 @@
 
     <div id="deviceBox" class="device-box" style="display:none;">
       <strong>Detected Device</strong><br><br>
-      <div id="deviceDetails" style="font-size:1.1em; line-height:1.6;"></div>
+      <div id="deviceDetails" style="font-size:1.1em;"></div>
       <button onclick="useDetectedDevice()" class="btn-primary" style="margin-top:15px;">✅ Use This Device</button>
     </div>
 
@@ -62,7 +62,7 @@
     <div id="txSection" class="benefit-box" style="display:none; margin-top:20px;">
       <strong>Paste Transaction Hash:</strong><br>
       <input id="txHashInput" type="text" placeholder="0x..." style="width:90%; padding:12px; margin:10px 0; font-family:monospace;">
-      <button onclick="generateLicense()" class="btn-primary">✅ Generate Licence Now</button>
+      <button onclick="verifyAndGenerateLicense()" class="btn-primary">✅ Verify & Generate Licence</button>
     </div>
   </div>
 
@@ -116,14 +116,11 @@
         await port.open({ baudRate: 115200 });
         const reader = port.readable.getReader();
         let buffer = '';
-        const timeout = setTimeout(() => { reader.cancel(); alert("Timeout - check Serial Monitor"); }, 15000);
-
+        const timeout = setTimeout(() => reader.cancel(), 15000);
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
           buffer += new TextDecoder().decode(value);
-          console.log("Serial data:", buffer); // for debugging
-
           if (buffer.includes('MAC:') || buffer.includes('END_STATUS')) {
             clearTimeout(timeout);
             reader.cancel();
@@ -136,7 +133,7 @@
           }
         }
       } catch(e) {
-        alert("Device detection failed.\n\n1. Hold BOOT button while plugging in\n2. Check Arduino Serial Monitor for output");
+        alert("Could not detect device.\nHold the BOOT button while plugging in.");
       }
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
@@ -164,7 +161,7 @@
 
     async function sendPayment() {
       if (!walletAddress) return alert("Please connect your wallet first.");
-      if (!selectedMac || selectedMac === 'Unknown') return alert("Please detect your device first (MAC required).");
+      if (!selectedMac || selectedMac === 'Unknown') return alert("Please detect your device first.");
 
       const token = document.getElementById("paymentToken").value;
       const basePLSC = selectedType === 'lifetime' ? 100 : 20;
@@ -191,7 +188,7 @@
 
         document.getElementById("txSection").style.display = 'block';
         document.getElementById("txHashInput").value = txHash;
-        alert(`✅ Transaction Sent!\n\nTX Hash: ${txHash}\n\nWait for confirmation, then paste the hash below.`);
+        alert(`✅ Transaction Sent!\n\nTX Hash: ${txHash}\n\nWait for confirmation on PulseChain, then click "Verify & Generate Licence".`);
       } catch (err) {
         alert("Transaction cancelled or failed.");
       }
@@ -200,13 +197,31 @@
       payBtn.disabled = false;
     }
 
-    function generateLicense() {
+    async function verifyAndGenerateLicense() {
       const txHash = document.getElementById("txHashInput").value.trim();
       if (!txHash) return alert("Please paste the transaction hash first.");
-      if (!selectedMac || selectedMac === 'Unknown') return alert("No valid MAC detected.");
+      if (!selectedMac || selectedMac === 'Unknown') return alert("No valid device MAC detected.");
 
-      const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
-      alert(`✅ Licence Generated!\n\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nGo to the Flash page and use this key.`);
+      try {
+        const receipt = await window.ethereum.request({
+          method: 'eth_getTransactionReceipt',
+          params: [txHash]
+        });
+
+        if (!receipt || receipt.status !== "0x1") {
+          return alert("Transaction not confirmed yet. Please wait and try again.");
+        }
+
+        if (receipt.to.toLowerCase() !== TREASURY.toLowerCase()) {
+          return alert("This transaction was not sent to the correct treasury wallet.");
+        }
+
+        const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
+        alert(`✅ Licence Generated Successfully!\n\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nGo to the Flash page and use this key.`);
+
+      } catch (e) {
+        alert("Could not verify transaction. Please try again later.");
+      }
     }
 
     // Mesh Background
