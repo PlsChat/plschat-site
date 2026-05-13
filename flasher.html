@@ -7,11 +7,22 @@
   <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; background: #0a0c1f; color: #c9d1d9; margin:0; padding:40px 20px; text-align:center; min-height:100vh; }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: #0a0c1f; 
+      color: #c9d1d9; 
+      margin:0; 
+      padding:40px 20px; 
+      text-align:center; 
+      min-height:100vh; 
+    }
     .container { max-width: 820px; margin: 0 auto; }
-    h1 { font-size: 3em; background: linear-gradient(90deg, #a855f7, #67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    p { font-size: 1.2em; color: #94a3b8; }
-    
+    h1 { 
+      font-size: 3em; 
+      background: linear-gradient(90deg, #a855f7, #67e8f9); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent; 
+    }
     .license-box { 
       background: rgba(34,197,94,0.15); 
       border: 2px solid #22c55e; 
@@ -22,8 +33,23 @@
       text-align: left; 
       display: none;
     }
-    .key { font-family: monospace; background:#111; padding:14px; border-radius:8px; word-break:break-all; margin:12px 0; font-size:1.05em; }
-    button { padding:16px 32px; font-size:1.1em; margin:10px; border:none; border-radius:12px; cursor:pointer; font-weight:600; }
+    .key { 
+      font-family: monospace; 
+      background:#111; 
+      padding:14px; 
+      border-radius:8px; 
+      word-break:break-all; 
+      margin:12px 0; 
+    }
+    button { 
+      padding:16px 32px; 
+      font-size:1.1em; 
+      margin:10px; 
+      border:none; 
+      border-radius:12px; 
+      cursor:pointer; 
+      font-weight:600; 
+    }
     .btn-send { background:#22c55e; color:#000; }
   </style>
 </head>
@@ -43,10 +69,10 @@
     </div>
 
     <div style="background:rgba(30,30,50,0.8); padding:20px; border-radius:12px; max-width:600px; margin:30px auto; text-align:left;">
-      <strong>How to Flash + Activate Licence:</strong><br><br>
-      1. Hold BOOT button while plugging in device<br>
-      2. Click "Connect / Install" to flash firmware<br>
-      3. After flashing, click <strong>Send Licence to Device</strong>
+      <strong>How to use:</strong><br><br>
+      1. Hold BOOT button while plugging in<br>
+      2. Flash the firmware<br>
+      3. Click <strong>Send Licence to Device</strong>
     </div>
   </div>
 
@@ -88,7 +114,7 @@
     }
 
     async function sendLicenseToDevice() {
-      if (!currentLicenseKey) return alert("No licence found.");
+      if (!currentLicenseKey) return alert("No licence found for this device.");
       
       try {
         const port = await navigator.serial.requestPort();
@@ -96,20 +122,23 @@
         const writer = port.writable.getWriter();
         await writer.write(new TextEncoder().encode(`LICENSE:${currentLicenseKey}\n`));
         writer.releaseLock();
-        alert("✅ Licence sent to device!");
+        alert("✅ Licence successfully sent to device!");
       } catch (err) {
-        alert("Failed to send. Make sure device is connected.");
+        alert("Failed to send. Make sure device is connected and in BOOT mode.");
       }
     }
 
     function copyLicense() {
       if (currentLicenseKey) {
         navigator.clipboard.writeText(currentLicenseKey);
-        alert("Copied to clipboard!");
+        alert("Licence key copied to clipboard!");
       }
     }
 
-    window.onload = () => setTimeout(detectAndLoadLicense, 1200);
+    // Auto-detect when page loads
+    window.onload = () => {
+      setTimeout(detectAndLoadLicense, 1500);
+    };
   </script>
 </body>
 </html>
