@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PLSChat - Buy License</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; background: #0a0c1f; color: #c9d1d9; margin:0; padding:40px 20px; min-height:100vh; position:relative; overflow-y:auto; }
@@ -79,7 +80,9 @@
   </div>
 
   <script>
-    let walletAddress = null;
+    const CONTRACT_ADDRESS = "0x17B46bB02DF36E57B2b5015C4e289b984915EfE5";  // ← Your new address
+    let signer = null;
+    let contract = null;
     let selectedType = 'lifetime';
     let selectedMac = '';
 
@@ -93,7 +96,7 @@
 
     let tokenPricesGBP = { PLSC: 0.75 };
 
-    const CONTRACT_ADDRESS = "0x4C86C5640ADEc6daDB88b75adEFE3C2FbC2d3510";
+    const ABI = ["function buyLicense(string calldata deviceHardwareId) external"];
 
     async function fetchLivePrices() {
       try {
@@ -115,9 +118,12 @@
       btn.innerHTML = "⏳ Connecting...";
       btn.disabled = true;
       try {
+        if (!window.ethereum) throw new Error("MetaMask not found");
         const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-        walletAddress = accounts[0];
-        info.innerHTML = `✅ Connected: <strong>${walletAddress}</strong>`;
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        info.innerHTML = `✅ Connected: <strong>${accounts[0]}</strong>`;
       } catch (e) {
         info.innerHTML = "❌ Connection failed";
       }
@@ -178,7 +184,7 @@
     }
 
     async function buyLicense() {
-      if (!walletAddress) return alert("Please connect your wallet first.");
+      if (!signer) return alert("Please connect your wallet first.");
       if (!selectedMac) return alert("Please detect your device first.");
 
       const payBtn = document.getElementById("payBtn");
@@ -186,22 +192,9 @@
       payBtn.disabled = true;
 
       try {
-        // Proper function call encoding for buyLicense(string)
-        const functionSelector = "0x8f4e8c2a";
-        const paddedMac = selectedMac.split(':').join('').padEnd(64, '0');
-        const data = functionSelector + paddedMac;
-
-        const txHash = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [{
-            from: walletAddress,
-            to: CONTRACT_ADDRESS,
-            data: data,
-            gas: "0x493E0"   // 300,000 gas
-          }]
-        });
-
-        alert(`✅ Transaction Sent Successfully!\n\nHash: ${txHash}\n\nCheck MetaMask for confirmation.`);
+        const tx = await contract.buyLicense(selectedMac);
+        await tx.wait();
+        alert(`✅ Transaction Successful!\n\nYou purchased a ${selectedType} license for MAC: ${selectedMac}\n\nTX Hash: ${tx.hash}`);
       } catch (err) {
         console.error(err);
         alert("Transaction failed or was cancelled.");
