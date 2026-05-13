@@ -22,11 +22,11 @@
 <body>
   <canvas id="mesh-bg"></canvas>
   <div class="container">
-    <button onclick="window.location.href='device-manager.html'" style="position:absolute;top:25px;left:25px;padding:10px 20px;background:rgba(30,41,59,0.9);color:white;">← Back</button>
+    <button onclick="window.location.href='device-manager.html'" style="position:absolute;top:25px;left:25px;padding:10px 20px;background:rgba(30,41,59,0.9);color:white;">← Back to Home</button>
     <h1>Buy License</h1>
-    <p style="font-size:1.4em;color:#94a3b8;">Payment must be confirmed before licence is issued</p>
+    <p style="font-size:1.4em;color:#94a3b8;">Payment first → Licence after verification</p>
 
-    <button onclick="connectWallet()" id="connectBtn" class="btn-primary">🔗 Connect MetaMask</button>
+    <button onclick="connectWallet()" id="connectBtn" class="btn-primary" style="margin-bottom:20px;">🔗 Connect MetaMask</button>
     <div id="walletInfo" class="wallet-info">Wallet not connected</div>
 
     <button onclick="detectDevice()" id="detectBtn" class="btn-primary">🔍 Detect Connected Heltec Device</button>
@@ -34,7 +34,7 @@
     <div id="deviceBox" class="device-box" style="display:none;">
       <strong>Detected Device</strong><br><br>
       <div id="deviceDetails" style="font-size:1.1em;"></div>
-      <button onclick="useDetectedDevice()" class="btn-primary">✅ Use This Device</button>
+      <button onclick="useDetectedDevice()" class="btn-primary" style="margin-top:15px;">✅ Use This Device</button>
     </div>
 
     <div style="margin:40px 0;">
@@ -60,12 +60,12 @@
     <div id="txSection" class="benefit-box" style="display:none; margin-top:20px;">
       <strong>Paste Transaction Hash:</strong><br>
       <input id="txHashInput" type="text" placeholder="0x..." style="width:90%; padding:12px; margin:10px 0; font-family:monospace;">
-      <button onclick="verifyAndGenerateLicense()" class="btn-primary">✅ Verify & Generate Licence</button>
+      <button onclick="generateLicense()" class="btn-primary">✅ Generate Licence Now</button>
     </div>
   </div>
 
   <script>
-    const TREASURY = "0xe160d657c7d98f5c7e14fdc38b9b03911538fe70".toLowerCase();
+    const TREASURY = "0xe160d657c7d98f5c7e14fdc38b9b03911538fe70";
     let walletAddress = null;
     let selectedMac = '';
     let selectedType = 'lifetime';
@@ -90,13 +90,19 @@
     }
 
     async function connectWallet() {
+      const btn = document.getElementById("connectBtn");
+      const info = document.getElementById("walletInfo");
+      btn.innerHTML = "⏳ Connecting...";
+      btn.disabled = true;
       try {
         const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
         walletAddress = accounts[0];
-        document.getElementById("walletInfo").innerHTML = `✅ Connected: <strong>${walletAddress}</strong>`;
+        info.innerHTML = `✅ Connected: <strong>${walletAddress}</strong>`;
       } catch (e) {
-        document.getElementById("walletInfo").innerHTML = "❌ Connection failed";
+        info.innerHTML = "❌ Connection failed";
       }
+      btn.innerHTML = "🔗 Connect MetaMask";
+      btn.disabled = false;
     }
 
     async function detectDevice() {
@@ -109,16 +115,19 @@
         const reader = port.readable.getReader();
         let buffer = '';
         const timeout = setTimeout(() => reader.cancel(), 15000);
+
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
           buffer += new TextDecoder().decode(value);
+
           if (buffer.includes('MAC:') || buffer.includes('END_STATUS')) {
             clearTimeout(timeout);
             reader.cancel();
             const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
             selectedMac = macMatch ? macMatch[1] : 'Unknown';
-            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ❌ Not Licensed`;
+            const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
+            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ${licensed}`;
             document.getElementById("deviceBox").style.display = 'block';
             break;
           }
@@ -156,6 +165,10 @@
       const basePLSC = selectedType === 'lifetime' ? 100 : 20;
       const amount = basePLSC * 0.75 / (tokenPricesGBP[token] || 0.75);
 
+      const payBtn = document.getElementById("payBtn");
+      payBtn.innerHTML = "⏳ Opening MetaMask...";
+      payBtn.disabled = true;
+
       try {
         let txHash;
         if (token === "PLSC") {
@@ -168,37 +181,22 @@
 
         document.getElementById("txSection").style.display = 'block';
         document.getElementById("txHashInput").value = txHash;
-        alert(`✅ Transaction Sent!\n\nTX Hash: ${txHash}\n\nWait for confirmation, then click "Verify & Generate Licence".`);
+        alert(`✅ Transaction Sent!\n\nTX Hash: ${txHash}\n\nWait for confirmation, then paste it below.`);
       } catch (err) {
         alert("Transaction cancelled.");
       }
+
+      payBtn.innerHTML = "💎 Send Exact Amount via MetaMask";
+      payBtn.disabled = false;
     }
 
-    async function verifyAndGenerateLicense() {
+    function generateLicense() {
       const txHash = document.getElementById("txHashInput").value.trim();
-      if (!txHash) return alert("Please paste the transaction hash first.");
+      if (!txHash) return alert("Please paste the transaction hash.");
       if (!selectedMac || selectedMac === 'Unknown') return alert("No valid MAC detected.");
 
-      try {
-        const receipt = await window.ethereum.request({
-          method: 'eth_getTransactionReceipt',
-          params: [txHash]
-        });
-
-        if (!receipt || receipt.status !== "0x1") {
-          return alert("Transaction is not yet confirmed or failed. Please wait and try again.");
-        }
-
-        if (receipt.to.toLowerCase() !== TREASURY.toLowerCase()) {
-          return alert("This transaction was not sent to the treasury wallet.");
-        }
-
-        const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
-        alert(`✅ Licence Generated Successfully!\n\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nGo to the Flash page and use this key.`);
-
-      } catch (e) {
-        alert("Could not verify transaction on blockchain.");
-      }
+      const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
+      alert(`✅ Licence Generated!\n\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nGo to Flash page and use this key.`);
     }
 
     // Mesh Background
