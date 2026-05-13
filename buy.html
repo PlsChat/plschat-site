@@ -86,7 +86,6 @@
     let selectedType = 'lifetime';
     let selectedMac = '';
 
-    // Correct CoinGecko IDs from your links
     const coinGeckoIds = {
       PLS: "pulsechain",
       PLSX: "pulsex",
@@ -95,7 +94,7 @@
       WBTC: "wrapped-bitcoin-pulsechain"
     };
 
-    let tokenPricesGBP = { PLSC: 0.75 }; // PLSC is fixed at £0.75
+    let tokenPricesGBP = { PLSC: 0.75 };
 
     const ABI = ["function buyLicense(string calldata deviceHardwareId) external"];
 
@@ -110,9 +109,7 @@
         tokenPricesGBP.pDAI = data["dai-on-pulsechain"]?.gbp || 0.00155;
         tokenPricesGBP.pCOCK = data["pulsechain-peacock"]?.gbp || 0.011;
         tokenPricesGBP.WBTC = data["wrapped-bitcoin-pulsechain"]?.gbp || 65000;
-      } catch(e) {
-        console.log("CoinGecko fetch failed - using fallbacks");
-      }
+      } catch(e) {}
     }
 
     async function connectWallet() {
@@ -122,12 +119,11 @@
       btn.disabled = true;
       try {
         if (!window.ethereum) throw new Error("MetaMask not found");
-        await window.ethereum.request({ method: "eth_requestAccounts" });
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
         const provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-        const addr = await signer.getAddress();
-        info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
+        info.innerHTML = `✅ Connected: <strong>${accounts[0]}</strong>`;
       } catch (e) {
         info.innerHTML = "❌ Connection failed";
       }
@@ -135,7 +131,8 @@
       btn.disabled = false;
     }
 
-    async function detectDevice() {
+    async function detectDevice() { /* ... same working code as before ... */ 
+      // (keeping your working detectDevice function)
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
       btn.disabled = true;
@@ -161,7 +158,7 @@
           }
         }
       } catch(e) {
-        alert("Could not detect device. Make sure Heltec is plugged in.");
+        alert("Could not detect device.");
       }
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
@@ -198,18 +195,16 @@
       try {
         const tx = await contract.buyLicense(selectedMac);
         await tx.wait();
-        const price = selectedType === 'lifetime' ? "100 PLSC" : "20 PLSC";
-        alert(`✅ Transaction Successful!\n\nYou purchased a ${selectedType} license (${price})`);
+        alert(`✅ Success! You purchased a ${selectedType} license.`);
       } catch (err) {
-        console.error(err);
-        alert("Transaction failed or was cancelled.");
+        alert("Transaction failed or cancelled.");
       }
 
       payBtn.innerHTML = "💎 Pay & Activate Now";
       payBtn.disabled = false;
     }
 
-    // Mesh Background
+    // Mesh Background (unchanged)
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
     function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
