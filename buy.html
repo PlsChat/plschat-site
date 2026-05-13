@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PLSChat - Buy License</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; background: #0a0c1f; color: #c9d1d9; margin:0; padding:40px 20px; min-height:100vh; position:relative; overflow-y:auto; }
@@ -124,6 +125,7 @@
       btn.disabled = false;
     }
 
+    // === RELIABLE DEVICE DETECTION (from working version) ===
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
@@ -133,24 +135,29 @@
         await port.open({ baudRate: 115200 });
         const reader = port.readable.getReader();
         let buffer = '';
-        const timeout = setTimeout(() => reader.cancel(), 7000);
+        const timeout = setTimeout(() => reader.cancel(), 8000);
+
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
           buffer += new TextDecoder().decode(value);
+
           if (buffer.includes('MAC:') || buffer.includes('END_STATUS')) {
             clearTimeout(timeout);
             reader.cancel();
             const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
             selectedMac = macMatch ? macMatch[1] : 'Unknown';
             const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
-            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ${licensed}`;
+            document.getElementById("deviceDetails").innerHTML = `
+              MAC: <strong>${selectedMac}</strong><br>
+              Status: ${licensed}
+            `;
             document.getElementById("deviceBox").style.display = 'block';
             break;
           }
         }
       } catch(e) {
-        alert("Could not detect device.");
+        alert("Could not detect device.\n\nTip: Hold BOOT button while plugging in.");
       }
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
@@ -179,7 +186,7 @@
     function buyLicense() {
       if (!signer) return alert("Please connect your wallet first.");
       if (!selectedMac) return alert("Please detect your device first.");
-      alert(`✅ Test successful!\n\nWould send transaction for ${selectedType} license using ${document.getElementById("paymentToken").value}`);
+      alert(`✅ Test successful!\nWould buy ${selectedType} license for MAC: ${selectedMac}`);
     }
 
     // Mesh Background
