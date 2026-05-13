@@ -48,7 +48,7 @@
       <button onclick="selectType('yearly')" id="btnYearly" class="btn-primary">Yearly — 20 PLSC</button>
     </div>
 
-    <!-- Token Selector with Live Prices -->
+    <!-- Token Selector -->
     <div class="token-selector">
       <strong>Pay with:</strong><br><br>
       <select id="paymentToken" onchange="updateEquivalentPrice()">
@@ -59,7 +59,7 @@
         <option value="pCOCK">pCOCK</option>
         <option value="WBTC">WBTC</option>
       </select>
-      <div id="equivalentPrice" style="margin-top:15px; font-size:1.1em; color:#67e8f9; font-weight:600;"></div>
+      <div id="equivalentPrice" style="margin-top:15px; font-size:1.2em; color:#67e8f9; font-weight:600;"></div>
     </div>
 
     <div id="benefitLifetime" class="benefit-box" style="display:none;">
@@ -90,6 +90,18 @@
     let selectedMac = '';
     let selectedToken = 'PLSC';
 
+    // Approximate £ prices (fallback)
+    const tokenPrices = {
+      PLSC: 0.75,
+      PLS: 0.0000077,
+      PLSX: 0.000005,
+      pDAI: 1.00,
+      pCOCK: 0.0008,
+      WBTC: 65000
+    };
+
+    const ABI = ["function buyLicense(string calldata deviceHardwareId) external"];
+
     async function connectWallet() {
       const btn = document.getElementById("connectBtn");
       const info = document.getElementById("walletInfo");
@@ -100,7 +112,7 @@
         await window.ethereum.request({ method: "eth_requestAccounts" });
         const provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
-        contract = new ethers.Contract(CONTRACT_ADDRESS, ["function buyLicense(string calldata deviceHardwareId) external"], signer);
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         const addr = await signer.getAddress();
         info.innerHTML = `✅ Connected: <strong>${addr}</strong>`;
       } catch (e) {
@@ -158,20 +170,20 @@
       const token = document.getElementById("paymentToken").value;
       const equivalentDiv = document.getElementById("equivalentPrice");
 
-      try {
-        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=pulsechain,pulsex,dai-on-pulsechain&vs_currencies=usd`);
-        const data = await response.json();
-        
-        let priceUSD = 0.75; // fallback for PLSC
-        if (token === "PLS") priceUSD = data.pulsechain?.usd || 0.0000077;
-        if (token === "PLSX") priceUSD = data.pulsex?.usd || 0.000005;
-        if (token === "pDAI") priceUSD = data["dai-on-pulsechain"]?.usd || 1.0;
+      let priceGBP = tokenPrices[token] || 0.75;
 
-        const equivalent = (basePLSC * 0.75 / priceUSD).toFixed(4);
-        equivalentDiv.innerHTML = `Equivalent to <strong>${equivalent} ${token}</strong>`;
-      } catch(e) {
-        equivalentDiv.innerHTML = `Equivalent to <strong>${basePLSC * 0.75 / 0.75} ${token}</strong>`;
-      }
+      try {
+        // Live price attempt (CoinGecko)
+        const ids = token === "PLS" ? "pulsechain" : token === "PLSX" ? "pulsex" : token === "pDAI" ? "dai" : "";
+        if (ids) {
+          const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
+          const data = await res.json();
+          priceGBP = data[ids]?.usd || priceGBP;
+        }
+      } catch(e) {}
+
+      const equivalent = (basePLSC * 0.75 / priceGBP).toFixed(4);
+      equivalentDiv.innerHTML = `Equivalent to <strong>${basePLSC} PLSC = ${equivalent} ${token}</strong>`;
     }
 
     async function buyLicense() {
@@ -208,10 +220,7 @@
     }
     animate();
 
-    // Initial price update
-    window.onload = () => {
-      updateEquivalentPrice();
-    };
+    window.onload = updateEquivalentPrice;
   </script>
 </body>
 </html>
