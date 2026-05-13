@@ -80,7 +80,9 @@
   </div>
 
   <script>
+    const CONTRACT_ADDRESS = "0x4C86C5640ADEc6daDB88b75adEFE3C2FbC2d3510";
     let signer = null;
+    let contract = null;
     let selectedType = 'lifetime';
     let selectedMac = '';
 
@@ -93,6 +95,8 @@
     };
 
     let tokenPricesGBP = { PLSC: 0.75 };
+
+    const ABI = ["function buyLicense(string calldata deviceHardwareId) external"];
 
     async function fetchLivePrices() {
       try {
@@ -116,8 +120,10 @@
       try {
         if (!window.ethereum) throw new Error("MetaMask not found");
         const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-        signer = accounts[0];
-        info.innerHTML = `✅ Connected: <strong>${signer}</strong>`;
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        info.innerHTML = `✅ Connected: <strong>${accounts[0]}</strong>`;
       } catch (e) {
         info.innerHTML = "❌ Connection failed";
       }
@@ -125,7 +131,6 @@
       btn.disabled = false;
     }
 
-    // === RELIABLE DEVICE DETECTION (from working version) ===
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
@@ -136,28 +141,23 @@
         const reader = port.readable.getReader();
         let buffer = '';
         const timeout = setTimeout(() => reader.cancel(), 8000);
-
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
           buffer += new TextDecoder().decode(value);
-
           if (buffer.includes('MAC:') || buffer.includes('END_STATUS')) {
             clearTimeout(timeout);
             reader.cancel();
             const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
             selectedMac = macMatch ? macMatch[1] : 'Unknown';
             const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
-            document.getElementById("deviceDetails").innerHTML = `
-              MAC: <strong>${selectedMac}</strong><br>
-              Status: ${licensed}
-            `;
+            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ${licensed}`;
             document.getElementById("deviceBox").style.display = 'block';
             break;
           }
         }
       } catch(e) {
-        alert("Could not detect device.\n\nTip: Hold BOOT button while plugging in.");
+        alert("Could not detect device.\nTip: Hold BOOT button while plugging in.");
       }
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
@@ -183,10 +183,25 @@
       document.getElementById("equivalentPrice").innerHTML = `Equivalent to <strong>${basePLSC} PLSC = ${equivalent} ${token}</strong>`;
     }
 
-    function buyLicense() {
+    async function buyLicense() {
       if (!signer) return alert("Please connect your wallet first.");
       if (!selectedMac) return alert("Please detect your device first.");
-      alert(`✅ Test successful!\nWould buy ${selectedType} license for MAC: ${selectedMac}`);
+
+      const payBtn = document.getElementById("payBtn");
+      payBtn.innerHTML = "⏳ Sending to MetaMask...";
+      payBtn.disabled = true;
+
+      try {
+        const tx = await contract.buyLicense(selectedMac);
+        await tx.wait();
+        alert(`✅ Transaction Successful!\n\nYou have purchased a ${selectedType} license for MAC: ${selectedMac}\n\nTransaction Hash: ${tx.hash}`);
+      } catch (err) {
+        console.error(err);
+        alert("Transaction failed or was cancelled by user.");
+      }
+
+      payBtn.innerHTML = "💎 Pay & Activate Now";
+      payBtn.disabled = false;
     }
 
     // Mesh Background
