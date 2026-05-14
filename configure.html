@@ -26,9 +26,16 @@
     }
     .subtitle { color:#94a3b8; font-size:1.35em; margin-bottom:40px; }
     .btn-back { 
-      position:absolute; top:25px; left:25px; 
-      padding:10px 22px; background:rgba(30,41,59,0.9); color:white; 
-      border:none; border-radius:9999px; cursor:pointer; 
+      position:absolute; 
+      top:25px; 
+      left:25px; 
+      padding:10px 22px; 
+      background:rgba(30,41,59,0.9); 
+      color:white; 
+      border:none; 
+      border-radius:9999px; 
+      cursor:pointer; 
+      font-size:1em;
     }
     button { 
       padding:18px 36px; 
@@ -137,7 +144,7 @@
 
     async function connectDevice() {
       const box = document.getElementById("statusBox");
-      box.innerHTML = "🔄 Connecting...";
+      box.innerHTML = "🔄 Connecting to device...";
 
       try {
         const port = await navigator.serial.requestPort();
@@ -170,9 +177,7 @@
       }
     }
 
-    async function toggleMode() {
-      // Visual only - actual change on Apply
-    }
+    async function toggleMode() {}
 
     async function applyChanges() {
       const newMode = document.getElementById("wifiToggle").checked ? "WIFI" : "BLE";
