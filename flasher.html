@@ -6,22 +6,79 @@
   <title>PLSChat Web Flasher</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; background: #0a0c1f; color: #c9d1d9; margin:0; padding:40px 20px; min-height:100vh; position:relative; overflow-y:auto; text-align:center; }
-    #mesh-bg { position:fixed; top:0; left:0; right:0; bottom:0; z-index:-1; opacity:0.95; }
-    .container { max-width:800px; margin:0 auto; position:relative; z-index:2; }
-    h1 { font-size:3em; background:linear-gradient(90deg,#a855f7,#67e8f9); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: #0a0c1f; 
+      color: #c9d1d9; 
+      margin:0; 
+      padding:40px 20px; 
+      min-height:100vh; 
+      position:relative; 
+      overflow-y:auto; 
+      text-align:center; 
+    }
+    #mesh-bg { 
+      position:fixed; top:0; left:0; right:0; bottom:0; 
+      z-index:-1; opacity:0.95; 
+    }
+    .container { 
+      max-width:800px; margin:0 auto; position:relative; z-index:2; 
+    }
+    h1 { 
+      font-size:3em; 
+      background:linear-gradient(90deg,#a855f7,#67e8f9); 
+      -webkit-background-clip:text; 
+      -webkit-text-fill-color:transparent; 
+      margin-bottom:8px; 
+    }
     p { color:#94a3b8; font-size:1.2em; max-width:600px; margin:20px auto; }
-    button { padding:16px 36px; font-size:1.15em; font-weight:600; border:none; border-radius:9999px; cursor:pointer; margin:12px; transition:all 0.3s; }
-    .btn-connect { background:linear-gradient(135deg,#22d3ee,#67e8f9); color:#0f172a; }
-    .btn-flash { background:linear-gradient(135deg,#f59e0b,#fbbf24); color:#0f172a; }
-    .btn-send { background:linear-gradient(135deg,#22c55e,#86efac); color:#0f172a; }
-    .status { background:#1e2937; padding:20px; border-radius:16px; margin:25px auto; max-width:700px; text-align:left; font-family:monospace; min-height:140px; white-space:pre-wrap; }
+
+    .btn-back {
+      position: absolute; top: 25px; left: 25px;
+      padding: 10px 24px;
+      background: linear-gradient(135deg, #a855f7, #3b82f6);
+      color: white;
+      border: none;
+      border-radius: 9999px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(168,85,247,0.4);
+    }
+
+    button {
+      padding: 16px 36px;
+      font-size: 1.15em;
+      font-weight: 600;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      margin: 12px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .btn-connect { background: linear-gradient(135deg, #22d3ee, #67e8f9); color: #0f172a; }
+    .btn-flash { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #0f172a; }
+    .btn-send { background: linear-gradient(135deg, #22c55e, #86efac); color: #0f172a; }
+
+    .status { 
+      background:#1e2937; 
+      padding:20px; 
+      border-radius:16px; 
+      margin:25px auto; 
+      max-width:700px; 
+      text-align:left; 
+      font-family:monospace; 
+      min-height:140px; 
+      white-space:pre-wrap; 
+    }
     .success { color:#22c55e; font-weight:600; }
   </style>
   <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 </head>
 <body>
   <div class="container">
+    <button class="btn-back" onclick="window.location.href='device-manager.html'">← Back to Home</button>
+
     <h1>PLSChat Web Flasher</h1>
     <p>Flash firmware + apply your purchased licence</p>
 
@@ -37,9 +94,9 @@
     </div>
 
     <!-- Embedded Flash Installer -->
-    <div id="flashInstaller" style="display:none; margin-top:30px;">
+    <div id="flashInstaller" style="display:none; margin-top:40px;">
       <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
-      <p><strong>Important:</strong> Hold the <strong>BOOT button</strong> while clicking Connect in the installer.</p>
+      <p style="margin-top:20px;"><strong>Hold the BOOT button</strong> while clicking Connect in the installer below.</p>
     </div>
   </div>
 
