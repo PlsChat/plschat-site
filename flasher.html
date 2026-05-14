@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PLSChat - Web Flasher</title>
+  <title>PLSChat Web Flasher</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; background: #0a0c1f; color: #c9d1d9; margin:0; padding:40px 20px; min-height:100vh; position:relative; overflow-y:auto; text-align:center; }
@@ -13,6 +13,7 @@
     p { color:#94a3b8; font-size:1.2em; max-width:600px; margin:20px auto; }
     button { padding:16px 36px; font-size:1.15em; font-weight:600; border:none; border-radius:9999px; cursor:pointer; margin:12px; transition:all 0.3s; }
     .btn-connect { background:linear-gradient(135deg,#22d3ee,#67e8f9); color:#0f172a; }
+    .btn-flash { background:linear-gradient(135deg,#f59e0b,#fbbf24); color:#0f172a; }
     .btn-send { background:linear-gradient(135deg,#22c55e,#86efac); color:#0f172a; }
     .status { background:#1e2937; padding:20px; border-radius:16px; margin:25px auto; max-width:700px; text-align:left; font-family:monospace; min-height:140px; white-space:pre-wrap; }
   </style>
@@ -23,14 +24,14 @@
     <p>Flash firmware + apply your purchased licence</p>
 
     <button class="btn-connect" onclick="connectDevice()">🔌 Connect Device</button>
-    <button onclick="refreshLicense()" style="background:#64748b;color:white;">🔄 Refresh / Detect Licence</button>
+    <button class="btn-flash" onclick="flashFirmware()">⚡ Flash Device</button>
 
     <div id="statusBox" class="status">Click "Connect Device" above.<br>Hold the <strong>BOOT button</strong> on the Heltec while connecting.</div>
 
-    <div id="licenseBox" style="display:none; background:#1e2937; padding:20px; border-radius:16px; margin:25px auto; max-width:700px;">
-      <strong>✅ Licence Found</strong><br>
-      <div id="licenseContent" style="margin-top:12px; background:#0f172a; padding:15px; border-radius:8px; font-family:monospace;"></div>
-      <button class="btn-send" onclick="sendLicense()" style="margin-top:20px;">📤 Send Licence to Device</button>
+    <div id="licenseBox" style="display:none; background:#1e2937; padding:25px; border-radius:16px; margin:25px auto; max-width:700px;">
+      <strong>✅ Licence Found</strong><br><br>
+      <div id="licenseContent" style="background:#0f172a; padding:15px; border-radius:8px; font-family:monospace; margin-bottom:20px;"></div>
+      <button class="btn-send" onclick="sendLicense()">📤 Send Licence to Device</button>
     </div>
   </div>
 
@@ -38,6 +39,7 @@
 
   <script>
     let serialPort = null;
+    let currentMac = "";
     let currentLicenseKey = "";
 
     // Mesh background
@@ -58,42 +60,54 @@
       try {
         serialPort = await navigator.serial.requestPort();
         await serialPort.open({ baudRate: 115200 });
-        box.innerHTML = "✅ Device Connected!<br>Ready to send licence.";
+        box.innerHTML = "✅ Device Connected!";
+        autoDetectLicense();
       } catch (err) {
         box.innerHTML = `❌ Could not connect.<br>Hold BOOT button and <button onclick="connectDevice()">Retry</button>`;
       }
     }
 
-    async function refreshLicense() {
-      const saved = localStorage.getItem('licenses');
-      if (!saved) {
-        document.getElementById("statusBox").innerHTML += "<br>No licence found in browser. Buy one first.";
-        return;
-      }
-      const licenses = JSON.parse(saved);
-      const macs = Object.keys(licenses);
-      if (macs.length === 0) return;
+    async function autoDetectLicense() {
+      // Read MAC from device
+      const reader = serialPort.readable.getReader();
+      let buffer = '';
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += new TextDecoder().decode(value);
+          const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
+          if (macMatch) {
+            currentMac = macMatch[1];
+            break;
+          }
+        }
+      } finally { reader.releaseLock(); }
 
-      currentLicenseKey = licenses[macs[0]];
-      const box = document.getElementById("licenseBox");
-      document.getElementById("licenseContent").innerHTML = `
-        <strong>MAC:</strong> ${macs[0]}<br>
-        <strong>Key:</strong> ${currentLicenseKey}
-      `;
-      box.style.display = "block";
+      // Check if we have a saved licence for this MAC
+      const saved = localStorage.getItem('licenses');
+      if (saved) {
+        const licenses = JSON.parse(saved);
+        if (licenses[currentMac]) {
+          currentLicenseKey = licenses[currentMac];
+          const box = document.getElementById("licenseBox");
+          document.getElementById("licenseContent").innerHTML = `
+            <strong>MAC:</strong> ${currentMac}<br>
+            <strong>Key:</strong> ${currentLicenseKey}
+          `;
+          box.style.display = "block";
+        }
+      }
+    }
+
+    function flashFirmware() {
+      window.location.href = "/flasher-install.html";   // We'll create this next if needed
     }
 
     async function sendLicense() {
-      if (!serialPort) {
-        alert("Device must be plugged in and connected first.");
-        return;
-      }
-      if (!currentLicenseKey) {
-        alert("No licence found.");
-        return;
-      }
+      if (!serialPort || !currentLicenseKey) return alert("Device not connected or no licence");
       const box = document.getElementById("statusBox");
-      box.innerHTML += "\n→ Sending licence to device...";
+      box.innerHTML += "\n→ Sending licence...";
       try {
         const writer = serialPort.writable.getWriter();
         await writer.write(new TextEncoder().encode(`LICENSE:${currentLicenseKey}\n`));
