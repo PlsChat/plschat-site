@@ -6,20 +6,37 @@
   <title>PLSChat - Configure Device</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; background: #0a0c1f; color: #c9d1d9; margin:0; padding:40px 20px; min-height:100vh; }
-    .container { max-width:820px; margin:0 auto; text-align:center; }
-    h1 { font-size:3.4em; background:linear-gradient(90deg,#67e8f9,#a855f7); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: #0a0c1f; 
+      color: #c9d1d9; 
+      margin:0; 
+      padding:40px 20px; 
+      min-height:100vh; 
+      position:relative; 
+    }
+    #mesh-bg { position:fixed; top:0; left:0; right:0; bottom:0; z-index:-1; opacity:0.95; }
+    .container { max-width:820px; margin:0 auto; text-align:center; position:relative; z-index:2; }
+    h1 { 
+      font-size:3.4em; 
+      background:linear-gradient(90deg,#67e8f9,#a855f7); 
+      -webkit-background-clip:text; 
+      -webkit-text-fill-color:transparent; 
+      margin-bottom:8px; 
+    }
     .subtitle { color:#94a3b8; font-size:1.35em; margin-bottom:40px; }
-    .btn-back { position:absolute; top:25px; left:25px; padding:10px 22px; background:rgba(30,41,59,0.9); color:white; border:none; border-radius:9999px; cursor:pointer; }
-
-    .status-box {
-      background:rgba(15,23,42,0.95); padding:20px; border-radius:16px; margin:30px auto; max-width:700px;
+    .btn-back { 
+      position:absolute; top:25px; left:25px; padding:10px 22px; 
+      background:rgba(30,41,59,0.9); color:white; border:none; border-radius:9999px; cursor:pointer; 
+    }
+    .status-box { 
+      background:rgba(15,23,42,0.95); padding:20px; border-radius:16px; margin:30px auto; max-width:700px; 
     }
     .toggle-container {
-      display:flex; justify-content:center; gap:40px; margin:40px 0;
+      display:flex; justify-content:center; gap:40px; margin:40px 0; flex-wrap:wrap;
     }
     .toggle {
-      position:relative; display:inline-block; width:280px; height:80px;
+      position:relative; display:inline-block; width:260px; height:72px;
     }
     .toggle input { opacity:0; width:0; height:0; }
     .slider {
@@ -27,24 +44,40 @@
       background:#334155; border-radius:40px; transition:.4s;
     }
     .slider:before {
-      position:absolute; content:""; height:64px; width:120px; left:8px; bottom:8px;
+      position:absolute; content:""; height:56px; width:110px; left:8px; bottom:8px;
       background:white; border-radius:35px; transition:.4s;
     }
     input:checked + .slider { background:#22c55e; }
-    input:checked + .slider:before { transform:translateX(140px); }
+    input:checked + .slider:before { transform:translateX(130px); }
     .toggle-label {
-      position:absolute; top:50%; transform:translateY(-50%); font-size:1.3em; font-weight:600; width:100%; text-align:center; pointer-events:none;
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); 
+      font-size:1.25em; font-weight:600; pointer-events:none; width:100%;
+    }
+    .input-group { margin:20px 0; text-align:left; max-width:500px; margin-left:auto; margin-right:auto; }
+    .input-group label { display:block; margin-bottom:6px; color:#94a3b8; }
+    input[type="text"] {
+      width:100%; padding:14px; background:#1e2937; border:1px solid #475569; 
+      border-radius:8px; color:white; font-size:1.1em;
+    }
+    button.send-btn {
+      background:linear-gradient(135deg,#22c55e,#4ade80); color:#000; 
+      padding:16px 40px; font-size:1.2em; margin-top:20px;
     }
   </style>
 </head>
 <body>
+  <canvas id="mesh-bg"></canvas>
   <div class="container">
     <button class="btn-back" onclick="window.location.href='device-manager.html'">← Back to Device Manager</button>
     <h1>Configure Device</h1>
     <p class="subtitle">Current Mode • Toggle BLE / WiFi</p>
 
+    <button onclick="connectDevice()" style="padding:14px 32px; background:linear-gradient(135deg,#3b82f6,#60a5fa); margin-bottom:30px;">
+      🔌 Connect Device
+    </button>
+
     <div class="status-box" id="statusBox">
-      <strong>Connecting to device...</strong>
+      Click "Connect Device" to begin
     </div>
 
     <div class="toggle-container">
@@ -58,20 +91,34 @@
         <span class="slider"><span class="toggle-label">WiFi Hotspot</span></span>
       </label>
     </div>
+
+    <div class="input-group">
+      <label>WiFi SSID (Network Name)</label>
+      <input type="text" id="ssid" value="PLSChat-Repeater" readonly>
+    </div>
+
+    <div class="input-group">
+      <label>WiFi Password</label>
+      <input type="text" id="wifiPass" value="pls12345">
+    </div>
+
+    <button class="send-btn" onclick="applyChanges()">💾 Apply Changes</button>
   </div>
 
   <script>
     let currentMode = "BLE";
 
-    async function connectAndReadStatus() {
+    async function connectDevice() {
       const box = document.getElementById("statusBox");
+      box.innerHTML = "Connecting...";
+
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
         const reader = port.readable.getReader();
         let buffer = "";
 
-        const timeout = setTimeout(() => reader.cancel(), 12000);
+        const timeout = setTimeout(() => reader.cancel(), 15000);
 
         while (true) {
           const { value, done } = await reader.read();
@@ -87,38 +134,52 @@
             document.getElementById("bleToggle").checked = currentMode === "BLE";
             document.getElementById("wifiToggle").checked = currentMode === "WIFI";
 
-            box.innerHTML = `
-              <strong>✅ Device Connected</strong><br><br>
-              Current Mode: <strong>${currentMode}</strong>
-            `;
+            box.innerHTML = `✅ Connected • Current Mode: <strong>${currentMode}</strong>`;
             break;
           }
         }
       } catch (e) {
-        box.innerHTML = "❌ Could not connect to device.<br>Hold BOOT button and try again.";
+        box.innerHTML = `❌ Could not connect.<br>Hold BOOT button and try again.`;
       }
     }
 
     async function toggleMode() {
       const isWifi = document.getElementById("wifiToggle").checked;
       const newMode = isWifi ? "WIFI" : "BLE";
+      currentMode = newMode;
+    }
+
+    async function applyChanges() {
+      const newPass = document.getElementById("wifiPass").value.trim();
+      const newMode = document.getElementById("wifiToggle").checked ? "WIFI" : "BLE";
 
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
         const writer = port.writable.getWriter();
-        await writer.write(new TextEncoder().encode(`MODE:${newMode}\n`));
-        writer.releaseLock();
 
-        alert(`✅ Switched to ${newMode} Mode`);
-        currentMode = newMode;
+        await writer.write(new TextEncoder().encode(`MODE:${newMode}\n`));
+        if (newPass.length >= 8) {
+          await writer.write(new TextEncoder().encode(`WIFI PASS:${newPass}\n`));
+        }
+
+        writer.releaseLock();
+        alert("✅ Settings applied successfully!");
       } catch (err) {
-        alert("Failed to send command. Make sure device is connected.");
+        alert("Failed to apply settings. Make sure device is connected.");
       }
     }
 
-    // Auto connect when page loads
-    window.onload = connectAndReadStatus;
+    // Mesh Background (matching your other pages)
+    const canvas = document.getElementById('mesh-bg');
+    const ctx = canvas.getContext('2d');
+    function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+    function animate(){
+      ctx.fillStyle = 'rgba(10,12,31,0.16)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      requestAnimationFrame(animate);
+    }
+    animate();
   </script>
 </body>
 </html>
