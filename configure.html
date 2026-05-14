@@ -45,7 +45,7 @@
     }
     button:hover { transform:translateY(-4px); }
     .send-btn { background:linear-gradient(135deg,#22c55e,#4ade80); color:#000; }
-    
+
     .status-box { 
       background:rgba(15,23,42,0.95); 
       padding:20px; 
@@ -124,6 +124,11 @@
       <input type="text" id="wifiPass" value="pls12345">
     </div>
 
+    <div class="input-group">
+      <label>Bluetooth Pairing Code</label>
+      <input type="text" id="bleCode" value="482917" readonly>
+    </div>
+
     <button class="send-btn" onclick="applyChanges()">💾 Apply Changes</button>
   </div>
 
@@ -132,7 +137,7 @@
 
     async function connectDevice() {
       const box = document.getElementById("statusBox");
-      box.innerHTML = "🔄 Connecting to device...";
+      box.innerHTML = "🔄 Connecting...";
 
       try {
         const port = await navigator.serial.requestPort();
@@ -166,7 +171,7 @@
     }
 
     async function toggleMode() {
-      // Visual toggle only - actual change happens on Apply
+      // Visual only - actual change on Apply
     }
 
     async function applyChanges() {
@@ -179,7 +184,7 @@
         const writer = port.writable.getWriter();
 
         await writer.write(new TextEncoder().encode(`MODE:${newMode}\n`));
-        if (newPass.length >= 8) {
+        if (newPass && newPass.length >= 8) {
           await writer.write(new TextEncoder().encode(`WIFI PASS:${newPass}\n`));
         }
 
