@@ -18,6 +18,7 @@
     .status { background:#1e2937; padding:20px; border-radius:16px; margin:25px auto; max-width:700px; text-align:left; font-family:monospace; min-height:140px; white-space:pre-wrap; }
     .success { color:#22c55e; font-weight:600; }
   </style>
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 </head>
 <body>
   <div class="container">
@@ -33,6 +34,12 @@
       <strong class="success">✅ Licence Found</strong><br><br>
       <div id="licenseContent" style="background:#0f172a; padding:15px; border-radius:8px; font-family:monospace; margin-bottom:20px;"></div>
       <button class="btn-send" onclick="sendLicense()">📤 Send Licence to Device</button>
+    </div>
+
+    <!-- Embedded Flash Installer -->
+    <div id="flashInstaller" style="display:none; margin-top:30px;">
+      <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
+      <p><strong>Important:</strong> Hold the <strong>BOOT button</strong> while clicking Connect in the installer.</p>
     </div>
   </div>
 
@@ -61,10 +68,7 @@
       try {
         serialPort = await navigator.serial.requestPort();
         await serialPort.open({ baudRate: 115200 });
-        
         box.innerHTML = `<span class="success">✅ Device Connected!</span><br>Reading licence...`;
-        
-        // Auto-detect licence immediately
         autoDetectLicense();
       } catch (err) {
         box.innerHTML = `❌ Could not connect.<br>Hold BOOT button and <button onclick="connectDevice()">Retry</button>`;
@@ -72,7 +76,6 @@
     }
 
     async function autoDetectLicense() {
-      // Read MAC from device
       const reader = serialPort.readable.getReader();
       let buffer = '';
       try {
@@ -83,7 +86,6 @@
           const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
           if (macMatch) {
             const mac = macMatch[1];
-            // Check saved licences
             const saved = localStorage.getItem('licenses');
             if (saved) {
               const licenses = JSON.parse(saved);
@@ -101,14 +103,11 @@
             break;
           }
         }
-      } finally {
-        reader.releaseLock();
-      }
+      } finally { reader.releaseLock(); }
     }
 
     function flashFirmware() {
-      // Opens the actual firmware flasher (esp-web-tools)
-      window.location.href = "flasher-install.html";   // We'll create this if you want, or we can embed it
+      document.getElementById("flashInstaller").style.display = "block";
     }
 
     async function sendLicense() {
