@@ -29,13 +29,14 @@
       position:absolute; 
       top:25px; 
       left:25px; 
-      padding:10px 22px; 
-      background:rgba(30,41,59,0.9); 
+      padding:12px 24px; 
+      background:linear-gradient(90deg,#a855f7,#3b82f6); 
       color:white; 
       border:none; 
       border-radius:9999px; 
       cursor:pointer; 
-      font-size:1em;
+      font-size:1.05em;
+      box-shadow:0 0 15px rgba(168,85,247,0.6);
     }
     button { 
       padding:18px 36px; 
@@ -52,13 +53,13 @@
     }
     button:hover { transform:translateY(-4px); }
     .send-btn { background:linear-gradient(135deg,#22c55e,#4ade80); color:#000; }
-
     .status-box { 
       background:rgba(15,23,42,0.95); 
-      padding:20px; 
+      padding:25px; 
       border-radius:16px; 
       margin:30px auto; 
       max-width:700px; 
+      min-height:80px;
     }
     .toggle-container {
       display:flex; 
@@ -100,13 +101,17 @@
   <canvas id="mesh-bg"></canvas>
   <div class="container">
     <button class="btn-back" onclick="window.location.href='device-manager.html'">← Back to Device Manager</button>
+    
     <h1>Configure Device</h1>
     <p class="subtitle">Current Mode • Toggle BLE / WiFi</p>
 
     <button onclick="connectDevice()">🔌 Connect Device</button>
 
     <div class="status-box" id="statusBox">
-      Click "Connect Device" to begin
+      <strong>Instructions:</strong><br>
+      1. Plug in your Heltec V4<br>
+      2. Hold the BOOT button (small button next to USB-C)<br>
+      3. Click "Connect Device" above
     </div>
 
     <div class="toggle-container">
@@ -144,7 +149,7 @@
 
     async function connectDevice() {
       const box = document.getElementById("statusBox");
-      box.innerHTML = "🔄 Connecting to device...";
+      box.innerHTML = "🔄 Connecting... Hold BOOT button now.";
 
       try {
         const port = await navigator.serial.requestPort();
@@ -152,7 +157,7 @@
         const reader = port.readable.getReader();
         let buffer = "";
 
-        const timeout = setTimeout(() => reader.cancel(), 15000);
+        const timeout = setTimeout(() => reader.cancel(), 20000);
 
         while (true) {
           const { value, done } = await reader.read();
@@ -173,7 +178,7 @@
           }
         }
       } catch (e) {
-        box.innerHTML = `❌ Could not connect.<br>Hold BOOT button and try again.`;
+        box.innerHTML = `❌ Could not connect.<br>Hold BOOT button and <button onclick="connectDevice()" style="background:#22c55e;color:#000;padding:6px 14px;border-radius:9999px;">Retry</button>`;
       }
     }
 
