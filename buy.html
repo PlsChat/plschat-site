@@ -323,20 +323,28 @@ async function detectDevice() {
   document.getElementById('blockedBanner').style.display = 'none';
   document.getElementById('deviceBox').style.display = 'none';
 
+  // Show a live status message so user knows it's working
+  document.getElementById("deviceDetails").innerHTML =
+    '🔄 Connected — waiting for device status<br><small style="color:#64748b">This can take up to 30 seconds...</small>';
+  document.getElementById("deviceBox").style.display = 'block';
+
   try {
     const port = await navigator.serial.requestPort();
     await port.open({ baudRate: 115200 });
     const reader = port.readable.getReader();
     let buffer = '';
-    const timeout = setTimeout(() => reader.cancel(), 20000);
+
+    // 40 second timeout — device status prints every 30s so we need more than that
+    const timeout = setTimeout(() => reader.cancel(), 40000);
 
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
       buffer += new TextDecoder().decode(value);
 
-      // Works with both "MAC:XX:XX..." and "MAC: XX:XX..."
-      const macMatch = buffer.match(/MAC[:\s]+([0-9A-Fa-f:]{17})/);
+      // Precise MAC pattern — matches XX:XX:XX:XX:XX:XX exactly
+      // Handles both "MAC:90:70..." and "MAC: 90:70..." (with or without space)
+      const macMatch = buffer.match(/MAC:\s*([0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2})/);
       if (macMatch) {
         clearTimeout(timeout);
         reader.cancel();
@@ -363,7 +371,7 @@ async function detectDevice() {
       }
     }
   } catch(e) {
-    alert("Could not detect device.\nHold BOOT button while plugging in.");
+    document.getElementById("deviceDetails").innerHTML = '❌ Could not read device.<br><small>Hold BOOT button while plugging in.</small>';
   }
 
   btn.innerHTML = "🔍 Detect Connected Heltec Device";
