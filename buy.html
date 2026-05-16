@@ -65,6 +65,24 @@
     let walletAddress = null;
     let selectedMac = '';
     let selectedType = 'lifetime';
+    const coinGeckoIds = {
+      PLS: "pulsechain", PLSX: "pulsex", pDAI: "dai-on-pulsechain",
+      pCOCK: "pulsechain-peacock", WBTC: "wrapped-bitcoin-pulsechain"
+    };
+    let tokenPricesGBP = { PLSC: 0.75 };
+
+    async function fetchLivePrices() {
+      try {
+        const ids = Object.values(coinGeckoIds).join(',');
+        const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=gbp`);
+        const data = await res.json();
+        tokenPricesGBP.PLS = data.pulsechain?.gbp || 0.0000077;
+        tokenPricesGBP.PLSX = data.pulsex?.gbp || 0.000005;
+        tokenPricesGBP.pDAI = data["dai-on-pulsechain"]?.gbp || 0.00155;
+        tokenPricesGBP.pCOCK = data["pulsechain-peacock"]?.gbp || 0.011;
+        tokenPricesGBP.WBTC = data["wrapped-bitcoin-pulsechain"]?.gbp || 65000;
+      } catch(e) {}
+    }
 
     async function connectWallet() {
       try {
@@ -76,59 +94,59 @@
       }
     }
 
-    // === STRONGER MAC DETECTION ===
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
       btn.disabled = true;
-
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
         const reader = port.readable.getReader();
         let buffer = '';
-
-        const timeout = setTimeout(() => reader.cancel(), 30000); // 30 seconds
-
+        const timeout = setTimeout(() => reader.cancel(), 15000);
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
           buffer += new TextDecoder().decode(value);
-
-          // Very forgiving MAC detection
-          const macMatch = buffer.match(/MAC[:\s]*([0-9A-F:]{17})/i);
-          if (macMatch) {
+          if (buffer.includes('MAC:') || buffer.includes('END_STATUS')) {
             clearTimeout(timeout);
             reader.cancel();
-            selectedMac = macMatch[1];
+            const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
+            selectedMac = macMatch ? macMatch[1] : 'Unknown';
             const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
             document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ${licensed}`;
             document.getElementById("deviceBox").style.display = 'block';
-            console.log("✅ MAC detected:", selectedMac); // for debugging
             break;
           }
         }
       } catch(e) {
-        alert("Could not detect device.\n\nHold the BOOT button on the Heltec while connecting.");
+        alert("Could not detect device.\nHold BOOT button while plugging in.");
       }
-
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
     }
 
-    function useDetectedDevice() { 
-      alert(`MAC ${selectedMac} selected.`); 
-    }
+    function useDetectedDevice() { alert(`MAC ${selectedMac} selected.`); }
 
     function selectType(type) {
       selectedType = type;
       document.getElementById("btnLifetime").classList.toggle('selected', type === 'lifetime');
       document.getElementById("btnYearly").classList.toggle('selected', type === 'yearly');
+      updateEquivalentPrice();
+    }
+
+    async function updateEquivalentPrice() {
+      await fetchLivePrices();
+      const basePLSC = selectedType === 'lifetime' ? 100 : 20;
+      const token = document.getElementById("paymentToken").value;
+      const priceGBP = tokenPricesGBP[token] || 0.75;
+      const equivalent = (basePLSC * 0.75 / priceGBP).toFixed(4);
+      document.getElementById("equivalentPrice").innerHTML = `Equivalent to <strong>${basePLSC} PLSC = ${equivalent} ${token}</strong>`;
     }
 
     async function sendPayment() {
       if (!walletAddress) return alert("Please connect your wallet first.");
-      if (!selectedMac || selectedMac === '') return alert("Please detect your device first.");
+      if (!selectedMac || selectedMac === 'Unknown') return alert("Please detect your device first.");
 
       // === DUPLICATE LICENCE CHECK ===
       let licenses = JSON.parse(localStorage.getItem('licenses') || '{}');
@@ -136,8 +154,48 @@
         return alert("❌ A licence has already been purchased for this MAC address.\n\nYou cannot buy another licence for the same device.");
       }
 
-      alert("✅ No existing licence found for this MAC.\n\nYou can proceed with purchase.");
-      // ... rest of your original payment code would go here ...
+      // Proceed with payment if no existing licence
+      const token = document.getElementById("paymentToken").value;
+      const basePLSC = selectedType === 'lifetime' ? 100 : 20;
+      const amount = basePLSC * 0.75 / (tokenPricesGBP[token] || 0.75);
+
+      try {
+        let txHash;
+        if (token === "PLSC") {
+          const data = "0xa9059cbb" + TREASURY.slice(2).padStart(64, '0') + (BigInt(Math.floor(amount * 1e18)).toString(16)).padStart(64, '0');
+          txHash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: PLSC_CONTRACT, data: data, gas: "0x7A120" }] });
+        } else {
+          const valueWei = (BigInt(Math.floor(amount * 1e18))).toString(16);
+          txHash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: TREASURY, value: "0x" + valueWei, gas: "0x7A120" }] });
+        }
+        document.getElementById("txSection").style.display = 'block';
+        document.getElementById("txHashInput").value = txHash;
+        alert(`✅ Transaction Sent!\n\nTX: ${txHash}\n\nWait for confirmation, then click "Verify & Generate Licence".`);
+      } catch (err) {
+        alert("Transaction cancelled.");
+      }
+    }
+
+    async function verifyAndGenerateLicense() {
+      const txHash = document.getElementById("txHashInput").value.trim();
+      if (!txHash) return alert("Please paste the transaction hash first.");
+      if (!selectedMac || selectedMac === 'Unknown') return alert("No valid MAC detected.");
+      try {
+        const receipt = await window.ethereum.request({ method: 'eth_getTransactionReceipt', params: [txHash] });
+        if (!receipt || receipt.status !== "0x1") {
+          return alert("Transaction is not confirmed yet or failed.");
+        }
+        const isCorrect = receipt.to.toLowerCase() === TREASURY || receipt.to.toLowerCase() === PLSC_CONTRACT;
+        if (!isCorrect) return alert("Wrong recipient wallet.");
+        const licenseKey = `PLSC-LICENSE-${selectedMac.replace(/:/g,'')}-${Date.now()}`;
+        let licenses = JSON.parse(localStorage.getItem('licenses') || '{}');
+        licenses[selectedMac] = licenseKey;
+        localStorage.setItem('licenses', JSON.stringify(licenses));
+        await navigator.clipboard.writeText(licenseKey);
+        alert(`✅ Licence Generated Successfully!\n\nMAC: ${selectedMac}\nKey: ${licenseKey}\n\nKey copied to clipboard and saved for Flash page.`);
+      } catch (e) {
+        alert("Could not verify transaction.");
+      }
     }
 
     // Mesh Background
@@ -150,6 +208,7 @@
       requestAnimationFrame(animate);
     }
     animate();
+    window.onload = () => fetchLivePrices().then(() => updateEquivalentPrice());
   </script>
 </body>
 </html>
