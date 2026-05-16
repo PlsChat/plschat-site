@@ -158,7 +158,7 @@ select { padding:12px; font-size:1.1em; background:#1e2937; color:white; border-
   <div class="price-box">
     <div class="price-box-title">
       <span class="live-dot"></span>
-      Live Price · <span id="priceSource">fetching from CoinGecko...</span>
+      Live Price · <span id="priceSource">fetching from GeckoTerminal...</span>
     </div>
     <div class="price-main" id="priceMain">—</div>
     <div class="price-sub" id="priceSub"></div>
@@ -195,37 +195,63 @@ let selectedType  = 'lifetime';
 let macHasLicence = false;
 let tableOpen     = false;
 
-// Token prices in GBP — sensible fallbacks until CoinGecko responds
+// Token prices in GBP — fallbacks until live fetch succeeds
 let prices = {
-  PLSC: 0.75,
-  PLS:  0.0000077,
-  PLSX: 0.000005,
-  pDAI: 0.0012,
+  PLSC:  0.75,
+  PLS:   0.000005,
+  PLSX:  0.000003,
+  pDAI:  0.0012,
   pCOCK: 0.009,
-  WBTC:  600
+  WBTC:  80.0
 };
 
-const geckoMap = {
-  PLS:  'pulsechain',
-  PLSX: 'pulsex',
-  pDAI: 'dai-on-pulsechain',
-  pCOCK:'pulsechain-peacock',
-  WBTC: 'wrapped-bitcoin-pulsechain'
+// PulseChain contract addresses for GeckoTerminal
+const contracts = {
+  PLS:   '0xa1077a294dde1b09bb078844df40758a5d0f9a27',
+  PLSX:  '0x95b303987a60c71504d99aa1b13b4da07b0790ab',
+  pDAI:  '0x6b175474e89094c44da98b954eedeac495271d0f',
+  pCOCK: '0xc10a4ed9b4042222d69ff0b374eddd47ed90fc1f',
+  WBTC:  '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599'
 };
 
-// ── Fetch live prices from CoinGecko ──────────────────────────
+// ── Fetch live prices from GeckoTerminal (free, no API key) ───
 async function fetchLivePrices() {
   try {
-    const ids = Object.values(geckoMap).join(',');
-    const res  = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=gbp`);
-    if (!res.ok) throw new Error('non-200');
-    const data = await res.json();
-    if (data.pulsechain?.gbp)       prices.PLS   = data.pulsechain.gbp;
-    if (data.pulsex?.gbp)           prices.PLSX  = data.pulsex.gbp;
-    if (data['dai-on-pulsechain']?.gbp) prices.pDAI = data['dai-on-pulsechain'].gbp;
-    if (data['pulsechain-peacock']?.gbp)       prices.pCOCK = data['pulsechain-peacock'].gbp;
-    if (data['wrapped-bitcoin-pulsechain']?.gbp) prices.WBTC  = data['wrapped-bitcoin-pulsechain'].gbp;
-    document.getElementById('priceSource').textContent = 'live · CoinGecko';
+    const addrs = Object.values(contracts).join(',');
+    const res = await fetch(
+      `https://api.geckoterminal.com/api/v2/networks/pulsechain/tokens/multi/${addrs}`,
+      { headers: { 'Accept': 'application/json;version=20230302' } }
+    );
+    if (!res.ok) throw new Error('GeckoTerminal ' + res.status);
+    const json = await res.json();
+
+    // Reverse-map address to token symbol
+    const addrToToken = {};
+    for (const [token, addr] of Object.entries(contracts)) {
+      addrToToken[addr.toLowerCase()] = token;
+    }
+
+    // Fetch USD→GBP rate
+    let usdGbp = 0.79;
+    try {
+      const fx = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      const fxData = await fx.json();
+      usdGbp = fxData.rates?.GBP || 0.79;
+    } catch(e) {}
+
+    // Apply prices
+    let found = 0;
+    for (const item of (json.data || [])) {
+      const addr  = item.attributes?.address?.toLowerCase();
+      const usd   = parseFloat(item.attributes?.price_usd);
+      const token = addrToToken[addr];
+      if (token && !isNaN(usd) && usd > 0) {
+        prices[token] = usd * usdGbp;
+        found++;
+      }
+    }
+    document.getElementById('priceSource').textContent =
+      found > 0 ? `live · GeckoTerminal (${found}/5 tokens)` : 'partial data';
   } catch(e) {
     document.getElementById('priceSource').textContent = 'offline — using estimates';
   }
