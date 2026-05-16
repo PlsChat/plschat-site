@@ -94,27 +94,23 @@
       }
     }
 
-    // IMPROVED & MORE RELIABLE MAC DETECTION
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
       btn.disabled = true;
-
       try {
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
         const reader = port.readable.getReader();
         let buffer = '';
-
-        const timeout = setTimeout(() => reader.cancel(), 25000); // 25 seconds timeout
+        const timeout = setTimeout(() => reader.cancel(), 25000);
 
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
           buffer += new TextDecoder().decode(value);
 
-          // More flexible MAC detection
-          const macMatch = buffer.match(/MAC:\s*([0-9A-F:]{17})/i);
+          const macMatch = buffer.match(/MAC:([0-9A-F:]{17})/i);
           if (macMatch) {
             clearTimeout(timeout);
             reader.cancel();
@@ -128,7 +124,6 @@
       } catch(e) {
         alert("Could not detect device.\n\nHold the BOOT button on the Heltec while connecting.");
       }
-
       btn.innerHTML = "🔍 Detect Connected Heltec Device";
       btn.disabled = false;
     }
