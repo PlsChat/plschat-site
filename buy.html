@@ -94,7 +94,7 @@
       }
     }
 
-    // IMPROVED MAC DETECTION
+    // IMPROVED & MORE RELIABLE MAC DETECTION
     async function detectDevice() {
       const btn = document.getElementById("detectBtn");
       btn.innerHTML = "⏳ Detecting...";
@@ -106,7 +106,7 @@
         const reader = port.readable.getReader();
         let buffer = '';
 
-        const timeout = setTimeout(() => reader.cancel(), 20000); // longer timeout
+        const timeout = setTimeout(() => reader.cancel(), 25000); // 25 seconds timeout
 
         while (true) {
           const { value, done } = await reader.read();
@@ -114,7 +114,7 @@
           buffer += new TextDecoder().decode(value);
 
           // More flexible MAC detection
-          const macMatch = buffer.match(/MAC:([0-9A-F:]{17})/i);
+          const macMatch = buffer.match(/MAC:\s*([0-9A-F:]{17})/i);
           if (macMatch) {
             clearTimeout(timeout);
             reader.cancel();
@@ -163,7 +163,6 @@
         return alert("❌ A licence has already been purchased for this MAC address.\n\nYou cannot buy another licence for the same device.");
       }
 
-      // ... rest of your original sendPayment code ...
       const token = document.getElementById("paymentToken").value;
       const basePLSC = selectedType === 'lifetime' ? 100 : 20;
       const amount = basePLSC * 0.75 / (tokenPricesGBP[token] || 0.75);
