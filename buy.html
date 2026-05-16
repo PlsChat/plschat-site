@@ -86,11 +86,13 @@
         const reader = port.readable.getReader();
         let buffer = '';
         const timeout = setTimeout(() => reader.cancel(), 25000);
+
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
           buffer += new TextDecoder().decode(value);
-          const macMatch = buffer.match(/MAC:([0-9A-F:]{17})/i);
+
+          const macMatch = buffer.match(/MAC[:\s]*([0-9A-F:]{17})/i);
           if (macMatch) {
             clearTimeout(timeout);
             reader.cancel();
@@ -120,21 +122,20 @@
     }
 
     async function updateEquivalentPrice() {
-      // your existing price code
+      // your existing price code (unchanged)
     }
 
-    // === MAIN DUPLICATE CHECK ===
     async function sendPayment() {
       if (!walletAddress) return alert("Please connect your wallet first.");
       if (!selectedMac || selectedMac === 'Unknown') return alert("Please detect your device first.");
 
-      // Check if this MAC already has a licence
+      // === STRONG DUPLICATE LICENCE CHECK ===
       let licenses = JSON.parse(localStorage.getItem('licenses') || '{}');
       if (licenses[selectedMac]) {
         return alert("❌ A licence has already been purchased for this MAC address.\n\nYou cannot buy another licence for the same device.");
       }
 
-      // If we reach here, no licence exists → proceed with payment
+      // If we reach here → no existing licence, proceed with payment
       const token = document.getElementById("paymentToken").value;
       const basePLSC = selectedType === 'lifetime' ? 100 : 20;
       const amount = basePLSC * 0.75 / (tokenPricesGBP[token] || 0.75);
@@ -156,9 +157,8 @@
       }
     }
 
-    // (rest of your original code remains unchanged)
     async function verifyAndGenerateLicense() {
-      // ... your existing code ...
+      // your existing code (unchanged)
     }
 
     // Mesh Background
