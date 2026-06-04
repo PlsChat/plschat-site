@@ -6,7 +6,6 @@
   <title>PLSChat - Device Manager</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
- 
     body {
       font-family: 'Inter', sans-serif;
       background: #0a0c1f;
@@ -30,7 +29,6 @@
       position: relative;
       z-index: 2;
     }
- 
     h1 {
       font-size: 3.6em;
       font-weight: 700;
@@ -86,14 +84,13 @@
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
       transition: 0.7s;
     }
-    button:hover::before { 
-      left: 250%; 
+    button:hover::before {
+      left: 250%;
     }
     button:hover {
       transform: translateY(-4px);
       box-shadow: 0 15px 30px rgba(139, 92, 246, 0.6);
     }
-
     .success-box {
       background: rgba(34, 211, 238, 0.15);
       border: 2px solid #22d3ee;
@@ -147,7 +144,6 @@
 </head>
 <body>
   <canvas id="mesh-bg"></canvas>
- 
   <div class="container">
     <!-- Top Left Back Button -->
     <div class="top-nav">
@@ -155,24 +151,21 @@
     </div>
     <h1>PULSE CHAT</h1>
     <p class="subtitle">Decentralised LoRa Mesh Communication</p>
-  
+ 
     <div class="buttons">
       <button onclick="window.location.href='flasher.html'">🚀 Open Web Flasher</button>
       <button onclick="connectDevice()">🔌 Connect Device</button>
-      <button onclick="connectMetaMask()">🦊 MetaMask</button>
-      <button onclick="connectZKX()">🛡️ ZKX (Private)</button>
       <button onclick="window.location.href='buy.html'">💎 Buy License</button>
       <button onclick="claimRewards()">🏆 Claim Rewards</button>
       <button onclick="window.location.href='configure.html'">⚙️ Configure Device</button>
     </div>
     <div id="output"></div>
-    
+   
     <!-- Bottom Centered Back Button -->
     <div class="bottom-nav">
       <button onclick="window.location.href='index.html'" style="padding:14px 32px; font-size:1.1em; background:#334155; color:#c9d1d9;">← Back to Home</button>
     </div>
   </div>
-
   <script>
     // === ANIMATED MESH BACKGROUND (full version) ===
     const canvas = document.getElementById('mesh-bg');
@@ -252,7 +245,6 @@
       requestAnimationFrame(animate);
     }
     animate();
-
     // ==================== CONNECT DEVICE ====================
     async function connectDevice() {
       const output = document.getElementById('output');
@@ -303,8 +295,6 @@
         setTimeout(() => btn.textContent = orig, 1500);
       });
     }
-    function connectMetaMask() { alert("🦊 MetaMask connected!"); }
-    function connectZKX() { alert("🛡️ ZKX connected!"); }
     function claimRewards() { window.location.href = 'claim.html'; }
   </script>
 </body>
