@@ -17,78 +17,26 @@
       overflow-y:auto;
       text-align:center;
     }
-    #mesh-bg {
-      position:fixed; top:0; left:0; right:0; bottom:0;
-      z-index:-1; opacity:0.95;
-    }
-    .container {
-      max-width:800px; margin:0 auto; position:relative; z-index:2;
-      padding-top: 50px;
-    }
-    h1 {
-      font-size:3em;
-      background:linear-gradient(90deg,#a855f7,#67e8f9);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      margin-bottom:8px;
-    }
-    p { color:#94a3b8; font-size:1.2em; max-width:600px; margin:20px auto; }
-
-    /* Back button - moved to top left with better spacing */
-    .btn-back {
-      position: absolute;
-      top: 20px;
-      left: 30px;
-      padding: 10px 24px;
-      background: linear-gradient(135deg, #a855f7, #3b82f6);
-      color: white;
-      border: none;
-      border-radius: 9999px;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(168,85,247,0.4);
-      font-size: 0.95em;
-    }
-
+    #mesh-bg { position:fixed; top:0; left:0; right:0; bottom:0; z-index:-1; opacity:0.95; }
+    .container { max-width:800px; margin:0 auto; position:relative; z-index:2; padding-top:50px; }
+    h1 { font-size:3em; background:linear-gradient(90deg,#a855f7,#67e8f9); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; }
     button {
-      padding: 16px 36px;
-      font-size: 1.15em;
-      font-weight: 600;
-      border: none;
-      border-radius: 9999px;
-      cursor: pointer;
-      margin: 12px;
-      transition: all 0.3s;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-      color: white;
+      padding:16px 36px; font-size:1.15em; font-weight:600; border:none; border-radius:9999px;
+      cursor:pointer; margin:12px; transition:all 0.3s; box-shadow:0 4px 15px rgba(0,0,0,0.3); color:white;
     }
-
-    /* All buttons now use the same purple/blue gradient */
-    .btn-connect,
-    .btn-flash,
-    .btn-send {
-      background: linear-gradient(135deg, #a855f7, #3b82f6);
-    }
-
+    .btn-connect, .btn-flash, .btn-send { background: linear-gradient(135deg, #a855f7, #3b82f6); }
     .status {
-      background:#1e2937;
-      padding:20px;
-      border-radius:16px;
-      margin:25px auto;
-      max-width:700px;
-      text-align:left;
-      font-family:monospace;
-      min-height:140px;
-      white-space:pre-wrap;
+      background:#1e2937; padding:20px; border-radius:16px; margin:25px auto;
+      max-width:700px; text-align:left; font-family:monospace; min-height:140px; white-space:pre-wrap;
     }
     .success { color:#22c55e; font-weight:600; }
   </style>
-  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 </head>
 <body>
   <div class="container">
-    <!-- Back button moved to top-left -->
-    <button class="btn-back" onclick="window.location.href='device-manager.html'">← Back to Home</button>
+    <button onclick="window.location.href='device-manager.html'" style="position:absolute; top:20px; left:30px; padding:10px 24px; background:#334155; color:white; border:none; border-radius:9999px;">
+      ← Back to Device Manager
+    </button>
 
     <h1>PLSChat Web Flasher</h1>
     <p>Flash firmware + apply your purchased licence</p>
@@ -107,10 +55,9 @@
       <button class="btn-send" onclick="sendLicense()">📤 Send Licence to Device</button>
     </div>
 
-    <!-- Embedded Flash Installer -->
     <div id="flashInstaller" style="display:none; margin-top:40px;">
       <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
-      <p style="margin-top:20px;"><strong>Hold the BOOT button</strong> while clicking Connect in the installer below.</p>
+      <p style="margin-top:20px;"><strong>Hold the BOOT button</strong> while clicking Connect in the installer.</p>
     </div>
   </div>
 
@@ -120,44 +67,33 @@
     let serialPort = null;
     let currentLicenseKey = "";
 
-    // Mesh background
-    const canvas = document.getElementById('mesh-bg');
-    const ctx = canvas.getContext('2d');
-    function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    resize(); window.addEventListener('resize', resize);
-
-    let nodes = [];
-    for(let i=0;i<72;i++) nodes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.7,vy:(Math.random()-0.5)*0.7});
-
-    function animate(){
-      ctx.fillStyle = 'rgba(10,12,31,0.18)';
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      requestAnimationFrame(animate);
-    }
-    animate();
-
     async function connectDevice() {
       const box = document.getElementById("statusBox");
-      box.innerHTML = "🔄 Device connecting...<br><strong>Hold the BOOT button on the Heltec now!</strong>";
-     
+      box.innerHTML = "🔄 Connecting to device...<br><strong>Hold the BOOT button now!</strong>";
+
       try {
         serialPort = await navigator.serial.requestPort();
         await serialPort.open({ baudRate: 115200 });
-        box.innerHTML = `<span class="success">✅ Device Connected!</span><br>Reading licence...`;
-        autoDetectLicense();
+        box.innerHTML = `<span class="success">✅ Device Connected!</span><br>Looking for licence...`;
+        await autoDetectLicense();
       } catch (err) {
-        box.innerHTML = `❌ Could not connect.<br>Hold BOOT button and <button onclick="connectDevice()">Retry</button>`;
+        box.innerHTML = `❌ Connection failed.<br>Hold BOOT button and <button onclick="connectDevice()">Retry</button>`;
       }
     }
 
     async function autoDetectLicense() {
+      if (!serialPort) return;
+
       const reader = serialPort.readable.getReader();
       let buffer = '';
+
       try {
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
+
           buffer += new TextDecoder().decode(value);
+
           const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
           if (macMatch) {
             const mac = macMatch[1];
@@ -166,37 +102,63 @@
               const licenses = JSON.parse(saved);
               if (licenses[mac]) {
                 currentLicenseKey = licenses[mac];
-                const licenseBox = document.getElementById("licenseBox");
                 document.getElementById("licenseContent").innerHTML = `
                   <strong>MAC:</strong> ${mac}<br>
-                  <strong>Key:</strong> ${currentLicenseKey}
+                  <strong>Licence Key:</strong> ${currentLicenseKey}
                 `;
-                licenseBox.style.display = "block";
+                document.getElementById("licenseBox").style.display = "block";
+                document.getElementById("statusBox").innerHTML += "<br>✅ Licence found for this device.";
                 return;
               }
             }
             break;
           }
         }
-      } finally { reader.releaseLock(); }
+      } finally {
+        reader.releaseLock();
+      }
+    }
+
+    async function sendLicense() {
+      if (!serialPort || !currentLicenseKey) {
+        alert("Device not connected or no licence found.");
+        return;
+      }
+
+      const box = document.getElementById("statusBox");
+      box.innerHTML += "\n→ Sending licence to device...";
+
+      try {
+        const writer = serialPort.writable.getWriter();
+        const command = `LICENSE:${currentLicenseKey}\n`;
+        await writer.write(new TextEncoder().encode(command));
+        writer.releaseLock();
+
+        box.innerHTML += "\n✅ Licence command sent!";
+        box.innerHTML += "\nWaiting for device response...";
+
+        // Optional: read response from device
+        setTimeout(async () => {
+          try {
+            const reader = serialPort.readable.getReader();
+            const { value } = await reader.read();
+            const response = new TextDecoder().decode(value);
+            if (response.includes("LICENCE_OK")) {
+              box.innerHTML += "\n🎉 Device accepted the licence!";
+            } else {
+              box.innerHTML += "\n⚠️ Device responded but licence may not have been accepted.";
+            }
+            reader.releaseLock();
+          } catch (e) {}
+        }, 1500);
+
+      } catch (e) {
+        box.innerHTML += "\n❌ Failed to send licence.";
+      }
     }
 
     function flashFirmware() {
       document.getElementById("flashInstaller").style.display = "block";
-    }
-
-    async function sendLicense() {
-      if (!serialPort || !currentLicenseKey) return alert("Device not connected or no licence");
-      const box = document.getElementById("statusBox");
-      box.innerHTML += "\n→ Sending licence to device...";
-      try {
-        const writer = serialPort.writable.getWriter();
-        await writer.write(new TextEncoder().encode(`LICENSE:${currentLicenseKey}\n`));
-        writer.releaseLock();
-        box.innerHTML += "\n✅ Licence sent successfully!";
-      } catch (e) {
-        box.innerHTML += "\n❌ Failed to send.";
-      }
     }
   </script>
 </body>
