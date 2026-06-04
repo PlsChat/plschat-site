@@ -137,44 +137,23 @@
         box.innerHTML += "\n✅ Licence command sent!";
         box.innerHTML += "\nWaiting for device response...";
 
-        // Read response with timeout, accumulating chunks
-        const reader = serialPort.readable.getReader();
-        let response = '';
-        let timedOut = false;
-        const timeout = setTimeout(() => { timedOut = true; }, 5000);
-
-        try {
-          while (!timedOut) {
-            const readPromise = reader.read();
-            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve({ done: true, value: null }), 5000));
-            const result = await Promise.race([readPromise, timeoutPromise]);
-
-            if (result.done || result.value === null) break;
-
-            response += new TextDecoder().decode(result.value);
-            box.innerHTML += `\nDevice: ${response.trim()}`;
-
-            if (response.includes("LICENCE_OK") || response.includes("LICENSE_OK") || response.includes("OK")) {
+        // Optional: read response from device
+        setTimeout(async () => {
+          try {
+            const reader = serialPort.readable.getReader();
+            const { value } = await reader.read();
+            const response = new TextDecoder().decode(value);
+            if (response.includes("LICENCE_OK")) {
               box.innerHTML += "\n🎉 Device accepted the licence!";
-              clearTimeout(timeout);
-              break;
+            } else {
+              box.innerHTML += "\n⚠️ Device responded but licence may not have been accepted.";
             }
-            if (response.includes("FAIL") || response.includes("ERROR") || response.includes("INVALID")) {
-              box.innerHTML += "\n❌ Device rejected the licence.";
-              clearTimeout(timeout);
-              break;
-            }
-          }
-
-          if (timedOut && response === '') {
-            box.innerHTML += "\n⚠️ No response from device within 5 seconds.";
-          }
-        } finally {
-          reader.releaseLock();
-        }
+            reader.releaseLock();
+          } catch (e) {}
+        }, 1500);
 
       } catch (e) {
-        box.innerHTML += `\n❌ Failed to send licence: ${e.message}`;
+        box.innerHTML += "\n❌ Failed to send licence.";
       }
     }
 
