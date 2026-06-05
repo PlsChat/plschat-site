@@ -328,24 +328,23 @@
             position: relative;
             overflow: hidden;
             border: 1px solid #1f2439;
+            cursor: grab;
         }
 
-        .node-dot {
-            position: absolute;
-            width: 14px;
-            height: 14px;
-            background: #67e8f9;
-            border-radius: 50%;
-            box-shadow: 0 0 12px #67e8f9;
-            transition: all 0.3s ease;
+        .mesh-visual:active {
+            cursor: grabbing;
         }
 
-        .node-label {
-            position: absolute;
-            font-size: 10px;
-            color: #67e8f9;
-            white-space: nowrap;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        .mesh-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .mesh-controls .btn {
+            padding: 6px 12px;
+            font-size: 12px;
         }
 
         footer {
@@ -494,16 +493,22 @@
                     </div>
                 </div>
 
-                <!-- Simple Mesh Visualization -->
+                <!-- Enhanced Mesh Visualization -->
                 <div class="card">
                     <div class="card-header">
-                        <h3>Mesh View <span style="font-size:12px; color:#64748b;">(simplified)</span></h3>
+                        <h3>Mesh View <span style="font-size:12px; color:#64748b;">(relative + draggable)</span></h3>
+                        <span id="mesh-node-count" class="badge">0</span>
                     </div>
                     <div id="mesh-visual" class="mesh-visual">
                         <canvas id="mesh-canvas" width="340" height="220" style="width:100%; height:100%;"></canvas>
                     </div>
+                    <div class="mesh-controls">
+                        <button class="btn btn-secondary" onclick="resetMeshLayout()">Reset Layout</button>
+                        <button class="btn btn-secondary" onclick="autoArrangeByRSSI()">Auto-arrange (RSSI)</button>
+                        <button class="btn btn-secondary" onclick="toggleMeshLabels()">Toggle Labels</button>
+                    </div>
                     <div style="font-size: 11px; color: #64748b; margin-top: 8px; text-align: center;">
-                        Nodes appear here as they are discovered. Lines = recent communication.
+                        Drag nodes to arrange • Double-click to edit label • Stronger RSSI = closer visually
                     </div>
                 </div>
 
@@ -519,7 +524,7 @@
         </div>
 
         <footer>
-            PLSChat Network Monitor • Built for the main branch • Works offline after loading • Web Serial API (Chromium)
+            PLSChat Network Monitor • Enhanced main branch • Privacy-first relative mesh view • Web Serial API (Chromium)
         </footer>
     </div>
 
@@ -530,10 +535,19 @@
         let isConnected = false;
         let logLines = [];
         let packets = [];
-        let nodes = new Map(); // nodeId -> {lastSeen, rssi, count, battery?}
+        let nodes = new Map(); // nodeId -> {lastSeen, rssi, count, battery?, customLabel?}
         let packetCount = 0;
         let startTime = Date.now();
         let ppsInterval = null;
+
+        // Mesh view state
+        let canvas, ctx;
+        let meshNodes = []; // visual representation
+        let meshPositions = new Map(); // nodeId -> {x, y, label?}
+        let showMeshLabels = true;
+        let draggedNode = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
 
         const MAX_LOG_LINES = 300;
         const MAX_PACKETS = 50;
@@ -801,7 +815,8 @@
                     packetCount: 0,
                     lastRssi: null,
                     lastSnr: null,
-                    types: new Set()
+                    types: new Set(),
+                    customLabel: null
                 });
             }
 
@@ -822,7 +837,8 @@
                         packetCount: 0,
                         lastRssi: null,
                         lastSnr: null,
-                        types: new Set()
+                        types: new Set(),
+                        customLabel: null
                     });
                 }
                 const destNode = nodes.get(parsed.to);
@@ -857,10 +873,13 @@
                 const rssiText = node.lastRssi !== null ? 
                     `<span class="rssi ${node.lastRssi > -70 ? 'good' : node.lastRssi > -90 ? 'ok' : 'bad'}">${node.lastRssi} dBm</span>` : '';
 
+                const label = node.customLabel ? `<div style="font-size:10px; color:#a855f7;">${node.customLabel}</div>` : '';
+
                 html += `
-                    <div style="padding: 10px 12px; border-bottom: 1px solid #1f2439; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                    <div style="padding: 10px 12px; border-bottom: 1px solid #1f2439; display:flex; justify-content:space-between; align-items:center; gap:12px; cursor: pointer;" onclick="focusNodeInMesh('${node.id}')">
                         <div>
                             <div style="font-family:monospace; font-weight:600; color:#67e8f9;">${node.id}</div>
+                            ${label}
                             <div style="font-size:11px; color:#64748b;">${node.packetCount} packets • seen ${timeAgo}</div>
                         </div>
                         <div style="text-align:right; font-size:12px;">
@@ -894,14 +913,26 @@
             document.getElementById('stat-pps').textContent = pps;
         }
 
-        // ==================== MESH VISUALIZATION ====================
-        let canvas, ctx;
-        let meshNodes = [];
-
+        // ==================== ENHANCED MESH VISUALIZATION ====================
         function initMeshCanvas() {
             canvas = document.getElementById('mesh-canvas');
             ctx = canvas.getContext('2d', { alpha: true });
             
+            // Load saved positions and labels from localStorage
+            loadMeshState();
+
+            // Mouse events for dragging
+            canvas.addEventListener('mousedown', handleMeshMouseDown);
+            canvas.addEventListener('mousemove', handleMeshMouseMove);
+            canvas.addEventListener('mouseup', handleMeshMouseUp);
+            canvas.addEventListener('mouseleave', handleMeshMouseUp);
+            canvas.addEventListener('dblclick', handleMeshDoubleClick);
+
+            // Touch support (basic)
+            canvas.addEventListener('touchstart', handleMeshTouchStart);
+            canvas.addEventListener('touchmove', handleMeshTouchMove);
+            canvas.addEventListener('touchend', handleMeshTouchEnd);
+
             // Initial draw
             drawMesh();
             
@@ -909,29 +940,66 @@
             setInterval(drawMesh, 1500);
         }
 
+        function loadMeshState() {
+            try {
+                const saved = localStorage.getItem('plschat_mesh_positions');
+                if (saved) {
+                    meshPositions = new Map(JSON.parse(saved));
+                }
+            } catch (e) {
+                console.warn('Could not load mesh positions from localStorage');
+            }
+        }
+
+        function saveMeshState() {
+            try {
+                localStorage.setItem('plschat_mesh_positions', JSON.stringify(Array.from(meshPositions.entries())));
+            } catch (e) {
+                console.warn('Could not save mesh positions');
+            }
+        }
+
         function updateMeshVisualization() {
-            // Convert discovered nodes to visual positions (simple random layout)
             meshNodes = [];
             
             const sorted = Array.from(nodes.values()).sort((a,b) => b.packetCount - a.packetCount).slice(0, 12);
             
             sorted.forEach((node, i) => {
-                // Simple grid-ish placement with some randomness
-                const cols = 4;
-                const x = 50 + (i % cols) * 75 + (Math.random() - 0.5) * 20;
-                const y = 40 + Math.floor(i / cols) * 55 + (Math.random() - 0.5) * 15;
+                let pos = meshPositions.get(node.id);
+                
+                if (!pos) {
+                    // Initial smart placement based on RSSI (stronger = closer to center)
+                    const centerX = 170;
+                    const centerY = 110;
+                    const rssi = node.lastRssi || -90;
+                    const distance = Math.max(30, Math.min(120, (rssi + 110) * 1.5)); // rough mapping
+                    
+                    const angle = (i / sorted.length) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+                    const x = centerX + Math.cos(angle) * distance;
+                    const y = centerY + Math.sin(angle) * distance * 0.7;
+                    
+                    pos = {
+                        x: Math.max(25, Math.min(315, x)),
+                        y: Math.max(25, Math.min(200, y))
+                    };
+                    meshPositions.set(node.id, pos);
+                }
                 
                 meshNodes.push({
                     id: node.id,
-                    x: Math.max(20, Math.min(320, x)),
-                    y: Math.max(20, Math.min(200, y)),
-                    size: Math.max(8, Math.min(18, 8 + node.packetCount / 3)),
+                    x: pos.x,
+                    y: pos.y,
+                    size: Math.max(10, Math.min(22, 10 + node.packetCount / 2.5)),
                     lastSeen: node.lastSeen,
-                    packetCount: node.packetCount
+                    packetCount: node.packetCount,
+                    lastRssi: node.lastRssi,
+                    customLabel: node.customLabel || null
                 });
             });
             
             drawMesh();
+            document.getElementById('mesh-node-count').textContent = meshNodes.length;
+            saveMeshState();
         }
 
         function drawMesh() {
@@ -939,16 +1007,16 @@
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Draw connections (simple - connect recent nodes)
-            ctx.strokeStyle = 'rgba(103, 232, 249, 0.15)';
-            ctx.lineWidth = 1.5;
+            // Draw connections (recent communication)
+            ctx.strokeStyle = 'rgba(103, 232, 249, 0.18)';
+            ctx.lineWidth = 1.8;
             
             for (let i = 0; i < meshNodes.length; i++) {
                 for (let j = i + 1; j < meshNodes.length; j++) {
                     const a = meshNodes[i];
                     const b = meshNodes[j];
                     const dist = Math.hypot(a.x - b.x, a.y - b.y);
-                    if (dist < 160) {
+                    if (dist < 180) {
                         ctx.beginPath();
                         ctx.moveTo(a.x, a.y);
                         ctx.lineTo(b.x, b.y);
@@ -960,8 +1028,9 @@
             // Draw nodes
             meshNodes.forEach(node => {
                 const age = (Date.now() - node.lastSeen.getTime()) / 1000;
-                const alpha = Math.max(0.3, 1 - Math.min(age / 120, 0.7));
+                const alpha = Math.max(0.35, 1 - Math.min(age / 180, 0.65));
                 
+                // Node circle
                 ctx.fillStyle = `rgba(103, 232, 249, ${alpha})`;
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
@@ -969,18 +1038,195 @@
                 
                 // Glow
                 ctx.shadowColor = '#67e8f9';
-                ctx.shadowBlur = 8;
+                ctx.shadowBlur = 10;
                 ctx.beginPath();
-                ctx.arc(node.x, node.y, node.size * 0.6, 0, Math.PI * 2);
+                ctx.arc(node.x, node.y, node.size * 0.55, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.shadowBlur = 0;
                 
                 // Label
-                ctx.fillStyle = '#c9d1d9';
-                ctx.font = '10px Inter, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(node.id.length > 6 ? node.id.substring(0,6) : node.id, node.x, node.y + node.size + 12);
+                if (showMeshLabels) {
+                    ctx.fillStyle = '#c9d1d9';
+                    ctx.font = '11px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    const displayLabel = node.customLabel || (node.id.length > 6 ? node.id.substring(0,6) : node.id);
+                    ctx.fillText(displayLabel, node.x, node.y + node.size + 14);
+                }
+                
+                // RSSI indicator ring
+                if (node.lastRssi !== null) {
+                    const rssiNorm = Math.max(0, Math.min(1, (node.lastRssi + 110) / 40));
+                    ctx.strokeStyle = `rgba(103, 232, 249, ${0.3 + rssiNorm * 0.5})`;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, node.size + 4, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
             });
+        }
+
+        // Dragging handlers
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - rect.left) * (canvas.width / rect.width),
+                y: (e.clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        function handleMeshMouseDown(e) {
+            const pos = getMousePos(e);
+            draggedNode = null;
+            
+            for (let node of meshNodes) {
+                const dx = pos.x - node.x;
+                const dy = pos.y - node.y;
+                if (dx * dx + dy * dy < (node.size + 8) * (node.size + 8)) {
+                    draggedNode = node;
+                    dragOffsetX = dx;
+                    dragOffsetY = dy;
+                    break;
+                }
+            }
+        }
+
+        function handleMeshMouseMove(e) {
+            if (!draggedNode) return;
+            
+            const pos = getMousePos(e);
+            draggedNode.x = Math.max(20, Math.min(320, pos.x - dragOffsetX));
+            draggedNode.y = Math.max(20, Math.min(200, pos.y - dragOffsetY));
+            
+            // Update stored position
+            meshPositions.set(draggedNode.id, { x: draggedNode.x, y: draggedNode.y });
+            
+            drawMesh();
+        }
+
+        function handleMeshMouseUp(e) {
+            if (draggedNode) {
+                saveMeshState();
+            }
+            draggedNode = null;
+        }
+
+        function handleMeshDoubleClick(e) {
+            const pos = getMousePos(e);
+            
+            for (let node of meshNodes) {
+                const dx = pos.x - node.x;
+                const dy = pos.y - node.y;
+                if (dx * dx + dy * dy < (node.size + 10) * (node.size + 10)) {
+                    const newLabel = prompt(`Edit label for node ${node.id}:`, node.customLabel || '');
+                    if (newLabel !== null) {
+                        // Update in nodes map
+                        if (nodes.has(node.id)) {
+                            nodes.get(node.id).customLabel = newLabel.trim() || null;
+                        }
+                        // Update visual
+                        node.customLabel = newLabel.trim() || null;
+                        
+                        renderNodesList();
+                        drawMesh();
+                        saveMeshState();
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Basic touch support
+        function handleMeshTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const pos = {
+                x: (touch.clientX - rect.left) * (canvas.width / rect.width),
+                y: (touch.clientY - rect.top) * (canvas.height / rect.height)
+            };
+            
+            draggedNode = null;
+            for (let node of meshNodes) {
+                const dx = pos.x - node.x;
+                const dy = pos.y - node.y;
+                if (dx * dx + dy * dy < (node.size + 8) * (node.size + 8)) {
+                    draggedNode = node;
+                    dragOffsetX = dx;
+                    dragOffsetY = dy;
+                    break;
+                }
+            }
+        }
+
+        function handleMeshTouchMove(e) {
+            e.preventDefault();
+            if (!draggedNode) return;
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const pos = {
+                x: (touch.clientX - rect.left) * (canvas.width / rect.width),
+                y: (touch.clientY - rect.top) * (canvas.height / rect.height)
+            };
+            
+            draggedNode.x = Math.max(20, Math.min(320, pos.x - dragOffsetX));
+            draggedNode.y = Math.max(20, Math.min(200, pos.y - dragOffsetY));
+            meshPositions.set(draggedNode.id, { x: draggedNode.x, y: draggedNode.y });
+            drawMesh();
+        }
+
+        function handleMeshTouchEnd(e) {
+            if (draggedNode) saveMeshState();
+            draggedNode = null;
+        }
+
+        function resetMeshLayout() {
+            meshPositions.clear();
+            localStorage.removeItem('plschat_mesh_positions');
+            updateMeshVisualization();
+        }
+
+        function autoArrangeByRSSI() {
+            const centerX = 170;
+            const centerY = 110;
+            
+            meshNodes.forEach((node, i) => {
+                const rssi = node.lastRssi || -90;
+                const distance = Math.max(35, Math.min(110, (rssi + 110) * 1.4));
+                const angle = (i / meshNodes.length) * Math.PI * 2;
+                
+                const newX = centerX + Math.cos(angle) * distance;
+                const newY = centerY + Math.sin(angle) * distance * 0.75;
+                
+                node.x = Math.max(25, Math.min(315, newX));
+                node.y = Math.max(25, Math.min(195, newY));
+                
+                meshPositions.set(node.id, { x: node.x, y: node.y });
+            });
+            
+            drawMesh();
+            saveMeshState();
+        }
+
+        function toggleMeshLabels() {
+            showMeshLabels = !showMeshLabels;
+            drawMesh();
+        }
+
+        function focusNodeInMesh(nodeId) {
+            const node = meshNodes.find(n => n.id === nodeId);
+            if (!node) return;
+            
+            // Briefly highlight
+            const originalSize = node.size;
+            node.size = originalSize * 1.6;
+            drawMesh();
+            
+            setTimeout(() => {
+                if (node) {
+                    node.size = originalSize;
+                    drawMesh();
+                }
+            }, 800);
         }
 
         // ==================== SIMULATION (for demo) ====================
@@ -1009,7 +1255,7 @@
                 let to = sampleNodes[Math.floor(Math.random() * sampleNodes.length)];
                 if (to === from) to = 'BCAST';
                 
-                const rssi = Math.floor(Math.random() * 40) - 110; // -110 to -70
+                const rssi = Math.floor(Math.random() * 40) - 110;
                 const snr = (Math.random() * 12 - 2).toFixed(1);
                 const hops = Math.floor(Math.random() * 4);
                 const type = types[Math.floor(Math.random() * types.length)];
@@ -1049,6 +1295,7 @@
             // Clear mesh
             if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
             meshNodes = [];
+            document.getElementById('mesh-node-count').textContent = '0';
         }
 
         function clearPackets() {
@@ -1063,8 +1310,6 @@
                 .join('\n');
             
             navigator.clipboard.writeText(text).then(() => {
-                const originalText = event.currentTarget ? event.currentTarget.textContent : '';
-                // Simple feedback
                 const btns = document.querySelectorAll('button');
                 btns.forEach(b => {
                     if (b.textContent === 'Copy') {
@@ -1074,7 +1319,6 @@
                     }
                 });
             }).catch(() => {
-                // Fallback
                 prompt("Copy this log:", text);
             });
         }
@@ -1099,6 +1343,46 @@
             URL.revokeObjectURL(url);
         }
 
+        // Enhanced export with JSON option
+        function exportSessionJSON() {
+            const data = {
+                exported: new Date().toISOString(),
+                packets: packets,
+                nodes: Array.from(nodes.entries()).map(([id, n]) => ({
+                    id,
+                    ...n,
+                    types: Array.from(n.types)
+                })),
+                meshPositions: Array.from(meshPositions.entries())
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `plschat-session-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Add JSON export button dynamically (simple enhancement)
+        function addExportOptions() {
+            const exportBtn = document.querySelector('button[onclick="exportLog()"]');
+            if (exportBtn) {
+                exportBtn.onclick = null;
+                exportBtn.addEventListener('click', () => {
+                    const choice = confirm('Export as text log? (Cancel for JSON session export)');
+                    if (choice) {
+                        exportLog();
+                    } else {
+                        exportSessionJSON();
+                    }
+                });
+            }
+        }
+
         function filterLogKeydown(e) {
             if (e.key === "Escape") {
                 document.getElementById('filter-input').value = '';
@@ -1111,8 +1395,11 @@
             // Keyboard support
             document.getElementById('filter-input').addEventListener('keydown', filterLogKeydown);
             
-            // Initialize mesh canvas
+            // Initialize mesh canvas (now with drag + persistence)
             initMeshCanvas();
+            
+            // Add enhanced export options
+            setTimeout(addExportOptions, 500);
             
             // Demo hint
             setTimeout(() => {
@@ -1122,7 +1409,8 @@
                         <div style="padding: 40px 20px; text-align:center; color:#64748b; font-size:13px;">
                             <strong>Ready to monitor.</strong><br><br>
                             Click <strong>"Connect to Node"</strong> with a PLSChat device plugged in,<br>
-                            or press <strong>"Simulate Traffic"</strong> to see how it works.
+                            or press <strong>"Simulate Traffic"</strong> to see how it works.<br><br>
+                            <em>Tip: In Mesh View, drag nodes and double-click to set custom labels (saved locally).</em>
                         </div>
                     `;
                 }
@@ -1136,7 +1424,7 @@
                 }
             });
 
-            console.log('%c[PLSChat Monitor] Initialized. Ready for serial traffic.', 'color:#64748b');
+            console.log('%c[PLSChat Monitor] Enhanced version initialized. Drag nodes in Mesh View!', 'color:#64748b');
         }
 
         // Boot
