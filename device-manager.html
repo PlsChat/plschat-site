@@ -6,6 +6,7 @@
   <title>PLSChat - Device Manager</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
     body {
       font-family: 'Inter', sans-serif;
       background: #0a0c1f;
@@ -16,12 +17,14 @@
       position: relative;
       overflow-y: auto;
     }
+    
     #mesh-bg {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       z-index: -1;
-      opacity: 0.95;
+      opacity: 0.9;
     }
+    
     .container {
       max-width: 960px;
       margin: 0 auto;
@@ -29,6 +32,7 @@
       position: relative;
       z-index: 2;
     }
+    
     h1 {
       font-size: 3.6em;
       font-weight: 700;
@@ -37,16 +41,19 @@
       -webkit-text-fill-color: transparent;
       margin-bottom: 8px;
     }
+    
     .subtitle {
       color: #94a3b8;
       font-size: 1.3em;
       margin-bottom: 30px;
     }
+    
     .top-nav {
       position: absolute;
       top: 20px;
       left: 20px;
     }
+    
     .buttons {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -56,6 +63,7 @@
       margin-left: auto;
       margin-right: auto;
     }
+    
     button {
       padding: 18px 24px;
       font-size: 1.1em;
@@ -74,6 +82,7 @@
       color: white;
       box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
     }
+    
     button::before {
       content: '';
       position: absolute;
@@ -84,13 +93,16 @@
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
       transition: 0.7s;
     }
+    
     button:hover::before {
       left: 250%;
     }
+    
     button:hover {
       transform: translateY(-4px);
       box-shadow: 0 15px 30px rgba(139, 92, 246, 0.6);
     }
+    
     .success-box {
       background: rgba(34, 211, 238, 0.15);
       border: 2px solid #22d3ee;
@@ -102,41 +114,7 @@
       font-weight: 600;
       max-width: 500px;
     }
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-      margin-top: 20px;
-    }
-    .info-card {
-      background: rgba(30, 30, 50, 0.95);
-      padding: 18px;
-      border-radius: 12px;
-      border-left: 5px solid #67e8f9;
-      text-align: left;
-      position: relative;
-    }
-    .info-card strong {
-      color: #67e8f9;
-      display: block;
-      margin-bottom: 6px;
-    }
-    .action-btn {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      font-size: 0.85em;
-      padding: 4px 10px;
-      background: #334155;
-      color: #67e8f9;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .action-btn:hover {
-      background: #22d3ee;
-      color: #0f172a;
-    }
+    
     .bottom-nav {
       margin-top: 40px;
     }
@@ -144,11 +122,13 @@
 </head>
 <body>
   <canvas id="mesh-bg"></canvas>
+  
   <div class="container">
     <!-- Top Left Back Button -->
     <div class="top-nav">
       <button onclick="window.location.href='index.html'" style="padding:10px 16px; font-size:1em; background:#334155;">Back to Home</button>
     </div>
+    
     <h1>PULSE CHAT</h1>
     <p class="subtitle">Decentralised LoRa Mesh Communication</p>
  
@@ -160,6 +140,7 @@
       <button onclick="claimRewards()">Claim Rewards</button>
       <button onclick="window.location.href='configure.html'">Configure Device</button>
     </div>
+    
     <div id="output"></div>
    
     <!-- Bottom Centered Back Button -->
@@ -169,58 +150,113 @@
   </div>
 
   <script>
-    // === ANIMATED MESH BACKGROUND ===
+    // ==================== WORKING ANIMATED MESH BACKGROUND ====================
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    resize();
-    window.addEventListener('resize', resize);
+    
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
     let nodes = [];
-    for (let i = 0; i < 60; i++) {
-      nodes.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: 3.8,
-        vx: (Math.random() - 0.5) * 0.8,
-        vy: (Math.random() - 0.5) * 0.8
-      });
+    const nodeCount = 55;
+
+    function initNodes() {
+      nodes = [];
+      for (let i = 0; i < nodeCount; i++) {
+        nodes.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.7,
+          vy: (Math.random() - 0.5) * 0.7,
+          radius: 3.2
+        });
+      }
     }
+    initNodes();
 
     let mouse = { x: 0, y: 0, active: false };
-    window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true; });
-    window.addEventListener('mouseleave', () => mouse.active = false);
 
-    function animate() {
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.active = true;
+    });
+    
+    window.addEventListener('mouseleave', () => {
+      mouse.active = false;
+    });
+
+    function drawMesh() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw connections
+      ctx.strokeStyle = 'rgba(103, 232, 249, 0.12)';
+      ctx.lineWidth = 1;
+      
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const distance = Math.hypot(dx, dy);
+          
+          if (distance < 160) {
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      
+      // Draw nodes + mouse interaction
       nodes.forEach(node => {
+        // Mouse repulsion
         if (mouse.active) {
           const dx = node.x - mouse.x;
           const dy = node.y - mouse.y;
           const dist = Math.hypot(dx, dy);
-          if (dist < 280 && dist > 0) {
-            const force = (280 - dist) / 280 * 0.6;
-            node.vx += (dx / dist) * force;
-            node.vy += (dy / dist) * force;
+          
+          if (dist < 220 && dist > 0) {
+            const force = (220 - dist) / 220;
+            node.vx += (dx / dist) * force * 0.8;
+            node.vy += (dy / dist) * force * 0.8;
           }
         }
-        node.x += node.vx; node.y += node.vy;
-        const margin = 40;
-        if (node.x < margin || node.x > canvas.width - margin) node.vx *= -0.9;
-        if (node.y < margin || node.y > canvas.height - margin) node.vy *= -0.9;
+        
+        // Update position
+        node.x += node.vx;
+        node.y += node.vy;
+        
+        // Bounce off edges
+        const margin = 30;
+        if (node.x < margin || node.x > canvas.width - margin) node.vx *= -1;
+        if (node.y < margin || node.y > canvas.height - margin) node.vy *= -1;
+        
+        // Draw node
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
         ctx.fillStyle = '#67e8f9';
         ctx.fill();
       });
-      requestAnimationFrame(animate);
+      
+      requestAnimationFrame(drawMesh);
     }
-    animate();
+    
+    drawMesh();
+    // ==================== END OF ANIMATION ====================
 
-    // === EXISTING DEVICE MANAGER FUNCTIONS ===
+    // ==================== DEVICE MANAGER FUNCTIONS ====================
     function connectDevice() {
       const output = document.getElementById('output');
-      output.innerHTML = `<div class="success-box">Device connected successfully!</div>`;
+      output.innerHTML = `
+        <div class="success-box">
+          Device connected successfully!
+        </div>
+      `;
     }
 
     function claimRewards() {
