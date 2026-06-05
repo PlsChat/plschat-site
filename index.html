@@ -3,37 +3,253 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PLSChat - Decentralised LoRa Mesh</title>
+  <title>PLSChat • Decentralised Communication</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
-    body {
-      font-family: 'Inter', Arial, sans-serif;
-      background: #0a0c1f;
-      color: #c9d1d9;
-      text-align: center;
-      padding: 80px 20px;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+    
+    :root {
+      --primary: #67e8f9;
     }
-    h1 {
-      font-size: 3.5em;
+    
+    body {
+      font-family: 'Inter', system_ui, sans-serif;
+    }
+    
+    .font-display {
+      font-family: 'Space Grotesk', 'Inter', sans-serif;
+      font-weight: 600;
+    }
+
+    .gradient-text {
       background: linear-gradient(90deg, #a855f7, #67e8f9);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    a {
-      display: inline-block;
-      padding: 18px 40px;
-      background: #22d3ee;
-      color: #0f172a;
-      font-size: 1.3em;
-      font-weight: bold;
+
+    .section-header {
+      font-size: 2.5rem;
+      line-height: 1.1;
+      font-weight: 700;
+    }
+
+    .card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    }
+
+    .nav-link {
+      transition: color 0.2s ease;
+    }
+    
+    .nav-link:hover {
+      color: #67e8f9;
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(103, 232, 249, 0.1);
       border-radius: 12px;
-      text-decoration: none;
-      margin-top: 40px;
+      color: #67e8f9;
     }
   </style>
 </head>
-<body>
-  <h1>PULSE CHAT</h1>
-  <p style="font-size:1.4em; margin:30px 0;">Decentralised LoRa Mesh Communication</p>
-  <a href="device-manager.html">🔌 Open Device Manager</a>
+<body class="bg-[#0a0c1f] text-white">
+  <!-- Navbar -->
+  <nav class="border-b border-white/10">
+    <div class="max-w-screen-xl mx-auto px-6 py-5 flex items-center justify-between">
+      <div class="flex items-center gap-x-3">
+        <div class="w-9 h-9 bg-gradient-to-br from-purple-500 to-cyan-400 rounded-xl flex items-center justify-center">
+          <i class="fa-solid fa-satellite text-white text-xl"></i>
+        </div>
+        <div>
+          <span class="font-display text-2xl font-semibold tracking-tight">PLSChat</span>
+        </div>
+      </div>
+      
+      <div class="hidden md:flex items-center gap-x-8 text-sm">
+        <a href="#how" class="nav-link text-white/80 hover:text-white">How it works</a>
+        <a href="#benefits" class="nav-link text-white/80 hover:text-white">Benefits</a>
+        <a href="device-manager.html" class="nav-link text-white/80 hover:text-white">Device Manager</a>
+      </div>
+
+      <div class="flex items-center gap-x-3">
+        <a href="flasher.html" 
+           class="px-5 py-2.5 text-sm font-medium border border-white/20 hover:bg-white/5 rounded-xl transition-colors">
+          Flash Device
+        </a>
+        <a href="device-manager.html" 
+           class="px-5 py-2.5 text-sm font-semibold bg-white text-black rounded-xl hover:bg-white/90 transition-colors">
+          Open Device Manager
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <div class="max-w-screen-xl mx-auto px-6 pt-16 pb-20">
+    <div class="max-w-3xl">
+      <div class="inline-flex items-center gap-x-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6">
+        <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+        <span class="text-sm font-medium text-emerald-400">Now in active development</span>
+      </div>
+
+      <h1 class="text-6xl md:text-7xl font-display tracking-tighter leading-none mb-6">
+        We are the <span class="gradient-text">network</span>.<br>
+        No internet. No mobile towers.
+      </h1>
+      
+      <p class="text-2xl text-white/70 max-w-2xl mb-10">
+        PLSChat is a fully decentralised, encrypted text messaging system that runs on LoRa mesh networks. 
+        Your devices become the infrastructure.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="device-manager.html" 
+           class="inline-flex items-center justify-center px-8 py-4 bg-white text-black font-semibold rounded-2xl text-lg hover:bg-white/90 transition-all active:scale-[0.985]">
+          Get Started
+          <i class="fa-solid fa-arrow-right ml-3"></i>
+        </a>
+        
+        <a href="#how" 
+           class="inline-flex items-center justify-center px-8 py-4 border border-white/20 hover:bg-white/5 font-medium rounded-2xl text-lg transition-colors">
+          Learn how it works
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vision / What is PLSChat -->
+  <div class="max-w-screen-xl mx-auto px-6 py-16 border-t border-white/10">
+    <div class="grid md:grid-cols-2 gap-16 items-center">
+      <div>
+        <div class="uppercase tracking-[3px] text-xs font-semibold text-cyan-400 mb-3">THE VISION</div>
+        <h2 class="section-header tracking-tight mb-6">True decentralised<br>communication.</h2>
+        
+        <div class="space-y-6 text-lg text-white/80">
+          <p>PLSChat lets people communicate without relying on the internet, mobile networks, or any central authority.</p>
+          <p>Messages travel directly from device to device over long-range LoRa radio. Your community becomes the network.</p>
+        </div>
+      </div>
+
+      <div class="bg-white/5 border border-white/10 rounded-3xl p-8">
+        <div class="space-y-8">
+          <div class="flex gap-4">
+            <div class="feature-icon flex-shrink-0"><i class="fa-solid fa-wifi text-xl"></i></div>
+            <div>
+              <div class="font-semibold text-lg mb-1">No Internet Required</div>
+              <div class="text-white/70">Works completely offline. Perfect for remote areas, disasters, or when networks are censored.</div>
+            </div>
+          </div>
+          
+          <div class="flex gap-4">
+            <div class="feature-icon flex-shrink-0"><i class="fa-solid fa-users text-xl"></i></div>
+            <div>
+              <div class="font-semibold text-lg mb-1">We Are The Network</div>
+              <div class="text-white/70">Every PLSChat device helps relay messages for others. The more devices, the stronger the network becomes.</div>
+            </div>
+          </div>
+
+          <div class="flex gap-4">
+            <div class="feature-icon flex-shrink-0"><i class="fa-solid fa-lock text-xl"></i></div>
+            <div>
+              <div class="font-semibold text-lg mb-1">End-to-End Encrypted</div>
+              <div class="text-white/70">Messages are encrypted on your device. Only the intended recipient can read them.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Benefits -->
+  <div id="benefits" class="max-w-screen-xl mx-auto px-6 py-16 border-t border-white/10">
+    <div class="text-center mb-12">
+      <div class="text-cyan-400 text-sm font-semibold tracking-widest mb-3">WHY IT MATTERS</div>
+      <h2 class="section-header tracking-tight">Communication that can't be switched off.</h2>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="card bg-white/5 border border-white/10 rounded-3xl p-8">
+        <i class="fa-solid fa-globe text-3xl text-cyan-400 mb-6"></i>
+        <h3 class="font-semibold text-xl mb-3">Works Anywhere</h3>
+        <p class="text-white/70">Mountains, forests, disaster zones, or areas with no mobile coverage. If two devices can hear each other, they can communicate.</p>
+      </div>
+      
+      <div class="card bg-white/5 border border-white/10 rounded-3xl p-8">
+        <i class="fa-solid fa-shield-halved text-3xl text-cyan-400 mb-6"></i>
+        <h3 class="font-semibold text-xl mb-3">Censorship Resistant</h3>
+        <p class="text-white/70">No central servers to shut down. Messages keep moving as long as devices are powered on and within range.</p>
+      </div>
+      
+      <div class="card bg-white/5 border border-white/10 rounded-3xl p-8">
+        <i class="fa-solid fa-handshake text-3xl text-cyan-400 mb-6"></i>
+        <h3 class="font-semibold text-xl mb-3">Community Powered</h3>
+        <p class="text-white/70">Run a device and you help strengthen the network for everyone. Earn rewards for keeping the mesh alive.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- How it Works -->
+  <div id="how" class="max-w-screen-xl mx-auto px-6 py-16 border-t border-white/10">
+    <div class="max-w-2xl mx-auto text-center mb-12">
+      <div class="text-cyan-400 text-sm font-semibold tracking-widest mb-3">HOW IT WORKS</div>
+      <h2 class="section-header tracking-tight">Simple. Powerful. Yours.</h2>
+    </div>
+
+    <div class="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
+      <div class="text-center">
+        <div class="mx-auto w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-2xl mb-5 text-2xl font-bold">1</div>
+        <div class="font-semibold mb-2">Flash a Device</div>
+        <div class="text-white/70 text-sm">Upload PLSChat firmware to any compatible LoRa device (Heltec, SenseCAP, etc).</div>
+      </div>
+      
+      <div class="text-center">
+        <div class="mx-auto w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-2xl mb-5 text-2xl font-bold">2</div>
+        <div class="font-semibold mb-2">Join the Mesh</div>
+        <div class="text-white/70 text-sm">Devices automatically discover each other and form a self-healing mesh network.</div>
+      </div>
+      
+      <div class="text-center">
+        <div class="mx-auto w-14 h-14 flex items-center justify-center bg-white/5 border border-white/10 rounded-2xl mb-5 text-2xl font-bold">3</div>
+        <div class="font-semibold mb-2">Send Messages</div>
+        <div class="text-white/70 text-sm">Use the web interface or mobile app to send encrypted messages across the mesh.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="max-w-screen-xl mx-auto px-6 py-16 border-t border-white/10">
+    <div class="bg-white/5 border border-white/10 rounded-3xl p-10 md:p-14 text-center">
+      <h2 class="text-4xl font-display tracking-tight mb-4">Ready to build the network?</h2>
+      <p class="text-white/70 max-w-md mx-auto mb-8">Get started in minutes. Flash a device and become part of something bigger.</p>
+      
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="flasher.html" class="px-8 py-4 bg-white text-black font-semibold rounded-2xl inline-flex items-center justify-center gap-x-2 hover:bg-white/90">
+          <i class="fa-solid fa-microchip"></i>
+          <span>Flash Firmware</span>
+        </a>
+        <a href="device-manager.html" class="px-8 py-4 border border-white/30 hover:bg-white/5 font-medium rounded-2xl inline-flex items-center justify-center gap-x-2">
+          <span>Open Device Manager</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="border-t border-white/10 py-8">
+    <div class="max-w-screen-xl mx-auto px-6 text-center text-white/50 text-sm">
+      PLSChat • Built for resilience • We are the network
+    </div>
+  </footer>
+
 </body>
 </html>
