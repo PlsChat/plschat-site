@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLSChat • Admin Monitor</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+
+        :root {
+            --bg: #0a0c1f;
+            --card: #12152b;
+            --accent: #a855f7;
+            --accent2: #67e8f9;
+            --text: #c9d1d9;
+            --text-muted: #8b949e;
+            --success: #22c55e;
+            --warning: #eab308;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #1f2439;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo a {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            background: linear-gradient(90deg, #a855f7, #67e8f9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .badge {
+            background: #1f2439;
+            color: #67e8f9;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .btn {
+            background: linear-gradient(90deg, #a855f7, #67e8f9);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3);
+        }
+
+        .btn-secondary {
+            background: #1f2439;
+            color: var(--text);
+            border: 1px solid #374151;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid #1f2439;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat {
+            background: #0f1326;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #67e8f9;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .node-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .node-card {
+            background: #0f1326;
+            border: 1px solid #1f2439;
+            border-radius: 12px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .node-card:hover {
+            border-color: #a855f7;
+            transform: translateY(-2px);
+        }
+
+        .node-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .node-id {
+            font-family: monospace;
+            font-weight: 700;
+            color: #67e8f9;
+            font-size: 15px;
+        }
+
+        .node-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .metric {
+            font-size: 13px;
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .rssi {
+            font-weight: 700;
+        }
+
+        .rssi.good { color: #22c55e; }
+        .rssi.ok { color: #eab308; }
+        .rssi.bad { color: #ef4444; }
+
+        .config-section {
+            background: #0f1326;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            background: #1f2439;
+            border: 1px solid #374151;
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+
+        .status-dot.connected {
+            background: #22c55e;
+            box-shadow: 0 0 8px #22c55e;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 28px;
+            max-width: 520px;
+            width: 90%;
+            border: 1px solid #1f2439;
+        }
+
+        .node-detail h3 {
+            margin-bottom: 16px;
+            color: #67e8f9;
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .warning {
+            background: #3f2a1f;
+            border: 1px solid #eab308;
+            color: #fcd34d;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <a href="../index.html">
+                    <div>
+                        <h1>PLSChat</h1>
+                        <div style="font-size: 13px; color: #67e8f9; margin-top: -6px;">ADMIN MONITOR</div>
+                    </div>
+                </a>
+                <div class="badge">SECURE • MQTT</div>
+            </div>
+            
+            <a href="../index.html" class="btn btn-secondary">← Back to Site</a>
+        </header>
+
+        <div class="warning">
+            <strong>Admin Only</strong> — This page should be protected. 
+            Use Cloudflare Access, Staticrypt, or move it behind authentication for production use.
+        </div>
+
+        <!-- MQTT Connection -->
+        <div class="card">
+            <h3 style="margin-bottom: 16px;">MQTT Connection</h3>
+            
+            <div class="config-grid">
+                <div class="form-group">
+                    <label>Broker URL (wss://)</label>
+                    <input type="text" id="broker-url" value="wss://broker.hivemq.com:8884/mqtt" placeholder="wss://your-broker:8884/mqtt">
+                </div>
+                <div class="form-group">
+                    <label>Username (optional)</label>
+                    <input type="text" id="mqtt-user" placeholder="username">
+                </div>
+                <div class="form-group">
+                    <label>Password (optional)</label>
+                    <input type="password" id="mqtt-pass" placeholder="password">
+                </div>
+                <div class="form-group">
+                    <label>Topic Prefix</label>
+                    <input type="text" id="topic-prefix" value="plschat/" placeholder="plschat/">
+                </div>
+            </div>
+
+            <div style="margin-top: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <button id="connect-btn" class="btn" onclick="connectMQTT()">Connect to MQTT</button>
+                <button id="disconnect-btn" class="btn btn-secondary" onclick="disconnectMQTT()" style="display: none;">Disconnect</button>
+                
+                <div class="status">
+                    <div id="status-dot" class="status-dot"></div>
+                    <span id="status-text">Disconnected</span>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="toggleDemoMode()">Toggle Demo Mode</button>
+            </div>
+            
+            <div style="margin-top: 12px; font-size: 12px; color: #64748b;">
+                Tip: Use a secure MQTT broker with TLS (wss://). For production, enable username/password or client certificates.
+            </div>
+        </div>
+
+        <!-- Network Stats -->
+        <div class="card">
+            <h3 style="margin-bottom: 16px;">Network Overview</h3>
+            <div class="stats-grid">
+                <div class="stat">
+                    <div class="stat-value" id="stat-nodes">0</div>
+                    <div class="stat-label">Nodes Online</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stat-avg-rssi">--</div>
+                    <div class="stat-label">Avg RSSI (dBm)</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stat-avg-battery">--</div>
+                    <div class="stat-label">Avg Battery %</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stat-packets">0</div>
+                    <div class="stat-label">Packets (last min)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nodes List -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3>Discovered Nodes</h3>
+                <input type="text" id="node-filter" placeholder="Filter nodes..." style="background:#0f1326; border:1px solid #374151; color:#c9d1d9; padding:8px 14px; border-radius:8px; width:220px;" oninput="filterNodes()">
+            </div>
+            
+            <div id="nodes-grid" class="node-grid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <footer>
+            PLSChat Admin Monitor • Connects via MQTT • For authorized maintainers only
+        </footer>
+    </div>
+
+    <!-- Node Detail Modal -->
+    <div id="node-modal" class="modal" onclick="if (event.target.id === 'node-modal') closeModal()">
+        <div class="modal-content" onclick="event.stopImmediatePropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 id="modal-node-id" style="color:#67e8f9; margin:0;"></h3>
+                <button onclick="closeModal()" class="btn btn-secondary" style="padding:6px 14px; font-size:13px;">Close</button>
+            </div>
+            
+            <div id="modal-content">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script>
+        let client = null;
+        let nodes = new Map();
+        let demoInterval = null;
+        let isDemoMode = false;
+
+        // Demo data generator
+        function generateDemoData() {
+            const demoNodes = ['A1B2C3', 'D4E5F6', '112233', '445566', '778899', 'AABBCC'];
+            const now = Date.now();
+
+            demoNodes.forEach((id, index) => {
+                if (!nodes.has(id)) {
+                    nodes.set(id, {
+                        id: id,
+                        lastRssi: -70 - Math.floor(Math.random() * 35),
+                        battery: 60 + Math.floor(Math.random() * 40),
+                        lastSeen: new Date(now - Math.random() * 1000 * 60 * 30),
+                        packetCount: Math.floor(Math.random() * 200),
+                        lastUpdate: new Date()
+                    });
+                } else {
+                    const node = nodes.get(id);
+                    node.lastRssi = Math.max(-110, Math.min(-50, node.lastRssi + (Math.random() - 0.5) * 8));
+                    node.battery = Math.max(10, Math.min(100, node.battery + (Math.random() - 0.5) * 3));
+                    node.lastSeen = new Date();
+                    node.packetCount += Math.floor(Math.random() * 3);
+                    node.lastUpdate = new Date();
+                }
+            });
+
+            updateUI();
+        }
+
+        function toggleDemoMode() {
+            isDemoMode = !isDemoMode;
+            
+            if (isDemoMode) {
+                if (client) disconnectMQTT();
+                
+                // Generate initial data
+                generateDemoData();
+                
+                // Keep updating
+                if (demoInterval) clearInterval(demoInterval);
+                demoInterval = setInterval(() => {
+                    generateDemoData();
+                }, 2500);
+                
+                document.getElementById('connect-btn').style.display = 'none';
+                document.getElementById('disconnect-btn').style.display = 'inline-flex';
+                document.getElementById('status-text').textContent = 'Demo Mode Active';
+                document.getElementById('status-dot').classList.add('connected');
+            } else {
+                if (demoInterval) {
+                    clearInterval(demoInterval);
+                    demoInterval = null;
+                }
+                nodes.clear();
+                updateUI();
+                document.getElementById('connect-btn').style.display = 'inline-flex';
+                document.getElementById('disconnect-btn').style.display = 'none';
+                document.getElementById('status-text').textContent = 'Disconnected';
+                document.getElementById('status-dot').classList.remove('connected');
+            }
+        }
+
+        function updateUI() {
+            // Update stats
+            const nodeArray = Array.from(nodes.values());
+            document.getElementById('stat-nodes').textContent = nodeArray.length;
+
+            if (nodeArray.length > 0) {
+                const avgRssi = nodeArray.reduce((sum, n) => sum + n.lastRssi, 0) / nodeArray.length;
+                document.getElementById('stat-avg-rssi').textContent = avgRssi.toFixed(0);
+
+                const avgBattery = nodeArray.reduce((sum, n) => sum + n.battery, 0) / nodeArray.length;
+                document.getElementById('stat-avg-battery').textContent = avgBattery.toFixed(0) + '%';
+
+                // Rough packets in last minute (demo only)
+                const recentPackets = nodeArray.reduce((sum, n) => sum + (n.packetCount || 0), 0);
+                document.getElementById('stat-packets').textContent = Math.floor(recentPackets / 10);
+            }
+
+            // Render nodes
+            renderNodes();
+        }
+
+        function renderNodes(filter = '') {
+            const container = document.getElementById('nodes-grid');
+            container.innerHTML = '';
+
+            const filtered = Array.from(nodes.values())
+                .filter(n => n.id.toLowerCase().includes(filter.toLowerCase()))
+                .sort((a, b) => b.lastSeen - a.lastSeen);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:40px; color:#64748b;">No nodes found.</div>`;
+                return;
+            }
+
+            filtered.forEach(node => {
+                const card = document.createElement('div');
+                card.className = 'node-card';
+                card.onclick = () => showNodeDetail(node.id);
+
+                const rssiClass = node.lastRssi > -70 ? 'good' : node.lastRssi > -90 ? 'ok' : 'bad';
+                const timeAgo = Math.floor((Date.now() - node.lastSeen.getTime()) / 1000);
+                const timeText = timeAgo < 60 ? `${timeAgo}s ago` : `${Math.floor(timeAgo/60)}m ago`;
+
+                card.innerHTML = `
+                    <div class="node-header">
+                        <div class="node-id">${node.id}</div>
+                        <div style="font-size:11px; color:#64748b;">${timeText}</div>
+                    </div>
+                    <div class="node-metrics">
+                        <div class="metric">
+                            <div class="metric-label">RSSI</div>
+                            <div class="rssi ${rssiClass}">${node.lastRssi} dBm</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Battery</div>
+                            <div style="font-weight:700;">${node.battery}%</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterNodes() {
+            const filter = document.getElementById('node-filter').value;
+            renderNodes(filter);
+        }
+
+        function showNodeDetail(nodeId) {
+            const node = nodes.get(nodeId);
+            if (!node) return;
+
+            const modal = document.getElementById('node-modal');
+            const content = document.getElementById('modal-content');
+
+            document.getElementById('modal-node-id').textContent = nodeId;
+
+            const timeAgo = Math.floor((Date.now() - node.lastSeen.getTime()) / 1000);
+            const timeText = timeAgo < 60 ? `${timeAgo} seconds ago` : `${Math.floor(timeAgo/60)} minutes ago`;
+
+            content.innerHTML = `
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:24px;">
+                    <div>
+                        <div style="font-size:12px; color:#64748b; margin-bottom:4px;">LAST RSSI</div>
+                        <div style="font-size:28px; font-weight:700;" class="rssi ${node.lastRssi > -70 ? 'good' : node.lastRssi > -90 ? 'ok' : 'bad'}">${node.lastRssi} dBm</div>
+                    </div>
+                    <div>
+                        <div style="font-size:12px; color:#64748b; margin-bottom:4px;">BATTERY</div>
+                        <div style="font-size:28px; font-weight:700;">${node.battery}%</div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom:20px;">
+                    <div style="font-size:12px; color:#64748b; margin-bottom:4px;">LAST SEEN</div>
+                    <div style="font-size:15px;">${node.lastSeen.toLocaleString()} (${timeText})</div>
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <div style="font-size:12px; color:#64748b; margin-bottom:4px;">PACKETS RECEIVED</div>
+                    <div style="font-size:22px; font-weight:700;">${node.packetCount || 0}</div>
+                </div>
+
+                <div style="background:#1f2439; padding:16px; border-radius:10px; font-size:13px; color:#64748b;">
+                    More detailed history and graphs coming soon.<br>
+                    (Publish richer data from the device for full features)
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('node-modal').style.display = 'none';
+        }
+
+        // MQTT Functions
+        function connectMQTT() {
+            const brokerUrl = document.getElementById('broker-url').value.trim();
+            const username = document.getElementById('mqtt-user').value.trim();
+            const password = document.getElementById('mqtt-pass').value.trim();
+            const topicPrefix = document.getElementById('topic-prefix').value.trim() || 'plschat/';
+
+            if (!brokerUrl) {
+                alert('Please enter a broker URL');
+                return;
+            }
+
+            try {
+                const options = {
+                    username: username || undefined,
+                    password: password || undefined,
+                    reconnectPeriod: 5000,
+                    connectTimeout: 10000
+                };
+
+                client = mqtt.connect(brokerUrl, options);
+
+                client.on('connect', () => {
+                    console.log('Connected to MQTT broker');
+                    updateConnectionUI(true);
+
+                    // Subscribe to relevant topics
+                    client.subscribe(`${topicPrefix}#`, (err) => {
+                        if (err) console.error('Subscription error:', err);
+                    });
+                });
+
+                client.on('message', (topic, message) => {
+                    handleMQTTMessage(topic, message.toString());
+                });
+
+                client.on('error', (err) => {
+                    console.error('MQTT Error:', err);
+                    alert('MQTT connection error: ' + err.message);
+                    disconnectMQTT();
+                });
+
+                client.on('close', () => {
+                    updateConnectionUI(false);
+                });
+
+            } catch (err) {
+                alert('Failed to connect: ' + err.message);
+            }
+        }
+
+        function handleMQTTMessage(topic, payload) {
+            try {
+                const data = JSON.parse(payload);
+                const parts = topic.split('/');
+                
+                // Expected topic patterns:
+                // plschat/nodes/{nodeId}
+                // plschat/network/summary
+
+                if (parts.includes('nodes') && parts.length >= 3) {
+                    const nodeId = parts[parts.length - 1];
+                    
+                    if (!nodes.has(nodeId)) {
+                        nodes.set(nodeId, {
+                            id: nodeId,
+                            lastRssi: null,
+                            battery: null,
+                            lastSeen: new Date(),
+                            packetCount: 0,
+                            lastUpdate: new Date()
+                        });
+                    }
+
+                    const node = nodes.get(nodeId);
+                    
+                    if (data.rssi !== undefined) node.lastRssi = data.rssi;
+                    if (data.battery !== undefined) node.battery = data.battery;
+                    if (data.packetCount !== undefined) node.packetCount = data.packetCount;
+                    
+                    node.lastSeen = new Date();
+                    node.lastUpdate = new Date();
+
+                    updateUI();
+                }
+
+                if (parts.includes('network') && parts.includes('summary')) {
+                    // Handle network summary if you publish it
+                    if (data.nodeCount) document.getElementById('stat-nodes').textContent = data.nodeCount;
+                    // etc.
+                }
+
+            } catch (e) {
+                // Not JSON or different format — ignore for now
+                console.log('Non-JSON message on', topic);
+            }
+        }
+
+        function disconnectMQTT() {
+            if (client) {
+                client.end();
+                client = null;
+            }
+            updateConnectionUI(false);
+            if (demoInterval) {
+                clearInterval(demoInterval);
+                demoInterval = null;
+            }
+        }
+
+        function updateConnectionUI(connected) {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            const connectBtn = document.getElementById('connect-btn');
+            const disconnectBtn = document.getElementById('disconnect-btn');
+
+            if (connected) {
+                dot.classList.add('connected');
+                text.textContent = 'Connected to MQTT';
+                connectBtn.style.display = 'none';
+                disconnectBtn.style.display = 'inline-flex';
+            } else {
+                dot.classList.remove('connected');
+                text.textContent = 'Disconnected';
+                connectBtn.style.display = 'inline-flex';
+                disconnectBtn.style.display = 'none';
+            }
+        }
+
+        // Initialize
+        function init() {
+            // Show initial empty state
+            document.getElementById('nodes-grid').innerHTML = 
+                `<div style="grid-column: 1 / -1; text-align:center; padding:40px; color:#64748b;">
+                    Connect to MQTT or enable Demo Mode to see nodes.
+                </div>`;
+
+            // Keyboard support for filter
+            document.getElementById('node-filter').addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    this.value = '';
+                    renderNodes();
+                }
+            });
+
+            console.log('%c[PLSChat Admin Monitor] Ready. Connect to MQTT or use Demo Mode.', 'color:#64748b');
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
