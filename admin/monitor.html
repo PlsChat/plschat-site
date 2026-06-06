@@ -329,6 +329,33 @@
         </div>
     </div>
 
+    <!-- Change Password Modal -->
+    <div id="change-password-modal" class="modal" onclick="if (event.target.id === 'change-password-modal') closeChangePasswordModal()">
+        <div class="modal-content" onclick="event.stopImmediatePropagation()" style="max-width: 420px;">
+            <h3 style="margin-bottom: 20px; color: #67e8f9;">Change Admin Password</h3>
+            
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>Current Password</label>
+                <input type="password" id="current-password" style="width:100%; padding:10px; background:#0f1326; border:1px solid #374151; color:#c9d1d9; border-radius:8px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>New Password</label>
+                <input type="password" id="new-password" style="width:100%; padding:10px; background:#0f1326; border:1px solid #374151; color:#c9d1d9; border-radius:8px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Confirm New Password</label>
+                <input type="password" id="confirm-password" style="width:100%; padding:10px; background:#0f1326; border:1px solid #374151; color:#c9d1d9; border-radius:8px;">
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <button onclick="changeAdminPassword()" class="btn" style="flex:1;">Update Password</button>
+                <button onclick="closeChangePasswordModal()" class="btn btn-secondary" style="flex:1;">Cancel</button>
+            </div>
+            
+            <div id="change-password-error" style="color: #ef4444; margin-top: 12px; font-size: 13px; display: none;"></div>
+        </div>
+    </div>
+
     <div class="container">
         <header>
             <div class="logo">
@@ -342,6 +369,7 @@
             </div>
             
             <a href="../index.html" class="btn btn-secondary">← Back to Site</a>
+            <button onclick="showChangePasswordModal()" class="btn btn-secondary" style="margin-left: 8px; padding: 8px 14px; font-size: 13px;">Change Password</button>
         </header>
 
         <div class="warning">
@@ -755,15 +783,17 @@
             }
         }
 
-        // Simple client-side login (temporary)
-        const ADMIN_PASSWORD = "plschat2026"; // ← Change this password as needed
+        // Simple client-side login (temporary) - supports changeable password via localStorage
+        function getAdminPassword() {
+            return localStorage.getItem('adminPassword') || "plschat2026";
+        }
 
         function checkAdminPassword() {
             const input = document.getElementById('admin-password').value;
             const errorDiv = document.getElementById('login-error');
+            const correctPassword = getAdminPassword();
 
-            if (input === ADMIN_PASSWORD) {
-                // Success - hide login and remember for session
+            if (input === correctPassword) {
                 document.getElementById('login-overlay').style.display = 'none';
                 sessionStorage.setItem('adminLoggedIn', 'true');
             } else {
@@ -780,6 +810,56 @@
                 const overlay = document.getElementById('login-overlay');
                 if (overlay) overlay.style.display = 'none';
             }
+        }
+
+        // Change Password functions
+        function showChangePasswordModal() {
+            document.getElementById('change-password-modal').style.display = 'flex';
+            document.getElementById('current-password').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+            document.getElementById('change-password-error').style.display = 'none';
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('change-password-modal').style.display = 'none';
+        }
+
+        function changeAdminPassword() {
+            const current = document.getElementById('current-password').value;
+            const newPass = document.getElementById('new-password').value;
+            const confirm = document.getElementById('confirm-password').value;
+            const errorDiv = document.getElementById('change-password-error');
+            const correctPassword = getAdminPassword();
+
+            errorDiv.style.display = 'none';
+
+            if (current !== correctPassword) {
+                errorDiv.textContent = "Current password is incorrect";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (newPass.length < 6) {
+                errorDiv.textContent = "New password must be at least 6 characters";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (newPass !== confirm) {
+                errorDiv.textContent = "New passwords do not match";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Save new password
+            localStorage.setItem('adminPassword', newPass);
+            alert("Password changed successfully! Please log in again with the new password.");
+            closeChangePasswordModal();
+
+            // Force re-login
+            sessionStorage.removeItem('adminLoggedIn');
+            location.reload();
         }
 
         // Initialize
