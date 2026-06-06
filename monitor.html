@@ -54,6 +54,14 @@
             gap: 12px;
         }
 
+        .logo a {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .logo h1 {
             font-family: 'Space Grotesk', sans-serif;
             font-size: 28px;
@@ -71,29 +79,6 @@
             font-size: 12px;
             font-weight: 600;
             letter-spacing: 0.5px;
-        }
-
-        .status-bar {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: var(--card);
-            padding: 12px 20px;
-            border-radius: 12px;
-            border: 1px solid #1f2439;
-        }
-
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ef4444;
-            transition: all 0.3s ease;
-        }
-
-        .status-dot.connected {
-            background: #22c55e;
-            box-shadow: 0 0 12px #22c55e;
         }
 
         .btn {
@@ -378,6 +363,10 @@
                     </div>
                 </div>
             </div>
+
+            <a href="admin/monitor.html" class="btn btn-secondary" style="margin-left: 12px; padding: 10px 18px; font-size: 14px;">
+                Admin Dashboard
+            </a>
         </header>
 
         <!-- Connection Controls -->

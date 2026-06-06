@@ -310,6 +310,25 @@
     </style>
 </head>
 <body>
+    <!-- Simple Login Gate (temporary until Cloudflare Access is set up) -->
+    <div id="login-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,12,31,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div style="background: #12152b; border: 1px solid #374151; border-radius: 16px; padding: 40px; width: 100%; max-width: 380px; text-align: center;">
+            <h2 style="margin-bottom: 8px; color: #67e8f9;">Admin Access</h2>
+            <p style="color: #64748b; margin-bottom: 24px; font-size: 14px;">Enter password to access the remote monitor</p>
+            
+            <input type="password" id="admin-password" placeholder="Password" 
+                   style="width: 100%; padding: 14px; background: #0f1326; border: 1px solid #374151; color: #c9d1d9; border-radius: 10px; font-size: 16px; margin-bottom: 16px;">
+            
+            <button onclick="checkAdminPassword()" class="btn" style="width: 100%; padding: 14px; font-size: 16px;">
+                Login
+            </button>
+            
+            <div id="login-error" style="color: #ef4444; margin-top: 12px; font-size: 13px; display: none;">
+                Incorrect password
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <header>
             <div class="logo">
@@ -736,8 +755,37 @@
             }
         }
 
+        // Simple client-side login (temporary)
+        const ADMIN_PASSWORD = "plschat2026"; // ← Change this password as needed
+
+        function checkAdminPassword() {
+            const input = document.getElementById('admin-password').value;
+            const errorDiv = document.getElementById('login-error');
+
+            if (input === ADMIN_PASSWORD) {
+                // Success - hide login and remember for session
+                document.getElementById('login-overlay').style.display = 'none';
+                sessionStorage.setItem('adminLoggedIn', 'true');
+            } else {
+                errorDiv.style.display = 'block';
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 2000);
+            }
+        }
+
+        // Check if already logged in this session
+        function checkExistingLogin() {
+            if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+                const overlay = document.getElementById('login-overlay');
+                if (overlay) overlay.style.display = 'none';
+            }
+        }
+
         // Initialize
         function init() {
+            checkExistingLogin();
+
             // Show initial empty state
             document.getElementById('nodes-grid').innerHTML = 
                 `<div style="grid-column: 1 / -1; text-align:center; padding:40px; color:#64748b;">
@@ -751,6 +799,16 @@
                     renderNodes();
                 }
             });
+
+            // Allow pressing Enter in password field
+            const passInput = document.getElementById('admin-password');
+            if (passInput) {
+                passInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        checkAdminPassword();
+                    }
+                });
+            }
 
             console.log('%c[PLSChat Admin Monitor] Ready. Connect to MQTT or use Demo Mode.', 'color:#64748b');
         }
