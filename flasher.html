@@ -52,7 +52,6 @@
       border-radius: 16px;
       margin: 25px auto;
       max-width: 700px;
-      text-align: left;
       font-family: monospace;
       white-space: pre-wrap;
     }
@@ -116,13 +115,13 @@
       <h2 style="margin-top:0;">Send Licence (Optional)</h2>
       <button class="btn-primary" onclick="connectDevice()">🔌 Connect Device</button>
       
-      <div id="statusBox" class="status">
-        Click "Connect Device" to send a licence key to your device.
+      <div id="statusBox" class="status" style="text-align: center;">
+        Click <strong>"Connect Device"</strong> to send a licence key to your device.
       </div>
 
-      <div id="licenseBox" style="display:none; margin-top:20px;">
+      <div id="licenseBox" style="display:none; margin-top:20px; text-align: center;">
         <strong class="success">✅ Licence Found</strong><br><br>
-        <div id="licenseContent" style="background:#0f172a; padding:15px; border-radius:8px; font-family:monospace; margin-bottom:20px;"></div>
+        <div id="licenseContent" style="background:#0f172a; padding:15px; border-radius:8px; font-family:monospace; margin-bottom:20px; text-align: left;"></div>
         <button class="btn-primary" onclick="sendLicense()">📤 Send Licence to Device</button>
       </div>
     </div>
@@ -143,14 +142,14 @@
         serialPort = await navigator.serial.requestPort();
         await serialPort.open({ baudRate: 115200 });
         box.innerHTML = `<span class="success">✅ Connected!</span><br>Looking for licence...`;
-        // You can paste your full autoDetectLicense() function here
+        // Paste your full autoDetectLicense function here if needed
       } catch (err) {
         box.innerHTML = `❌ Connection failed.<br>Hold BOOT button and try again.`;
       }
     }
 
     async function sendLicense() {
-      // Paste your full sendLicense() function here
+      // Paste your full sendLicense function here if needed
       console.log("Sending licence...");
     }
   </script>
