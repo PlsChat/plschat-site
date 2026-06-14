@@ -3,176 +3,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PLSChat Web Flasher</title>
+  <title>PLSChat Web Flasher - Preview</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
     body {
-      font-family: 'Inter', sans-serif;
-      background: #0a0c1f;
-      color: #c9d1d9;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
       margin: 0;
       padding: 40px 20px;
-      min-height: 100vh;
       text-align: center;
     }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      position: relative;
+    .container { max-width: 700px; margin: 0 auto; }
+    h1 { font-size: 2.2rem; margin-bottom: 8px; }
+    .title { background: linear-gradient(90deg, #7c3aed, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: #94a3b8; margin-bottom: 40px; }
+    
+    .card {
+      background: #1e2937;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+      border: 1px solid #334155;
     }
-    h1 {
-      font-size: 3em;
-      background: linear-gradient(90deg, #a855f7, #67e8f9);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 8px;
-    }
-    .subtitle {
-      color: #94a3b8;
-      margin-bottom: 40px;
-    }
+    .card h2 { margin-top: 0; color: #f1f5f9; }
+    
+    .warning { color: #f87171; font-size: 0.95rem; margin: 16px 0; }
+    
     button {
-      padding: 16px 36px;
-      font-size: 1.1em;
-      font-weight: 600;
+      background: #7c3aed;
+      color: white;
       border: none;
+      padding: 14px 32px;
+      font-size: 1rem;
       border-radius: 9999px;
       cursor: pointer;
-      margin: 10px;
-      transition: all 0.3s;
-      color: white;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, #a855f7, #3b82f6);
-    }
-    .btn-erase {
-      background: linear-gradient(135deg, #b91c1c, #7f1d1d);
-      color: white;
-      padding: 14px 28px;
-      font-size: 1em;
-      margin-bottom: 15px;
-      box-shadow: 0 4px 15px rgba(185, 28, 28, 0.3);
-    }
-    .status {
-      background: #1e2937;
-      padding: 20px;
-      border-radius: 16px;
-      margin: 25px auto;
-      max-width: 700px;
-      font-family: monospace;
-      white-space: pre-wrap;
-    }
-    .success { color: #22c55e; font-weight: 600; }
-    .section {
-      background: #1e2937;
-      padding: 30px;
-      border-radius: 16px;
-      margin: 30px auto;
-      max-width: 700px;
-    }
-    .note {
-      font-size: 0.9em;
-      color: #94a3b8;
-      margin-top: 15px;
-    }
-    .back-btn {
-      position: absolute;
-      top: 0;
-      left: 0;
-      padding: 12px 24px;
-      background: linear-gradient(135deg, #a855f7, #3b82f6);
-      color: white;
-      border: none;
-      border-radius: 9999px;
-      font-size: 0.95em;
       font-weight: 600;
-      text-decoration: none;
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
+    button:hover { background: #6d28d9; }
+    
+    .back-btn {
+      position: absolute;
+      top: 30px;
+      left: 30px;
+      background: #7c3aed;
+      padding: 10px 20px;
+      border-radius: 9999px;
+      font-size: 0.95rem;
+    }
+    
+    /* Success Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.85);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #1e2937;
+      padding: 40px 50px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 420px;
+      border: 1px solid #475569;
+    }
+    .success-icon {
+      font-size: 60px;
+      margin-bottom: 20px;
+    }
+    .modal h2 { margin: 0 0 12px 0; font-size: 1.6rem; }
+    .modal p { color: #94a3b8; margin-bottom: 30px; }
   </style>
 </head>
 <body>
+  <button class="back-btn">← Back</button>
+
   <div class="container">
-
-    <!-- Back Button -->
-    <a href="device-manager.html" class="back-btn">← Back</a>
-
-    <h1>PLSChat Web Flasher</h1>
+    <h1 class="title">PLSChat Web Flasher</h1>
     <p class="subtitle">Flash PLSChat v2.42 firmware to your Heltec V4</p>
 
-    <!-- Firmware Section -->
-    <div class="section">
-      <h2 style="margin-top:0;">Flash Firmware</h2>
-      <p style="color:#f87171; font-weight:600; margin-bottom:15px;">Important: You must erase the device first before flashing new firmware.</p>
+    <!-- Flash Firmware Card -->
+    <div class="card">
+      <h2>Flash Firmware</h2>
+      <p class="warning">Important: You must erase the device first before flashing new firmware.</p>
       
-      <button onclick="showEraseInstructions()" class="btn-erase">🗑️ Erase Device First (Recommended)</button>
-      <br>
-      
-      <esp-web-install-button manifest="manifest.json">
-        <button slot="activate" class="btn-primary">⚡ Flash PLSChat v2.42</button>
-      </esp-web-install-button>
-
-      <p class="note">
-        <strong>Tip:</strong> Hold the <strong>BOOT button</strong> on the Heltec V4 while clicking "Connect".
-      </p>
+      <button onclick="simulateFlash()">⚡ Connect &amp; Flash</button>
     </div>
 
     <!-- Licence Section -->
-    <div class="section">
-      <h2 style="margin-top:0;">Send Licence (Optional)</h2>
-      <button class="btn-primary" onclick="connectDevice()">🔌 Connect Device</button>
-      
-      <div id="statusBox" class="status" style="text-align: center;">
-        Click <strong>"Connect Device"</strong> to send a licence key to your device.
-      </div>
-
-      <div id="licenseBox" style="display:none; margin-top:20px; text-align: center;">
-        <strong class="success">✅ Licence Found</strong><br><br>
-        <div id="licenseContent" style="background:#0f172a; padding:15px; border-radius:8px; font-family:monospace; margin-bottom:20px; text-align: left;"></div>
-        <button class="btn-primary" onclick="sendLicense()">📤 Send Licence to Device</button>
-      </div>
+    <div class="card">
+      <h2>Send Licence (Optional)</h2>
+      <button>🔑 Connect Device</button>
     </div>
-
   </div>
 
-  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  <!-- Success Modal -->
+  <div id="successModal" class="modal">
+    <div class="modal-content">
+      <div class="success-icon">🎉</div>
+      <h2>Installation Complete!</h2>
+      <p>Firmware v2.42 has been successfully flashed to your device.</p>
+      
+      <button onclick="closeModal()" style="width: 100%;">Finish</button>
+    </div>
+  </div>
 
   <script>
-    let serialPort = null;
-    let currentLicenseKey = "";
-
-    function showEraseInstructions() {
-      alert(
-        'How to Erase the Device (Important!)\n\n' +
-        '1. Click the purple "Flash PLSChat v2.42" button below.\n' +
-        '2. In the popup window, click the "Connect" button.\n' +
-        '3. Hold the BOOT button on your Heltec V4, then select the port and click Connect.\n' +
-        '4. Once connected, look in the TOP RIGHT of the popup for a small gear icon (⚙️).\n' +
-        '5. Click the gear icon → choose "Erase device" → confirm.\n\n' +
-        'This fixes the flashing / SHA-256 errors you were seeing.'
-      );
+    function simulateFlash() {
+      // In real version this will be the actual flashing
+      setTimeout(() => {
+        document.getElementById('successModal').style.display = 'flex';
+      }, 800);
     }
-
-    async function connectDevice() {
-      const box = document.getElementById('statusBox');
-      box.innerHTML = '🔄 Connecting...<br><strong>Hold the BOOT button on the device!</strong>';
-
-      try {
-        serialPort = await navigator.serial.requestPort();
-        await serialPort.open({ baudRate: 115200 });
-        box.innerHTML = `<span class="success">✅ Connected!</span><br>Looking for licence...`;
-      } catch (err) {
-        box.innerHTML = `❌ Connection failed.<br>Hold BOOT button and try again.`;
+    
+    function closeModal() {
+      document.getElementById('successModal').style.display = 'none';
+      alert('Modal closed! (In real version it will just close cleanly)');
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('successModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeModal();
       }
-    }
-
-    async function sendLicense() {
-      console.log('Sending licence...');
-    }
+    });
   </script>
 </body>
 </html>
