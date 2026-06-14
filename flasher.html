@@ -73,16 +73,18 @@
       position: absolute;
       top: 0;
       left: 0;
-      padding: 10px 20px;
-      background: #334155;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #a855f7, #3b82f6);
       color: white;
       border: none;
       border-radius: 9999px;
       font-size: 0.95em;
+      font-weight: 600;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
   </style>
 </head>
@@ -90,12 +92,12 @@
   <div class="container">
 
     <!-- Back Button -->
-    <a href="device-manager.html" class="back-btn">← Back to Device Manager</a>
+    <a href="device-manager.html" class="back-btn">← Back</a>
 
     <h1>PLSChat Web Flasher</h1>
     <p class="subtitle">Flash PLSChat v2.42 firmware to your Heltec V4</p>
 
-    <!-- Firmware Flashing -->
+    <!-- Firmware Section -->
     <div class="section">
       <h2 style="margin-top:0;">Flash Firmware</h2>
       <p>Click the button below to flash <strong>PLSChat v2.42</strong> onto your Heltec V4.</p>
@@ -112,7 +114,6 @@
     <!-- Licence Section -->
     <div class="section">
       <h2 style="margin-top:0;">Send Licence (Optional)</h2>
-      
       <button class="btn-primary" onclick="connectDevice()">🔌 Connect Device</button>
       
       <div id="statusBox" class="status">
@@ -142,19 +143,14 @@
         serialPort = await navigator.serial.requestPort();
         await serialPort.open({ baudRate: 115200 });
         box.innerHTML = `<span class="success">✅ Connected!</span><br>Looking for licence...`;
-        await autoDetectLicense();
+        // You can paste your full autoDetectLicense() function here
       } catch (err) {
         box.innerHTML = `❌ Connection failed.<br>Hold BOOT button and try again.`;
       }
     }
 
-    async function autoDetectLicense() {
-      // Paste your original licence detection code here if needed
-      console.log("Licence detection running...");
-    }
-
     async function sendLicense() {
-      // Paste your original send licence code here if needed
+      // Paste your full sendLicense() function here
       console.log("Sending licence...");
     }
   </script>
