@@ -1,12 +1,12 @@
 {
   "name": "PLSChat Firmware",
-  "version": "2.19",
+  "version": "2.42",
   "new_install_prompt_erase": true,
   "builds": [
     {
       "chipFamily": "ESP32-S3",
       "parts": [
-        { "path": "PLSchat.ino.bin", "offset": 0 }
+        { "path": "PLSChat_v2_42.bin", "offset": 0 }
       ]
     }
   ]
