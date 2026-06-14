@@ -107,9 +107,9 @@
     <!-- Firmware Section -->
     <div class="section">
       <h2 style="margin-top:0;">Flash Firmware</h2>
-      <p><strong style="color:#f87171;">Important:</strong> Erase the device first before flashing (this fixes most flashing problems).</p>
+      <p style="color:#f87171; font-weight:600;">Important: Erase the device first before flashing (this fixes most flashing problems).</p>
       
-      <button onclick="eraseDevice()" class="btn-erase">🗑️ Erase Device First (Recommended)</button>
+      <button onclick="showEraseInstructions()" class="btn-erase">🗑️ Erase Device First (Recommended)</button>
       <br>
       
       <esp-web-install-button manifest="manifest.json">
@@ -145,14 +145,8 @@
     let serialPort = null;
     let currentLicenseKey = "";
 
-    async function eraseDevice() {
-      try {
-        const { erase } = await import('https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module');
-        await erase();
-        alert('✅ Device erased successfully! Now click the Flash button.');
-      } catch (e) {
-        alert('Erase failed or cancelled: ' + e);
-      }
+    function showEraseInstructions() {
+      alert('To erase the device:\n\n1. Click the "Flash PLSChat v2.42" button below.\n2. In the popup that appears, click the small gear icon (⚙️) in the top right.\n3. Select "Erase device" and confirm.\n\nThis fixes the flashing problems you were having.');
     }
 
     async function connectDevice() {
