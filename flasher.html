@@ -107,7 +107,7 @@
     <!-- Firmware Section -->
     <div class="section">
       <h2 style="margin-top:0;">Flash Firmware</h2>
-      <p style="color:#f87171; font-weight:600;">Important: Erase the device first before flashing (this fixes most flashing problems).</p>
+      <p style="color:#f87171; font-weight:600; margin-bottom:15px;">Important: You must erase the device first before flashing new firmware.</p>
       
       <button onclick="showEraseInstructions()" class="btn-erase">🗑️ Erase Device First (Recommended)</button>
       <br>
@@ -117,7 +117,7 @@
       </esp-web-install-button>
 
       <p class="note">
-        <strong>Important:</strong> Hold the <strong>BOOT button</strong> on the Heltec V4 while clicking "Connect".
+        <strong>Tip:</strong> Hold the <strong>BOOT button</strong> on the Heltec V4 while clicking "Connect".
       </p>
     </div>
 
@@ -146,7 +146,15 @@
     let currentLicenseKey = "";
 
     function showEraseInstructions() {
-      alert('To erase the device:\n\n1. Click the "Flash PLSChat v2.42" button below.\n2. In the popup that appears, click the small gear icon (⚙️) in the top right.\n3. Select "Erase device" and confirm.\n\nThis fixes the flashing problems you were having.');
+      alert(
+        'How to Erase the Device (Important!)\n\n' +
+        '1. Click the purple "Flash PLSChat v2.42" button below.\n' +
+        '2. In the popup window, click the "Connect" button.\n' +
+        '3. Hold the BOOT button on your Heltec V4, then select the port and click Connect.\n' +
+        '4. Once connected, look in the TOP RIGHT of the popup for a small gear icon (⚙️).\n' +
+        '5. Click the gear icon → choose "Erase device" → confirm.\n\n' +
+        'This fixes the flashing / SHA-256 errors you were seeing.'
+      );
     }
 
     async function connectDevice() {
