@@ -3,133 +3,171 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PLSChat • Device Manager</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <title>PLSChat - Device Manager</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
-    body { font-family: 'Inter', system_ui, sans-serif; }
-    .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0c1f;
+      color: #c9d1d9;
+      margin: 0;
+      padding: 40px 20px;
+      min-height: 100vh;
+      position: relative;
+      overflow-y: auto;
+    }
+    
+    #mesh-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: -1;
+      opacity: 0.9;
+    }
+    
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+    
+    h1 {
+      font-size: 3.6em;
+      font-weight: 700;
+      background: linear-gradient(90deg, #a855f7, #67e8f9, #58a6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      color: #94a3b8;
+      font-size: 1.3em;
+      margin-bottom: 30px;
+    }
+    
+    .top-nav {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+    }
+    
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin: 40px 0;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    button {
+      padding: 18px 24px;
+      font-size: 1.1em;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6, #a855f7);
+      color: white;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+    }
+    
+    button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -150%;
+      width: 60%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      transition: 0.7s;
+    }
+    
+    button:hover::before {
+      left: 250%;
+    }
+    
+    button:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 15px 30px rgba(139, 92, 246, 0.6);
+    }
+    
+    .success-box {
+      background: rgba(34, 211, 238, 0.15);
+      border: 2px solid #22d3ee;
+      padding: 20px;
+      border-radius: 16px;
+      margin: 30px auto;
+      color: #67e8f9;
+      font-size: 1.5em;
+      font-weight: 600;
+      max-width: 500px;
+    }
+    
+    .bottom-nav {
+      margin-top: 40px;
+    }
+
+    .map-button {
+      background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+      box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4) !important;
+    }
+
+    .map-button:hover {
+      box-shadow: 0 15px 30px rgba(34, 197, 94, 0.6) !important;
+    }
   </style>
 </head>
-<body class="bg-[#0a0c1f] text-zinc-200">
-  <!-- Navbar -->
-  <nav class="border-b border-white/10 bg-[#0a0c1f]/95 backdrop-blur-lg sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="flex items-center justify-between h-20">
-        <div class="flex items-center gap-x-3">
-          <svg width="38" height="38" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
-            <defs>
-              <linearGradient id="plsGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#3b82f6"/>
-                <stop offset="50%" stop-color="#c026d3"/>
-                <stop offset="100%" stop-color="#ec4899"/>
-              </linearGradient>
-            </defs>
-            <path d="M50 5 L90 27.5 L90 72.5 L50 95 L10 72.5 L10 27.5 Z" fill="url(#plsGrad3)" stroke="#fff" stroke-width="3"/>
-            <polyline points="25,50 35,50 40,35 48,65 55,42 62,58 68,50 75,50" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="font-display text-3xl font-semibold tracking-tighter">PLSChat</span>
-        </div>
-        <div class="flex items-center gap-x-3">
-          <a href="index.html" class="text-sm px-4 py-2 rounded-2xl border border-white/20 hover:bg-white/5 transition">← Home</a>
-          <a href="flasher.html" class="inline-flex items-center px-5 py-2 text-sm font-semibold border border-white/20 rounded-2xl hover:bg-white/5 transition">
-            <i class="fa-solid fa-microchip mr-2"></i> Web Flasher
-          </a>
-        </div>
-      </div>
+<body>
+  <canvas id="mesh-bg"></canvas>
+  
+  <div class="container">
+    <!-- Top Left Back Button -->
+    <div class="top-nav">
+      <button onclick="window.location.href='index.html'" style="padding:10px 16px; font-size:1em; background:#334155;">Back to Home</button>
     </div>
-  </nav>
-
-  <div class="max-w-5xl mx-auto px-6 pt-10 pb-16">
-    <div class="text-center mb-8">
-      <div class="inline px-4 py-1 rounded-3xl bg-white/5 border border-white/10 text-xs tracking-widest mb-3">DEVICE CONTROL CENTER</div>
-      <h1 class="font-display text-5xl tracking-tighter mb-2">Device Manager</h1>
-      <p class="text-xl text-zinc-400">Connect, configure, and manage your Heltec V4 (or compatible) PLSChat nodes.</p>
+    
+    <h1>PULSE CHAT</h1>
+    <p class="subtitle">Decentralised LoRa Mesh Communication</p>
+ 
+    <div class="buttons">
+      <button onclick="window.location.href='flasher.html'">Open Web Flasher</button>
+      <button onclick="window.location.href='monitor.html'">Network Monitor</button>
+      <!-- Replaced Connect Device with Coverage Map button -->
+      <a href="coverage-map.html" style="text-decoration: none; width: 100%;">
+        <button class="map-button" style="width: 100%;">
+          <span>View Coverage Map</span>
+        </button>
+      </a>
+      <button onclick="window.location.href='buy.html'">Buy License</button>
+      <button onclick="claimRewards()">Claim Rewards</button>
+      <button onclick="window.location.href='configure.html'">Configure Device</button>
     </div>
-
-    <!-- Animated Mesh Background (kept from original) -->
-    <canvas id="mesh-bg" class="fixed inset-0 -z-10 opacity-60"></canvas>
-
-    <div class="relative z-10">
-      <!-- Action Buttons -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto mb-10">
-        <button onclick="window.location.href='flasher.html'" 
-                class="group flex items-center justify-center gap-x-3 px-6 py-5 bg-zinc-900 border border-white/10 hover:border-fuchsia-400/50 rounded-3xl text-left transition">
-          <i class="fa-solid fa-microchip text-2xl text-fuchsia-400 group-hover:scale-110 transition"></i>
-          <div>
-            <div class="font-semibold">Open Web Flasher</div>
-            <div class="text-xs text-zinc-500">Flash or update firmware</div>
-          </div>
-        </button>
-
-        <button onclick="connectDevice()" 
-                class="group flex items-center justify-center gap-x-3 px-6 py-5 bg-zinc-900 border border-white/10 hover:border-fuchsia-400/50 rounded-3xl text-left transition">
-          <i class="fa-solid fa-plug text-2xl text-fuchsia-400 group-hover:scale-110 transition"></i>
-          <div>
-            <div class="font-semibold">Connect Device</div>
-            <div class="text-xs text-zinc-500">Link your Heltec V4 via USB</div>
-          </div>
-        </button>
-
-        <button onclick="window.location.href='configure.html'" 
-                class="group flex items-center justify-center gap-x-3 px-6 py-5 bg-zinc-900 border border-white/10 hover:border-fuchsia-400/50 rounded-3xl text-left transition">
-          <i class="fa-solid fa-cog text-2xl text-fuchsia-400 group-hover:scale-110 transition"></i>
-          <div>
-            <div class="font-semibold">Configure Device</div>
-            <div class="text-xs text-zinc-500">Settings & preferences</div>
-          </div>
-        </button>
-
-        <button onclick="window.location.href='buy.html'" 
-                class="group flex items-center justify-center gap-x-3 px-6 py-5 bg-zinc-900 border border-white/10 hover:border-fuchsia-400/50 rounded-3xl text-left transition">
-          <i class="fa-solid fa-shopping-cart text-2xl text-fuchsia-400 group-hover:scale-110 transition"></i>
-          <div>
-            <div class="font-semibold">Buy PLSC License</div>
-            <div class="text-xs text-zinc-500">Unlock premium features</div>
-          </div>
-        </button>
-
-        <button onclick="claimRewards()" 
-                class="group flex items-center justify-center gap-x-3 px-6 py-5 bg-zinc-900 border border-white/10 hover:border-fuchsia-400/50 rounded-3xl text-left transition">
-          <i class="fa-solid fa-gift text-2xl text-fuchsia-400 group-hover:scale-110 transition"></i>
-          <div>
-            <div class="font-semibold">Claim Rewards</div>
-            <div class="text-xs text-zinc-500">PLSC token rewards</div>
-          </div>
-        </button>
-
-        <button onclick="window.location.href='monitor.html'" 
-                class="group flex items-center justify-center gap-x-3 px-6 py-5 bg-zinc-900 border border-white/10 hover:border-fuchsia-400/50 rounded-3xl text-left transition">
-          <i class="fa-solid fa-chart-line text-2xl text-fuchsia-400 group-hover:scale-110 transition"></i>
-          <div>
-            <div class="font-semibold">Network Monitor</div>
-            <div class="text-xs text-zinc-500">View mesh activity</div>
-          </div>
-        </button>
-      </div>
-
-      <!-- Status / Output -->
-      <div id="output" class="max-w-md mx-auto"></div>
-
-      <div class="text-center mt-8">
-        <p class="text-xs text-zinc-500">Heltec V4 is the primary supported device. Connect via USB-C for full control.</p>
-      </div>
+    
+    <div id="output"></div>
+   
+    <!-- Bottom Centered Back Button -->
+    <div class="bottom-nav">
+      <button onclick="window.location.href='index.html'" style="padding:14px 32px; font-size:1.1em; background:#334155; color:#c9d1d9;">Back to Home</button>
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="border-t border-white/10 py-8 text-xs text-zinc-500">
-    <div class="max-w-5xl mx-auto px-6 text-center">
-      PLSChat Device Manager • Heltec V4 recommended • Powered by PLSC on PulseChain
-    </div>
-  </footer>
-
   <script>
-    // Animated Mesh Background (preserved & improved)
+    // ==================== WORKING ANIMATED MESH BACKGROUND ====================
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
-
+    
     function resizeCanvas() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -138,7 +176,7 @@
     window.addEventListener('resize', resizeCanvas);
 
     let nodes = [];
-    const nodeCount = 60;
+    const nodeCount = 55;
 
     function initNodes() {
       nodes = [];
@@ -146,9 +184,9 @@
         nodes.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.6,
-          vy: (Math.random() - 0.5) * 0.6,
-          radius: 2.8
+          vx: (Math.random() - 0.5) * 0.7,
+          vy: (Math.random() - 0.5) * 0.7,
+          radius: 3.2
         });
       }
     }
@@ -156,20 +194,30 @@
 
     let mouse = { x: 0, y: 0, active: false };
 
-    window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true; });
-    window.addEventListener('mouseleave', () => { mouse.active = false; });
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.active = true;
+    });
+    
+    window.addEventListener('mouseleave', () => {
+      mouse.active = false;
+    });
 
     function drawMesh() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = 'rgba(192, 38, 211, 0.08)';
+      
+      // Draw connections
+      ctx.strokeStyle = 'rgba(103, 232, 249, 0.12)';
       ctx.lineWidth = 1;
-
+      
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
           const dx = nodes[i].x - nodes[j].x;
           const dy = nodes[i].y - nodes[j].y;
           const distance = Math.hypot(dx, dy);
-          if (distance < 180) {
+          
+          if (distance < 160) {
             ctx.beginPath();
             ctx.moveTo(nodes[i].x, nodes[i].y);
             ctx.lineTo(nodes[j].x, nodes[j].y);
@@ -177,52 +225,50 @@
           }
         }
       }
-
+      
+      // Draw nodes + mouse interaction
       nodes.forEach(node => {
+        // Mouse repulsion
         if (mouse.active) {
           const dx = node.x - mouse.x;
           const dy = node.y - mouse.y;
           const dist = Math.hypot(dx, dy);
-          if (dist < 240 && dist > 0) {
-            const force = (240 - dist) / 240;
-            node.vx += (dx / dist) * force * 0.7;
-            node.vy += (dy / dist) * force * 0.7;
+          
+          if (dist < 220 && dist > 0) {
+            const force = (220 - dist) / 220;
+            node.vx += (dx / dist) * force * 0.8;
+            node.vy += (dy / dist) * force * 0.8;
           }
         }
+        
+        // Update position
         node.x += node.vx;
         node.y += node.vy;
-
-        const margin = 40;
+        
+        // Bounce off edges
+        const margin = 30;
         if (node.x < margin || node.x > canvas.width - margin) node.vx *= -1;
         if (node.y < margin || node.y > canvas.height - margin) node.vy *= -1;
-
+        
+        // Draw node
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-        ctx.fillStyle = '#c026d3';
+        ctx.fillStyle = '#67e8f9';
         ctx.fill();
       });
-
+      
       requestAnimationFrame(drawMesh);
     }
+    
     drawMesh();
+    // ==================== END OF ANIMATION ====================
 
-    // Device functions
-    function connectDevice() {
-      const output = document.getElementById('output');
-      output.innerHTML = `
-        <div class="max-w-md mx-auto mt-4 p-6 bg-zinc-900 border border-emerald-400/30 rounded-3xl text-center">
-          <div class="text-emerald-400 text-2xl mb-2"><i class="fa-solid fa-check-circle"></i></div>
-          <div class="font-semibold text-lg">Device connected successfully!</div>
-          <div class="text-xs text-zinc-400 mt-1">Your Heltec V4 is now linked. Use the options above to configure or flash.</div>
-        </div>
-      `;
-    }
-
+    // ==================== DEVICE MANAGER FUNCTIONS ====================
     function claimRewards() {
       window.location.href = 'claim.html';
     }
 
-    console.log('%c[PLSChat] Device Manager updated to new cohesive style.', 'color:#64748b');
+    // Note: connectDevice() function removed as the button was replaced with Coverage Map
   </script>
 </body>
 </html>
