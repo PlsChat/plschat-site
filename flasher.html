@@ -47,12 +47,12 @@
       background: linear-gradient(135deg, #a855f7, #3b82f6);
     }
     .btn-erase {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
       color: white;
       padding: 14px 28px;
       font-size: 1em;
       margin-bottom: 15px;
-      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+      box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
     }
     .btn-help {
       background: #334155;
@@ -121,7 +121,7 @@
     }
     .modal-content h3 {
       margin-top: 0;
-      color: #f59e0b;
+      color: #a855f7;
     }
     .modal-content ol {
       padding-left: 20px;
@@ -144,12 +144,12 @@
     <!-- Firmware Section -->
     <div class="section">
       <h2 style="margin-top:0;">Flash Firmware</h2>
-      <p style="color:#f59e0b; font-weight:600; margin-bottom:15px;">Important: You must erase the device first before flashing new firmware.</p>
+      <p style="color:#a855f7; font-weight:600; margin-bottom:15px;">Important: You must erase the device first before flashing new firmware.</p>
       
       <button onclick="showEraseInstructions()" class="btn-erase">🗑️ Erase Device First (Recommended)</button>
       <br>
       
-      <esp-web-install-button manifest="flasher/manifest.json">
+      <esp-web-install-button manifest="flasher/manifest.json?v=5">
         <button slot="activate" class="btn-primary">⚡ Flash Firmware</button>
       </esp-web-install-button>
 
