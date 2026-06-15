@@ -47,8 +47,6 @@
     .nav-link:hover {
       color: #c026d3;
     }
-
-    .accent-purple { color: #c026d3; }
   </style>
 </head>
 <body class="bg-[#0a0c1f] text-zinc-200">
@@ -56,9 +54,7 @@
   <nav class="border-b border-white/10 bg-[#0a0c1f]/95 backdrop-blur-lg sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-6">
       <div class="flex items-center justify-between h-20">
-        <!-- Logo + Brand -->
         <div class="flex items-center gap-x-3">
-          <!-- PLS Logo SVG (hexagon + heartbeat line, subtle pink/purple gradient) -->
           <svg width="38" height="38" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
             <defs>
               <linearGradient id="plsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -67,36 +63,26 @@
                 <stop offset="100%" stop-color="#ec4899"/>
               </linearGradient>
             </defs>
-            <!-- Hexagon -->
             <path d="M50 5 L90 27.5 L90 72.5 L50 95 L10 72.5 L10 27.5 Z" fill="url(#plsGrad)" stroke="#fff" stroke-width="3"/>
-            <!-- Heartbeat / ECG line -->
             <polyline points="25,50 35,50 40,35 48,65 55,42 62,58 68,50 75,50" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <div>
-            <span class="font-display text-3xl font-semibold tracking-tighter">PLSChat</span>
-          </div>
+          <span class="font-display text-3xl font-semibold tracking-tighter">PLSChat</span>
         </div>
 
-        <!-- Desktop Nav -->
         <div class="hidden md:flex items-center gap-x-9 text-sm font-medium">
           <a href="#what" class="nav-link text-zinc-400 hover:text-white">What is it?</a>
           <a href="#capabilities" class="nav-link text-zinc-400 hover:text-white">Capabilities</a>
           <a href="#limitations" class="nav-link text-zinc-400 hover:text-white">Realistic Limits</a>
           <a href="#security" class="nav-link text-zinc-400 hover:text-white">Security</a>
           <a href="#get-started" class="nav-link text-zinc-400 hover:text-white">Get Started</a>
-          <!-- NEW: Coverage Map link -->
-          <a href="coverage-map.html" class="nav-link text-emerald-400 hover:text-emerald-300 font-medium">Coverage Map</a>
         </div>
 
-        <!-- CTAs -->
         <div class="flex items-center gap-x-3">
-          <a href="flasher.html" 
-             class="hidden sm:inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/20 hover:bg-white/5 transition-colors">
+          <a href="flasher.html" class="hidden sm:inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/20 hover:bg-white/5 transition-colors">
             <i class="fa-solid fa-microchip mr-2"></i>
             <span>Web Flasher</span>
           </a>
-          <a href="device-manager.html" 
-             class="inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold bg-white text-[#0a0c1f] rounded-2xl hover:bg-zinc-100 transition-all active:scale-[0.985]">
+          <a href="device-manager.html" class="inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold bg-white text-[#0a0c1f] rounded-2xl hover:bg-zinc-100 transition-all active:scale-[0.985]">
             <i class="fa-solid fa-plug mr-2"></i>
             <span class="font-bold">Device Manager</span>
           </a>
@@ -109,7 +95,6 @@
     </div>
   </nav>
 
-  <!-- Mobile Menu -->
   <div id="mobile-menu" class="hidden md:hidden border-b border-white/10 bg-[#0a0c1f]">
     <div class="px-6 py-4 flex flex-col gap-y-1 text-sm">
       <a href="#what" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">What is it?</a>
@@ -117,15 +102,12 @@
       <a href="#limitations" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Realistic Limits</a>
       <a href="#security" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Security & Resilience</a>
       <a href="#get-started" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Get Started</a>
-      <!-- NEW: Coverage Map link in mobile -->
-      <a href="coverage-map.html" class="py-2.5 px-4 text-emerald-400 hover:bg-white/5 rounded-2xl font-medium">Coverage Map</a>
       <div class="pt-3 border-t border-white/10 mt-2">
         <a href="flasher.html" class="block py-2.5 px-4 text-fuchsia-400">Web Flasher →</a>
       </div>
     </div>
   </div>
 
-  <!-- Hero -->
   <header class="max-w-5xl mx-auto px-6 pt-16 pb-20 text-center">
     <div class="inline-flex items-center gap-x-2 px-4 py-1.5 rounded-3xl bg-white/5 border border-white/10 text-xs font-medium tracking-[1.5px] mb-6">
       <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
@@ -144,137 +126,89 @@
     </p>
 
     <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-      <a href="flasher.html" 
-         class="group w-full sm:w-auto inline-flex items-center justify-center gap-x-3 px-8 py-4 text-lg font-semibold bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 text-white rounded-3xl hover:brightness-105 transition-all active:scale-[0.985]">
+      <a href="flasher.html" class="group w-full sm:w-auto inline-flex items-center justify-center gap-x-3 px-8 py-4 text-lg font-semibold bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 text-white rounded-3xl hover:brightness-105 transition-all active:scale-[0.985]">
         <i class="fa-solid fa-satellite fa-fw"></i>
         <span>Flash Device & Get Started</span>
       </a>
       
-      <a href="device-manager.html" 
-         class="w-full sm:w-auto inline-flex items-center justify-center gap-x-3 px-8 py-4 text-lg font-semibold border border-white/30 hover:bg-white/5 rounded-3xl transition-all">
+      <a href="device-manager.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-x-3 px-8 py-4 text-lg font-semibold border border-white/30 hover:bg-white/5 rounded-3xl transition-all">
         <i class="fa-solid fa-plug fa-fw"></i>
         <span>Open Device Manager</span>
       </a>
     </div>
 
     <div class="mt-8 flex items-center justify-center gap-x-8 text-xs text-zinc-500">
-      <div class="flex items-center gap-x-1.5">
-        <i class="fa-solid fa-check text-emerald-400"></i>
-        <span>Works without internet</span>
-      </div>
-      <div class="flex items-center gap-x-1.5">
-        <i class="fa-solid fa-check text-emerald-400"></i>
-        <span>End-to-end encrypted</span>
-      </div>
-      <div class="flex items-center gap-x-1.5">
-        <i class="fa-solid fa-check text-emerald-400"></i>
-        <span>PLSC powered • Heltec V4</span>
-      </div>
+      <div class="flex items-center gap-x-1.5"><i class="fa-solid fa-check text-emerald-400"></i> <span>Works without internet</span></div>
+      <div class="flex items-center gap-x-1.5"><i class="fa-solid fa-check text-emerald-400"></i> <span>End-to-end encrypted</span></div>
+      <div class="flex items-center gap-x-1.5"><i class="fa-solid fa-check text-emerald-400"></i> <span>PLSC powered • Heltec V4</span></div>
     </div>
   </header>
 
-  <!-- Trust / Use Cases -->
   <div class="border-y border-white/10 bg-white/[0.015]">
     <div class="max-w-6xl mx-auto px-6 py-8">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-        <div class="flex flex-col items-center gap-y-1.5 py-3">
-          <i class="fa-solid fa-users text-2xl text-fuchsia-400 mb-1"></i>
-          <div class="text-sm font-medium">Communities & Events</div>
-        </div>
-        <div class="flex flex-col items-center gap-y-1.5 py-3">
-          <i class="fa-solid fa-mountain text-2xl text-fuchsia-400 mb-1"></i>
-          <div class="text-sm font-medium">Remote & Off-Grid Teams</div>
-        </div>
-        <div class="flex flex-col items-center gap-y-1.5 py-3">
-          <i class="fa-solid fa-user-secret text-2xl text-fuchsia-400 mb-1"></i>
-          <div class="text-sm font-medium">Preppers & Sovereignty</div>
-        </div>
-        <div class="flex flex-col items-center gap-y-1.5 py-3">
-          <i class="fa-solid fa-broadcast-tower text-2xl text-fuchsia-400 mb-1"></i>
-          <div class="text-sm font-medium">Protests & Censored Areas</div>
-        </div>
+        <div class="flex flex-col items-center gap-y-1.5 py-3"><i class="fa-solid fa-users text-2xl text-fuchsia-400 mb-1"></i><div class="text-sm font-medium">Communities & Events</div></div>
+        <div class="flex flex-col items-center gap-y-1.5 py-3"><i class="fa-solid fa-mountain text-2xl text-fuchsia-400 mb-1"></i><div class="text-sm font-medium">Remote & Off-Grid Teams</div></div>
+        <div class="flex flex-col items-center gap-y-1.5 py-3"><i class="fa-solid fa-user-secret text-2xl text-fuchsia-400 mb-1"></i><div class="text-sm font-medium">Preppers & Sovereignty</div></div>
+        <div class="flex flex-col items-center gap-y-1.5 py-3"><i class="fa-solid fa-broadcast-tower text-2xl text-fuchsia-400 mb-1"></i><div class="text-sm font-medium">Protests & Censored Areas</div></div>
       </div>
     </div>
   </div>
 
-  <!-- What is PLSChat -->
   <section id="what" class="max-w-5xl mx-auto px-6 pt-20 pb-16">
     <div class="max-w-3xl">
       <div class="uppercase tracking-[2px] text-xs font-semibold text-fuchsia-400 mb-3">THE PROJECT</div>
       <h2 class="section-header tracking-tighter mb-6">What is PLSChat?</h2>
-      
       <div class="prose prose-invert text-lg text-zinc-300 max-w-none">
         <p>PLSChat is a <strong>lightweight, secure LoRa mesh platform</strong> built for real-world off-grid use. It turns compatible ESP32 LoRa devices (Heltec V4 recommended) into a self-healing radio network where messages hop between nodes without any internet, cellular towers, or central infrastructure.</p>
-        
-        <p class="mt-4">Its standout feature is <strong>Room Servers</strong> — persistent group chat rooms that store the last ~32 messages. Participants can retrieve missed messages even after being offline for hours or days. It's decentralized, radio-powered group chat with store-and-forward resilience.</p>
+        <p class="mt-4">Its standout feature is <strong>Room Servers</strong> — persistent group chat rooms that store the last ~32 messages. Participants can retrieve missed messages even after being offline for hours or days.</p>
       </div>
     </div>
   </section>
 
-  <!-- Capabilities -->
   <section id="capabilities" class="max-w-6xl mx-auto px-6 pb-20">
     <div class="flex items-end justify-between mb-8">
       <div>
         <div class="uppercase tracking-[2px] text-xs font-semibold text-fuchsia-400 mb-2">WHAT IT DOES WELL</div>
         <h3 class="text-4xl font-semibold tracking-tighter">Core Capabilities</h3>
       </div>
-      <a href="#limitations" class="hidden md:flex items-center text-sm text-zinc-400 hover:text-white group">
-        See realistic limits <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-0.5 transition"></i>
-      </a>
+      <a href="#limitations" class="hidden md:flex items-center text-sm text-zinc-400 hover:text-white group">See realistic limits <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-0.5 transition"></i></a>
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
       <div class="feature-card bg-zinc-900/60 border border-white/10 rounded-3xl p-7">
-        <div class="w-11 h-11 rounded-2xl bg-fuchsia-400/10 flex items-center justify-center mb-5">
-          <i class="fa-solid fa-sync text-fuchsia-400 text-2xl"></i>
-        </div>
+        <div class="w-11 h-11 rounded-2xl bg-fuchsia-400/10 flex items-center justify-center mb-5"><i class="fa-solid fa-sync text-fuchsia-400 text-2xl"></i></div>
         <h4 class="font-semibold text-xl mb-2.5">Self-Healing Mesh Network</h4>
-        <p class="text-zinc-400 text-[15px]">Devices automatically relay messages and reroute around offline nodes. The network stays alive even if individual devices drop out. True peer-to-peer radio communication.</p>
+        <p class="text-zinc-400 text-[15px]">Devices automatically relay messages and reroute around offline nodes. The network stays alive even if individual devices drop out.</p>
       </div>
-
       <div class="feature-card bg-zinc-900/60 border border-white/10 rounded-3xl p-7">
-        <div class="w-11 h-11 rounded-2xl bg-violet-400/10 flex items-center justify-center mb-5">
-          <i class="fa-solid fa-database text-violet-400 text-2xl"></i>
-        </div>
+        <div class="w-11 h-11 rounded-2xl bg-violet-400/10 flex items-center justify-center mb-5"><i class="fa-solid fa-database text-violet-400 text-2xl"></i></div>
         <h4 class="font-semibold text-xl mb-2.5">Persistent Room Servers</h4>
-        <p class="text-zinc-400 text-[15px]">Create or join named group rooms. Messages are stored and forwarded. Catch up on the last ~32 messages when you reconnect — even after long offline periods.</p>
+        <p class="text-zinc-400 text-[15px]">Create or join named group rooms. Messages are stored and forwarded. Catch up on the last ~32 messages when you reconnect.</p>
       </div>
-
       <div class="feature-card bg-zinc-900/60 border border-white/10 rounded-3xl p-7">
-        <div class="w-11 h-11 rounded-2xl bg-emerald-400/10 flex items-center justify-center mb-5">
-          <i class="fa-solid fa-lock text-emerald-400 text-2xl"></i>
-        </div>
+        <div class="w-11 h-11 rounded-2xl bg-emerald-400/10 flex items-center justify-center mb-5"><i class="fa-solid fa-lock text-emerald-400 text-2xl"></i></div>
         <h4 class="font-semibold text-xl mb-2.5">End-to-End Encryption</h4>
-        <p class="text-zinc-400 text-[15px]">Messages are encrypted using Diffie-Hellman key exchange. Content stays private between participants. No central party can read your chats.</p>
+        <p class="text-zinc-400 text-[15px]">Messages are encrypted using Diffie-Hellman key exchange. Content stays private between participants.</p>
       </div>
-
       <div class="feature-card bg-zinc-900/60 border border-white/10 rounded-3xl p-7">
-        <div class="w-11 h-11 rounded-2xl bg-amber-400/10 flex items-center justify-center mb-5">
-          <i class="fa-solid fa-wifi text-amber-400 text-2xl"></i>
-        </div>
+        <div class="w-11 h-11 rounded-2xl bg-amber-400/10 flex items-center justify-center mb-5"><i class="fa-solid fa-wifi text-amber-400 text-2xl"></i></div>
         <h4 class="font-semibold text-xl mb-2.5">True Off-Grid Operation</h4>
-        <p class="text-zinc-400 text-[15px]">No internet, no cellular, no ISPs, no data centers required. Works in remote wilderness, during blackouts, or under active censorship.</p>
+        <p class="text-zinc-400 text-[15px]">No internet, no cellular, no ISPs, no data centers required. Works in remote areas, blackouts, or under censorship.</p>
       </div>
-
       <div class="feature-card bg-zinc-900/60 border border-white/10 rounded-3xl p-7">
-        <div class="w-11 h-11 rounded-2xl bg-rose-400/10 flex items-center justify-center mb-5">
-          <i class="fa-solid fa-microchip text-rose-400 text-2xl"></i>
-        </div>
-        <h4 class="font-semibold text-xl mb-2.5">Heltec V4 & ESP32 LoRa Support</h4>
-        <p class="text-zinc-400 text-[15px]">Optimized for Heltec V4 (recommended). Also works with LilyGo, T-Deck, RAK and most ESP32 LoRa boards. Flash directly from your browser.</p>
+        <div class="w-11 h-11 rounded-2xl bg-rose-400/10 flex items-center justify-center mb-5"><i class="fa-solid fa-microchip text-rose-400 text-2xl"></i></div>
+        <h4 class="font-semibold text-xl mb-2.5">Heltec V4 Recommended</h4>
+        <p class="text-zinc-400 text-[15px]">Optimized for the Heltec V4 with its beautiful built-in OLED. Flash directly from your browser for the best experience.</p>
       </div>
-
       <div class="feature-card bg-zinc-900/60 border border-white/10 rounded-3xl p-7">
-        <div class="w-11 h-11 rounded-2xl bg-sky-400/10 flex items-center justify-center mb-5">
-          <i class="fa-solid fa-coins text-sky-400 text-2xl"></i>
-        </div>
+        <div class="w-11 h-11 rounded-2xl bg-sky-400/10 flex items-center justify-center mb-5"><i class="fa-solid fa-coins text-sky-400 text-2xl"></i></div>
         <h4 class="font-semibold text-xl mb-2.5">PLSC Token Utility</h4>
-        <p class="text-zinc-400 text-[15px]">Device-bound licenses unlock premium features. Aligns with PulseChain ecosystem. Open core protocol with optional paid enhancements.</p>
+        <p class="text-zinc-400 text-[15px]">Device-bound licenses unlock premium features. Aligns with PulseChain ecosystem.</p>
       </div>
     </div>
   </section>
 
-  <!-- Realistic Limitations -->
   <section id="limitations" class="bg-zinc-950 border-y border-white/10 py-16">
     <div class="max-w-5xl mx-auto px-6">
       <div class="max-w-3xl mb-10">
@@ -285,70 +219,49 @@
 
       <div class="grid md:grid-cols-2 gap-5">
         <div class="bg-zinc-900/70 border border-white/10 rounded-3xl p-7">
-          <h4 class="font-semibold flex items-center gap-x-2 text-lg mb-4">
-            <i class="fa-solid fa-globe text-amber-400"></i> 
-            <span>Geographic & Range Limits</span>
-          </h4>
+          <h4 class="font-semibold flex items-center gap-x-2 text-lg mb-4"><i class="fa-solid fa-globe text-amber-400"></i> <span>Geographic & Range Limits</span></h4>
           <ul class="space-y-3 text-[15px] text-zinc-300">
-            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Coverage depends on terrain, antennas, node density and placement. Expect reliable local-to-regional reach in a well-deployed mesh.</li>
-            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Not designed for instant global messaging like internet platforms. Messages propagate physically through the mesh.</li>
-            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Sparse networks or difficult terrain can reduce reliability and increase latency.</li>
+            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Coverage depends on terrain, antennas, node density. Expect reliable local-to-regional reach.</li>
+            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Not designed for instant global messaging. Messages propagate physically through the mesh.</li>
+            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Sparse networks or difficult terrain can reduce reliability.</li>
           </ul>
         </div>
-
         <div class="bg-zinc-900/70 border border-white/10 rounded-3xl p-7">
-          <h4 class="font-semibold flex items-center gap-x-2 text-lg mb-4">
-            <i class="fa-solid fa-tachometer-alt text-amber-400"></i> 
-            <span>Bandwidth & Message Limits</span>
-          </h4>
+          <h4 class="font-semibold flex items-center gap-x-2 text-lg mb-4"><i class="fa-solid fa-tachometer-alt text-amber-400"></i> <span>Bandwidth & Message Limits</span></h4>
           <ul class="space-y-3 text-[15px] text-zinc-300">
-            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> LoRa prioritizes long range and low power. Best suited for short-to-medium text messages and group coordination.</li>
-            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Not ideal for high-volume chat, large files, images, voice notes, or streaming. Data rates are inherently limited.</li>
-            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Room Servers currently store only the most recent ~32 messages. Retrieve important history promptly.</li>
+            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> LoRa prioritizes long range and low power. Best for short-to-medium text and group coordination.</li>
+            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Not ideal for high-volume chat, large files, images, voice, or streaming.</li>
+            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Room Servers store only the most recent ~32 messages.</li>
           </ul>
         </div>
-
         <div class="bg-zinc-900/70 border border-white/10 rounded-3xl p-7">
-          <h4 class="font-semibold flex items-center gap-x-2 text-lg mb-4">
-            <i class="fa-solid fa-hdd text-amber-400"></i> 
-            <span>Hardware Requirement</span>
-          </h4>
+          <h4 class="font-semibold flex items-center gap-x-2 text-lg mb-4"><i class="fa-solid fa-hdd text-amber-400"></i> <span>Hardware Requirement</span></h4>
           <ul class="space-y-3 text-[15px] text-zinc-300">
-            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Requires dedicated compatible LoRa hardware (Heltec V4 recommended). Cannot run as pure software on standard phones or laptops.</li>
-            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Users must acquire, power, and position physical devices. Battery life varies by hardware and duty cycle.</li>
-            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Initial firmware flashing and PLSC license activation require an internet connection (one-time or occasional).</li>
+            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Requires dedicated LoRa hardware (Heltec V4 recommended). Not pure software on phones/laptops.</li>
+            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Users must acquire, power, and position physical devices.</li>
+            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Initial flashing and PLSC activation require occasional internet.</li>
           </ul>
         </div>
-
         <div class="bg-zinc-900/70 border border-white/10 rounded-3xl p-7">
-          <h4 class="font-semibold flex items-center gap-x-2 text-lg mb-4">
-            <i class="fa-solid fa-user-shield text-amber-400"></i> 
-            <span>Physical & Operational Security</span>
-          </h4>
+          <h4 class="font-semibold flex items-center gap-x-2 text-lg mb-4"><i class="fa-solid fa-user-shield text-amber-400"></i> <span>Physical & Operational Security</span></h4>
           <ul class="space-y-3 text-[15px] text-zinc-300">
-            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Physical device seizure remains a risk. Strong user practices (key management, device security) are essential.</li>
-            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Local radio interception is possible with specialized equipment and physical proximity to the mesh area.</li>
-            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Regulatory compliance for radio transmission power and duty cycles is the user's responsibility.</li>
+            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Physical device seizure remains a risk. Strong user key/device security practices are essential.</li>
+            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Local radio interception possible with specialized equipment and proximity.</li>
+            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Comply with local radio regulations.</li>
           </ul>
         </div>
       </div>
-
-      <div class="mt-8 text-center text-sm text-zinc-500 max-w-md mx-auto">
-        These limitations are intentional design choices that deliver genuine resilience where internet-based systems fail.
-      </div>
+      <div class="mt-8 text-center text-sm text-zinc-500 max-w-md mx-auto">These limitations are intentional design choices that deliver genuine resilience where internet-based systems fail.</div>
     </div>
   </section>
 
-  <!-- Security & Resilience -->
   <section id="security" class="max-w-5xl mx-auto px-6 py-20">
     <div class="grid md:grid-cols-12 gap-x-12 items-center">
       <div class="md:col-span-7">
         <div class="uppercase tracking-[2px] text-xs font-semibold text-emerald-400 mb-3">ARCHITECTURAL ADVANTAGE</div>
         <h3 class="text-4xl font-semibold tracking-tighter leading-none mb-6">Built for Real Adversarial Conditions</h3>
-        
         <div class="space-y-5 text-[15.5px] text-zinc-300">
           <p>PLSChat has no central servers, relays, or cloud infrastructure that authorities can locate, subpoena, or remotely disable. Messages travel as radio signals between physical devices you control.</p>
-          
           <div class="pl-5 border-l-2 border-emerald-400/40">
             <p class="font-medium text-emerald-400 mb-1">Key resilience properties:</p>
             <ul class="space-y-1.5 text-sm">
@@ -359,39 +272,23 @@
               <li>• Jamming or disruption requires physical presence and resources</li>
             </ul>
           </div>
-          
           <p class="text-sm text-zinc-400">This architecture was specifically designed for scenarios where traditional internet infrastructure is unavailable, monitored, or actively suppressed.</p>
         </div>
       </div>
-
       <div class="md:col-span-5 mt-10 md:mt-0">
         <div class="bg-zinc-900 border border-white/10 rounded-3xl p-8">
           <div class="text-xs uppercase tracking-widest text-emerald-400 mb-4">THREAT MODEL FIT</div>
-          
           <div class="space-y-4 text-sm">
-            <div class="flex justify-between items-center py-1 border-b border-white/10">
-              <span class="text-zinc-400">Remote server seizure / legal demands</span>
-              <span class="font-mono text-emerald-400 text-xs font-bold">VERY LOW RISK</span>
-            </div>
-            <div class="flex justify-between items-center py-1 border-b border-white/10">
-              <span class="text-zinc-400">Internet takedown / mass censorship</span>
-              <span class="font-mono text-emerald-400 text-xs font-bold">IMMUNE</span>
-            </div>
-            <div class="flex justify-between items-center py-1 border-b border-white/10">
-              <span class="text-zinc-400">Mass metadata surveillance</span>
-              <span class="font-mono text-emerald-400 text-xs font-bold">VERY DIFFICULT</span>
-            </div>
-            <div class="flex justify-between items-center py-1">
-              <span class="text-zinc-400">Content interception (E2EE)</span>
-              <span class="font-mono text-emerald-400 text-xs font-bold">PROTECTED</span>
-            </div>
+            <div class="flex justify-between items-center py-1 border-b border-white/10"><span class="text-zinc-400">Remote server seizure / legal demands</span> <span class="font-mono text-emerald-400 text-xs font-bold">VERY LOW RISK</span></div>
+            <div class="flex justify-between items-center py-1 border-b border-white/10"><span class="text-zinc-400">Internet takedown / mass censorship</span> <span class="font-mono text-emerald-400 text-xs font-bold">IMMUNE</span></div>
+            <div class="flex justify-between items-center py-1 border-b border-white/10"><span class="text-zinc-400">Mass metadata surveillance</span> <span class="font-mono text-emerald-400 text-xs font-bold">VERY DIFFICULT</span></div>
+            <div class="flex justify-between items-center py-1"><span class="text-zinc-400">Content interception (E2EE)</span> <span class="font-mono text-emerald-400 text-xs font-bold">PROTECTED</span></div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Get Started -->
   <section id="get-started" class="border-t border-white/10 bg-zinc-950 py-16">
     <div class="max-w-5xl mx-auto px-6">
       <div class="text-center mb-10">
@@ -401,31 +298,23 @@
       </div>
       
       <div class="grid md:grid-cols-3 gap-6">
-        <!-- STEP 01 - Heltec V4 focused with image reference -->
+        <!-- STEP 01 with REAL edited photo -->
         <div class="bg-zinc-900 border border-white/10 rounded-3xl p-7 flex flex-col">
           <div class="text-fuchsia-400 font-mono text-xs mb-3 tracking-widest">STEP 01 — HARDWARE</div>
-          <div class="font-semibold text-xl mb-3">Get a Heltec V4 <span class="text-emerald-400">(Recommended)</span></div>
+          <div class="font-semibold text-xl mb-4">Get a Heltec V4 <span class="text-emerald-400">(Recommended)</span></div>
           
-          <!-- Nice visual card for the device image -->
-          <div class="mt-2 mb-4 rounded-2xl overflow-hidden border border-white/10 bg-zinc-950 flex items-center justify-center p-4">
-            <div class="text-center">
-              <i class="fa-solid fa-microchip text-5xl text-fuchsia-400 mb-3"></i>
-              <div class="text-sm font-medium">Heltec V4 running PLSChat</div>
-              <div class="text-[10px] text-zinc-500 mt-1">OLED shows: MODE: MESH • Connected nodes • Battery status</div>
-              <div class="mt-3 text-[10px] text-emerald-400">Photo reference: Your device will look like this when flashed</div>
-            </div>
+          <div class="mb-5 rounded-2xl overflow-hidden border border-white/10 shadow-lg">
+            <img src="heltec-v4-plschat.jpg" alt="Heltec V4 device running PLSChat - OLED clearly shows PLSChat logo, MODE: MESH, battery 85%, node info, LoRa OK at 433.9MHz" class="w-full h-auto">
           </div>
           
-          <p class="text-sm text-zinc-400 flex-1">The Heltec V4 is currently the best supported and recommended board. It has a built-in OLED that beautifully displays PLSChat status, mesh info, and more.</p>
-          
-          <div class="mt-4 text-xs text-zinc-500">Also compatible with LilyGo, T-Deck, RAK and other ESP32 LoRa boards.</div>
+          <p class="text-sm text-zinc-300 flex-1">The Heltec V4 is currently the best supported and recommended board. It features a beautiful built-in OLED that displays real-time PLSChat status, mesh info, battery, and more.</p>
         </div>
 
         <div class="bg-zinc-900 border border-white/10 rounded-3xl p-7 flex flex-col">
           <div class="text-fuchsia-400 font-mono text-xs mb-3 tracking-widest">STEP 02 — FLASH</div>
           <div class="font-semibold text-xl mb-3">Flash Firmware</div>
           <p class="text-sm text-zinc-400 flex-1">Use the browser-based Web Flasher. Works directly in Chrome or Edge. Hold the BOOT button on your Heltec V4 when prompted.</p>
-          <a href="flasher.html" class="mt-4 inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:brightness-105 transition">
+          <a href="flasher.html" class="mt-auto inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:brightness-105 transition">
             Open Web Flasher <i class="fa-solid fa-arrow-right ml-2"></i>
           </a>
         </div>
@@ -434,38 +323,30 @@
           <div class="text-fuchsia-400 font-mono text-xs mb-3 tracking-widest">STEP 03 — ACTIVATE</div>
           <div class="font-semibold text-xl mb-3">Activate & Connect</div>
           <p class="text-sm text-zinc-400 flex-1">Buy PLSC tokens, activate your device license via Device Manager, then create or join Room Servers and start messaging off-grid.</p>
-          <a href="device-manager.html" class="mt-4 inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/30 hover:bg-white/5 transition">
+          <a href="device-manager.html" class="mt-auto inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/30 hover:bg-white/5 transition">
             Open Device Manager <i class="fa-solid fa-plug ml-2"></i>
           </a>
         </div>
       </div>
 
       <div class="mt-10 text-center">
-        <p class="text-xs text-zinc-500">PLSC token purchase and full documentation coming soon. Core protocol is open. Heltec V4 is the primary supported device right now.</p>
+        <p class="text-xs text-zinc-500">PLSC token purchase and full documentation coming soon. Core protocol is open. Heltec V4 is the primary supported device.</p>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
   <footer class="border-t border-white/10 py-10 text-xs text-zinc-500">
     <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row md:items-center justify-between gap-y-4 text-center md:text-left">
-      <div>
-        © PLSChat • Decentralized LoRa Mesh • Powered by PLSC on PulseChain • Heltec V4 recommended
-      </div>
+      <div>© PLSChat • Decentralized LoRa Mesh • Powered by PLSC on PulseChain • Heltec V4 recommended</div>
       <div class="flex flex-wrap justify-center md:justify-end gap-x-5 gap-y-1">
         <a href="#limitations" class="hover:text-zinc-300">Limitations</a>
         <span class="hidden md:inline text-white/20">•</span>
         <span>Built for sovereignty & resilience</span>
       </div>
     </div>
-  </div>
   </footer>
 
   <script>
-    function initializeTailwind() {
-      // Tailwind already loaded via CDN
-    }
-    
     const mobileBtn = document.getElementById('mobile-menu-btn');
     const mobileMenu = document.getElementById('mobile-menu');
     
@@ -473,21 +354,10 @@
       mobileBtn.addEventListener('click', () => {
         mobileMenu.classList.toggle('hidden');
         const icon = mobileBtn.querySelector('i');
-        if (icon) {
-          icon.classList.toggle('fa-bars');
-          icon.classList.toggle('fa-times');
-        }
+        if (icon) { icon.classList.toggle('fa-bars'); icon.classList.toggle('fa-times'); }
       });
-      
       mobileMenu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-          mobileMenu.classList.add('hidden');
-          const icon = mobileBtn.querySelector('i');
-          if (icon) {
-            icon.classList.add('fa-bars');
-            icon.classList.remove('fa-times');
-          }
-        });
+        link.addEventListener('click', () => { mobileMenu.classList.add('hidden'); });
       });
     }
     
@@ -499,20 +369,16 @@
           const navHeight = 80;
           const elementPosition = target.getBoundingClientRect().top;
           const offsetPosition = elementPosition + window.scrollY - navHeight;
-          
           window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
         }
       });
     });
     
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && mobileMenu && !mobileMenu.classList.contains('hidden')) {
-        mobileMenu.classList.add('hidden');
-      }
+      if (e.key === 'Escape' && mobileMenu && !mobileMenu.classList.contains('hidden')) { mobileMenu.classList.add('hidden'); }
     });
     
-    initializeTailwind();
-    console.log('%c[PLSChat] Updated index with Heltec V4 focus, new logo, removed GitHub links & two use cases, more subtle pink/purple accents.', 'color:#64748b; font-size:9px');
+    console.log('%c[PLSChat] Updated with real rotated Heltec V4 photo.', 'color:#64748b');
   </script>
 </body>
 </html>
