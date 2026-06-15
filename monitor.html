@@ -19,6 +19,8 @@
         .packet-table th { background: #0f1326; color: #8b949e; font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
         .mesh-visual { background: #0f1326; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); }
         .node-id { font-family: monospace; background: #1f2439; padding: 2px 8px; border-radius: 6px; font-size: 12px; }
+        .modal { animation: fadeInScale 0.2s ease forwards; }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -27,7 +29,7 @@
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex items-center justify-between h-20">
                 <div class="flex items-center gap-x-3">
-                    <svg width="38" height="38" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+                    <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
                         <defs>
                             <linearGradient id="plsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" stop-color="#3b82f6"/>
@@ -96,7 +98,7 @@
             <p class="text-xs text-zinc-500 mt-3">Works in Chrome/Edge. Node must print verbose logs to serial.</p>
         </div>
 
-        <!-- Stats Row -->
+        <!-- Stats -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="card p-5"><div class="text-xs text-zinc-500">PACKETS</div><div id="stat-packets" class="stat-value">0</div></div>
             <div class="card p-5"><div class="text-xs text-zinc-500">UNIQUE NODES</div><div id="stat-nodes" class="stat-value">0</div></div>
@@ -117,15 +119,14 @@
                 <div id="log-container" class="log-container h-[380px] overflow-auto bg-black/30 p-4 rounded-2xl text-xs"></div>
             </div>
 
-            <!-- Parsed Packets + Nodes List -->
+            <!-- Recent Packets + Discovered Nodes -->
             <div class="lg:col-span-5 space-y-6">
-                <!-- Recent Packets -->
                 <div class="card p-6">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-semibold text-lg">Recent Packets <span class="text-xs text-zinc-500">(last 50)</span></h3>
+                        <h3 class="font-semibold text-lg">Recent Packets</h3>
                         <button onclick="clearPackets()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Clear</button>
                     </div>
-                    <div class="max-h-[220px] overflow-auto">
+                    <div class="max-h-[200px] overflow-auto">
                         <table class="packet-table w-full text-sm">
                             <thead><tr><th class="text-left py-2">Time</th><th>From → To</th><th>Type</th><th>RSSI</th></tr></thead>
                             <tbody id="packet-table-body" class="text-xs"></tbody>
@@ -133,13 +134,13 @@
                     </div>
                 </div>
 
-                <!-- Discovered Nodes -->
+                <!-- Discovered Nodes (clickable) -->
                 <div class="card p-6">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="font-semibold text-lg">Discovered Nodes</h3>
                         <span id="node-count-badge" class="text-xs px-3 py-1 bg-white/10 rounded-full">0</span>
                     </div>
-                    <div id="nodes-list" class="max-h-[160px] overflow-auto text-sm"></div>
+                    <div id="nodes-list" class="max-h-[200px] overflow-auto text-sm"></div>
                 </div>
             </div>
         </div>
@@ -147,16 +148,75 @@
         <!-- Mesh Visualization -->
         <div class="card p-6 mt-6">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="font-semibold text-lg">Mesh Visualization <span class="text-xs text-zinc-500">(drag nodes • double-click to label)</span></h3>
+                <h3 class="font-semibold text-lg">Mesh Visualization <span class="text-xs text-zinc-500">(drag • single-click for details • double-click to label)</span></h3>
                 <div class="flex gap-2">
-                    <button onclick="resetMeshLayout()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Reset Layout</button>
+                    <button onclick="resetMeshLayout()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Reset</button>
                     <button onclick="autoArrangeByRSSI()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Auto by RSSI</button>
                 </div>
             </div>
             <div id="mesh-visual" class="mesh-visual h-[320px] relative">
                 <canvas id="mesh-canvas" class="w-full h-full rounded-2xl cursor-grab"></canvas>
             </div>
-            <p class="text-[11px] text-zinc-500 mt-2 text-center">Stronger RSSI = closer visually • Nodes fade if not seen recently</p>
+            <p class="text-[11px] text-zinc-500 mt-2 text-center">Click a node for detailed stats • Drag to rearrange • Double-click to set custom label</p>
+        </div>
+    </div>
+
+    <!-- Node Detail Modal -->
+    <div id="node-modal" onclick="if (event.target.id === 'node-modal') hideNodeModal()" class="hidden fixed inset-0 bg-black/70 z-[2000] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" class="modal bg-[#0a0c1f] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden">
+            <div class="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+                <div>
+                    <div class="text-xs text-zinc-500">NODE DETAILS</div>
+                    <div id="modal-node-id" class="font-mono text-2xl font-semibold text-fuchsia-400"></div>
+                </div>
+                <button onclick="hideNodeModal()" class="text-zinc-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+
+            <div class="p-6 space-y-5">
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white/5 rounded-2xl p-4">
+                        <div class="text-xs text-zinc-500">LAST RSSI</div>
+                        <div id="modal-rssi" class="text-3xl font-semibold mt-1">-- dBm</div>
+                    </div>
+                    <div class="bg-white/5 rounded-2xl p-4">
+                        <div class="text-xs text-zinc-500">LAST SNR</div>
+                        <div id="modal-snr" class="text-3xl font-semibold mt-1">--</div>
+                    </div>
+                    <div class="bg-white/5 rounded-2xl p-4">
+                        <div class="text-xs text-zinc-500">PACKETS SEEN</div>
+                        <div id="modal-packets" class="text-3xl font-semibold mt-1">0</div>
+                    </div>
+                    <div class="bg-white/5 rounded-2xl p-4">
+                        <div class="text-xs text-zinc-500">LAST SEEN</div>
+                        <div id="modal-last-seen" class="text-lg font-medium mt-1">--</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="text-xs text-zinc-500 mb-1.5">PACKET TYPES SEEN</div>
+                    <div id="modal-types" class="flex flex-wrap gap-2 text-xs"></div>
+                </div>
+
+                <div class="bg-white/5 rounded-2xl p-4 text-sm">
+                    <div class="flex justify-between text-xs text-zinc-500 mb-1">
+                        <div>EST. UPTIME</div>
+                        <div id="modal-uptime" class="font-mono text-emerald-400">--</div>
+                    </div>
+                    <div class="text-[10px] text-zinc-500">Based on first seen time in this session (demo)</div>
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="editLabelFromModal()" class="w-full py-2.5 text-sm border border-white/20 hover:bg-white/5 rounded-2xl flex items-center justify-center gap-x-2">
+                        <i class="fa-solid fa-edit"></i> <span>Edit Custom Label</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 bg-white/5 border-t border-white/10 text-xs text-zinc-500 flex items-center gap-x-2">
+                <i class="fa-solid fa-info-circle"></i>
+                <span>Battery &amp; more fields appear when your node reports them via serial/MQTT.</span>
+            </div>
         </div>
     </div>
 
@@ -165,8 +225,8 @@
         let port = null, reader = null, isConnected = false;
         let logLines = [], packets = [], nodes = new Map();
         let packetCount = 0, ppsInterval = null;
+        let currentModalNodeId = null;
 
-        // Mesh state
         let canvas, ctx;
         let meshNodes = [];
         let meshPositions = new Map();
@@ -176,12 +236,9 @@
         const MAX_LOG_LINES = 300;
         const MAX_PACKETS = 50;
 
-        // ==================== SERIAL CONNECTION ====================
+        // ==================== SERIAL + PARSING (same as before) ====================
         async function connectSerial() {
-            if (!('serial' in navigator)) {
-                alert("Web Serial API only works in Chrome or Edge.");
-                return;
-            }
+            if (!('serial' in navigator)) { alert("Web Serial only works in Chrome/Edge."); return; }
             try {
                 port = await navigator.serial.requestPort();
                 await port.open({ baudRate: 115200 });
@@ -190,10 +247,7 @@
                 readSerialLoop();
                 if (ppsInterval) clearInterval(ppsInterval);
                 ppsInterval = setInterval(updatePPS, 1000);
-            } catch (err) {
-                alert("Failed to connect: " + err.message);
-                updateConnectionUI(false);
-            }
+            } catch (err) { alert("Failed to connect: " + err.message); updateConnectionUI(false); }
         }
 
         function updateConnectionUI(connected) {
@@ -208,39 +262,32 @@
             let buffer = '';
             try {
                 while (true) {
-                    const { value, done } = await reader.read();
-                    if (done) break;
+                    const { value, done } = await reader.read(); if (done) break;
                     buffer += decoder.decode(value, { stream: true });
-                    let lines = buffer.split('\n');
-                    buffer = lines.pop();
+                    let lines = buffer.split('\n'); buffer = lines.pop();
                     for (let line of lines) if (line.trim()) processSerialLine(line.trim());
                 }
-            } catch (err) { console.error(err); }
-            finally { if (reader) { reader.releaseLock(); reader = null; } }
+            } catch (e) {} finally { if (reader) { reader.releaseLock(); reader = null; } }
         }
 
         async function disconnectSerial() {
             if (reader) { try { await reader.cancel(); } catch(e){} reader = null; }
             if (port) { try { await port.close(); } catch(e){} port = null; }
-            isConnected = false;
-            updateConnectionUI(false);
+            isConnected = false; updateConnectionUI(false);
             if (ppsInterval) { clearInterval(ppsInterval); ppsInterval = null; }
         }
 
-        // ==================== PARSING & PROCESSING ====================
         function processSerialLine(line) {
             const timestamp = new Date();
             addToLog(line, timestamp);
             const parsed = parsePacketLine(line, timestamp);
             if (parsed) {
-                packets.unshift(parsed);
-                if (packets.length > MAX_PACKETS) packets.pop();
+                packets.unshift(parsed); if (packets.length > MAX_PACKETS) packets.pop();
                 updatePacketTable();
                 updateNodeFromPacket(parsed);
                 updateMeshVisualization();
             }
-            packetCount++;
-            updateStats();
+            packetCount++; updateStats();
         }
 
         function parsePacketLine(line, timestamp) {
@@ -272,17 +319,13 @@
             const timeStr = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const div = document.createElement('div');
             div.className = 'log-line';
-            let highlighted = line
-                .replace(/(rssi[=:]\s*-?\d+)/gi, '<span class="highlight">$1</span>')
-                .replace(/((?:from|src|node)[=:]\s*[0-9A-Fa-fxX]+)/gi, '<span class="highlight">$1</span>')
-                .replace(/\b(DATA|HELLO|ACK|BEACON)\b/gi, '<span class="highlight">$1</span>');
+            let highlighted = line.replace(/(rssi[=:]\s*-?\d+)/gi, '<span class="highlight">$1</span>')
+                                 .replace(/((?:from|src|node)[=:]\s*[0-9A-Fa-fxX]+)/gi, '<span class="highlight">$1</span>')
+                                 .replace(/\b(DATA|HELLO|ACK|BEACON)\b/gi, '<span class="highlight">$1</span>');
             div.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${highlighted}`;
             container.appendChild(div);
             logLines.push(div);
-            while (logLines.length > MAX_LOG_LINES) {
-                const old = logLines.shift();
-                if (old && old.parentNode) old.parentNode.removeChild(old);
-            }
+            while (logLines.length > MAX_LOG_LINES) { const old = logLines.shift(); if (old && old.parentNode) old.parentNode.removeChild(old); }
             container.scrollTop = container.scrollHeight;
         }
 
@@ -301,12 +344,10 @@
                 const time = p.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                 let rssiClass = p.rssi > -70 ? 'good' : p.rssi > -90 ? 'ok' : 'bad';
                 let typeClass = p.type === 'DATA' ? 'type-data' : p.type === 'HELLO' ? 'type-hello' : 'type-ack';
-                row.innerHTML = `
-                    <td style="font-family:monospace;color:#64748b;font-size:12px">${time}</td>
+                row.innerHTML = `<td style="font-family:monospace;color:#64748b;font-size:12px">${time}</td>
                     <td><span class="node-id">${p.from}</span> <span style="color:#64748b">→</span> <span class="node-id">${p.to}</span></td>
                     <td><span class="packet-type ${typeClass}">${p.type}</span></td>
-                    <td><span class="rssi ${rssiClass}">${p.rssi ? p.rssi + ' dBm' : '-'}</span></td>
-                `;
+                    <td><span class="rssi ${rssiClass}">${p.rssi ? p.rssi + ' dBm' : '-'}</span></td>`;
                 tbody.appendChild(row);
             });
         }
@@ -340,7 +381,7 @@
                 const ago = Math.floor((Date.now() - node.lastSeen.getTime())/1000);
                 const timeAgo = ago < 60 ? ago + 's ago' : Math.floor(ago/60) + 'm ago';
                 const rssi = node.lastRssi ? `<span class="text-emerald-400">${node.lastRssi} dBm</span>` : '';
-                html += `<div onclick="focusNodeInMesh('${node.id}')" style="padding:8px 10px;border-bottom:1px solid #1f2439;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+                html += `<div onclick="showNodeDetail('${node.id}')" style="padding:8px 10px;border-bottom:1px solid #1f2439;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
                     <div><div style="font-family:monospace;color:#67e8f9;font-weight:600">${node.id}</div><div style="font-size:11px;color:#64748b">${node.packetCount} pkts • ${timeAgo}</div></div>
                     <div style="text-align:right;font-size:12px">${rssi}</div>
                 </div>`;
@@ -364,25 +405,21 @@
             document.getElementById('stat-pps').textContent = (recent.length / 5).toFixed(1);
         }
 
-        // ==================== MESH VISUALIZATION (FULL WORKING) ====================
+        // ==================== MESH + NODE DETAIL ====================
         function initMeshCanvas() {
             canvas = document.getElementById('mesh-canvas');
             if (!canvas) return;
             ctx = canvas.getContext('2d');
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+            canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
 
             canvas.addEventListener('mousedown', handleMeshMouseDown);
             canvas.addEventListener('mousemove', handleMeshMouseMove);
             canvas.addEventListener('mouseup', handleMeshMouseUp);
             canvas.addEventListener('mouseleave', handleMeshMouseUp);
+            canvas.addEventListener('click', handleMeshClick);
             canvas.addEventListener('dblclick', handleMeshDoubleClick);
 
-            window.addEventListener('resize', () => {
-                canvas.width = canvas.offsetWidth;
-                canvas.height = canvas.offsetHeight;
-            });
-
+            window.addEventListener('resize', () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; });
             setInterval(drawMesh, 1200);
         }
 
@@ -393,21 +430,13 @@
             sorted.forEach((node, i) => {
                 let pos = meshPositions.get(node.id);
                 if (!pos) {
-                    const cx = canvas.width / 2;
-                    const cy = canvas.height / 2;
+                    const cx = canvas.width / 2; const cy = canvas.height / 2;
                     const angle = (i / sorted.length) * Math.PI * 2;
                     const dist = 80 + (node.lastRssi ? (node.lastRssi + 110) * 0.8 : 60);
                     pos = { x: cx + Math.cos(angle) * Math.min(dist, 140), y: cy + Math.sin(angle) * Math.min(dist, 100) };
                     meshPositions.set(node.id, pos);
                 }
-                meshNodes.push({
-                    id: node.id,
-                    x: pos.x, y: pos.y,
-                    size: Math.max(12, Math.min(26, 12 + node.packetCount / 3)),
-                    lastSeen: node.lastSeen,
-                    lastRssi: node.lastRssi,
-                    customLabel: node.customLabel || null
-                });
+                meshNodes.push({ id: node.id, x: pos.x, y: pos.y, size: Math.max(12, Math.min(26, 12 + node.packetCount / 3)), lastSeen: node.lastSeen, lastRssi: node.lastRssi, customLabel: node.customLabel || null });
             });
             drawMesh();
         }
@@ -416,50 +445,32 @@
             if (!ctx || !canvas) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw connections
-            ctx.strokeStyle = 'rgba(103, 232, 249, 0.15)';
-            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = 'rgba(103, 232, 249, 0.15)'; ctx.lineWidth = 1.5;
             for (let i = 0; i < meshNodes.length; i++) {
                 for (let j = i + 1; j < meshNodes.length; j++) {
                     const a = meshNodes[i], b = meshNodes[j];
-                    const dist = Math.hypot(a.x - b.x, a.y - b.y);
-                    if (dist < 220) {
-                        ctx.beginPath();
-                        ctx.moveTo(a.x, a.y);
-                        ctx.lineTo(b.x, b.y);
-                        ctx.stroke();
-                    }
+                    if (Math.hypot(a.x - b.x, a.y - b.y) < 220) { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
                 }
             }
 
-            // Draw nodes
             meshNodes.forEach(node => {
                 const age = (Date.now() - node.lastSeen.getTime()) / 1000;
                 const alpha = Math.max(0.35, 1 - Math.min(age / 180, 0.7));
 
-                ctx.shadowColor = '#67e8f9';
-                ctx.shadowBlur = 12;
+                ctx.shadowColor = '#67e8f9'; ctx.shadowBlur = 12;
                 ctx.fillStyle = `rgba(103, 232, 249, ${alpha})`;
-                ctx.beginPath();
-                ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 0;
+                ctx.beginPath(); ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
 
                 if (showMeshLabels) {
-                    ctx.fillStyle = '#c9d1d9';
-                    ctx.font = '12px Inter, sans-serif';
-                    ctx.textAlign = 'center';
+                    ctx.fillStyle = '#c9d1d9'; ctx.font = '12px Inter, sans-serif'; ctx.textAlign = 'center';
                     const label = node.customLabel || (node.id.length > 7 ? node.id.substring(0,7) : node.id);
                     ctx.fillText(label, node.x, node.y + node.size + 16);
                 }
 
                 if (node.lastRssi !== null) {
                     const norm = Math.max(0, Math.min(1, (node.lastRssi + 110) / 45));
-                    ctx.strokeStyle = `rgba(103, 232, 249, ${0.25 + norm * 0.55})`;
-                    ctx.lineWidth = 2.5;
-                    ctx.beginPath();
-                    ctx.arc(node.x, node.y, node.size + 5, 0, Math.PI * 2);
-                    ctx.stroke();
+                    ctx.strokeStyle = `rgba(103, 232, 249, ${0.25 + norm * 0.55})`; ctx.lineWidth = 2.5;
+                    ctx.beginPath(); ctx.arc(node.x, node.y, node.size + 5, 0, Math.PI * 2); ctx.stroke();
                 }
             });
         }
@@ -469,90 +480,120 @@
             return { x: (e.clientX - rect.left) * (canvas.width / rect.width), y: (e.clientY - rect.top) * (canvas.height / rect.height) };
         }
 
-        function handleMeshMouseDown(e) {
+        function handleMeshClick(e) {
             const pos = getMousePos(e);
-            draggedNode = null;
             for (let node of meshNodes) {
-                const dx = pos.x - node.x;
-                const dy = pos.y - node.y;
-                if (dx*dx + dy*dy < (node.size + 10) * (node.size + 10)) {
-                    draggedNode = node;
-                    dragOffsetX = dx;
-                    dragOffsetY = dy;
-                    break;
+                const dx = pos.x - node.x; const dy = pos.y - node.y;
+                if (dx*dx + dy*dy < (node.size + 12)*(node.size + 12)) {
+                    showNodeDetail(node.id);
+                    return;
                 }
             }
         }
 
-        function handleMeshMouseMove(e) {
-            if (!draggedNode) return;
-            const pos = getMousePos(e);
-            draggedNode.x = Math.max(30, Math.min(canvas.width - 30, pos.x - dragOffsetX));
-            draggedNode.y = Math.max(30, Math.min(canvas.height - 30, pos.y - dragOffsetY));
-            meshPositions.set(draggedNode.id, { x: draggedNode.x, y: draggedNode.y });
-            drawMesh();
-        }
-
-        function handleMeshMouseUp(e) {
-            if (draggedNode) {
-                // Save position
-            }
-            draggedNode = null;
-        }
+        function handleMeshMouseDown(e) { /* drag logic */ const pos = getMousePos(e); draggedNode = null; for (let node of meshNodes) { const dx = pos.x - node.x; const dy = pos.y - node.y; if (dx*dx + dy*dy < (node.size + 10)*(node.size + 10)) { draggedNode = node; dragOffsetX = dx; dragOffsetY = dy; break; } } }
+        function handleMeshMouseMove(e) { if (!draggedNode) return; const pos = getMousePos(e); draggedNode.x = Math.max(30, Math.min(canvas.width-30, pos.x-dragOffsetX)); draggedNode.y = Math.max(30, Math.min(canvas.height-30, pos.y-dragOffsetY)); meshPositions.set(draggedNode.id, {x: draggedNode.x, y: draggedNode.y}); drawMesh(); }
+        function handleMeshMouseUp(e) { draggedNode = null; }
 
         function handleMeshDoubleClick(e) {
             const pos = getMousePos(e);
             for (let node of meshNodes) {
-                const dx = pos.x - node.x;
-                const dy = pos.y - node.y;
+                const dx = pos.x - node.x; const dy = pos.y - node.y;
                 if (dx*dx + dy*dy < (node.size + 12)*(node.size + 12)) {
                     const newLabel = prompt(`Set custom label for node ${node.id}:`, node.customLabel || '');
                     if (newLabel !== null) {
                         if (nodes.has(node.id)) nodes.get(node.id).customLabel = newLabel.trim() || null;
                         node.customLabel = newLabel.trim() || null;
-                        renderNodesList();
-                        drawMesh();
+                        renderNodesList(); drawMesh();
                     }
-                    break;
+                    return;
                 }
             }
         }
 
-        function resetMeshLayout() {
-            meshPositions.clear();
-            updateMeshVisualization();
-        }
-
+        function resetMeshLayout() { meshPositions.clear(); updateMeshVisualization(); }
         function autoArrangeByRSSI() {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
+            const cx = canvas.width / 2; const cy = canvas.height / 2;
             meshNodes.forEach((node, i) => {
                 const dist = 70 + (node.lastRssi ? (node.lastRssi + 110) * 0.9 : 70);
                 const angle = (i / meshNodes.length) * Math.PI * 2;
-                node.x = Math.max(40, Math.min(canvas.width - 40, cx + Math.cos(angle) * dist));
-                node.y = Math.max(40, Math.min(canvas.height - 40, cy + Math.sin(angle) * dist * 0.75));
+                node.x = Math.max(40, Math.min(canvas.width-40, cx + Math.cos(angle) * dist));
+                node.y = Math.max(40, Math.min(canvas.height-40, cy + Math.sin(angle) * dist * 0.75));
                 meshPositions.set(node.id, { x: node.x, y: node.y });
             });
             drawMesh();
         }
 
-        function focusNodeInMesh(nodeId) {
-            const node = meshNodes.find(n => n.id === nodeId);
+        // ==================== NODE DETAIL MODAL ====================
+        function showNodeDetail(nodeId) {
+            const node = nodes.get(nodeId);
             if (!node) return;
-            const orig = node.size;
-            node.size = orig * 1.8;
-            drawMesh();
-            setTimeout(() => { if (node) { node.size = orig; drawMesh(); } }, 700);
+
+            currentModalNodeId = nodeId;
+
+            document.getElementById('modal-node-id').textContent = nodeId;
+            document.getElementById('modal-rssi').innerHTML = node.lastRssi !== null ? `${node.lastRssi} <span class="text-base font-normal text-zinc-400">dBm</span>` : '--';
+            document.getElementById('modal-snr').textContent = node.lastSnr !== null ? node.lastSnr.toFixed(1) : '--';
+            document.getElementById('modal-packets').textContent = node.packetCount;
+
+            const ago = Math.floor((Date.now() - node.lastSeen.getTime()) / 1000);
+            const timeAgo = ago < 60 ? ago + 's ago' : Math.floor(ago/60) + 'm ago';
+            document.getElementById('modal-last-seen').textContent = timeAgo;
+
+            // Uptime estimate
+            const uptimeMin = Math.floor((Date.now() - node.firstSeen.getTime()) / 60000);
+            document.getElementById('modal-uptime').textContent = uptimeMin < 60 ? `${uptimeMin}m` : `${Math.floor(uptimeMin/60)}h ${uptimeMin%60}m`;
+
+            // Packet types
+            const typesContainer = document.getElementById('modal-types');
+            typesContainer.innerHTML = '';
+            if (node.types.size > 0) {
+                node.types.forEach(type => {
+                    const span = document.createElement('span');
+                    span.className = `px-3 py-1 rounded-full text-xs ${type === 'DATA' ? 'bg-blue-900 text-blue-300' : type === 'HELLO' ? 'bg-emerald-900 text-emerald-300' : 'bg-amber-900 text-amber-300'}`;
+                    span.textContent = type;
+                    typesContainer.appendChild(span);
+                });
+            } else {
+                typesContainer.innerHTML = `<span class="text-xs text-zinc-500">No types recorded yet</span>`;
+            }
+
+            document.getElementById('node-modal').classList.remove('hidden');
+            document.getElementById('node-modal').classList.add('flex');
         }
 
-        // ==================== SIMULATION & UTILS ====================
+        function hideNodeModal() {
+            document.getElementById('node-modal').classList.remove('flex');
+            document.getElementById('node-modal').classList.add('hidden');
+            currentModalNodeId = null;
+        }
+
+        function editLabelFromModal() {
+            if (!currentModalNodeId) return;
+            const node = nodes.get(currentModalNodeId);
+            if (!node) return;
+
+            const newLabel = prompt(`Set custom label for node ${currentModalNodeId}:`, node.customLabel || '');
+            if (newLabel !== null) {
+                node.customLabel = newLabel.trim() || null;
+                // Update mesh if visible
+                const meshNode = meshNodes.find(n => n.id === currentModalNodeId);
+                if (meshNode) meshNode.customLabel = node.customLabel;
+                renderNodesList();
+                drawMesh();
+                // Refresh modal
+                hideNodeModal();
+                setTimeout(() => showNodeDetail(currentModalNodeId), 150);
+            }
+        }
+
+        // ==================== SIMULATE & UTILS ====================
         function simulateTraffic() {
             const sample = ['A1B2', 'C3D4', '1122', '3344', 'E5F6'];
             const types = ['DATA', 'HELLO', 'ACK'];
             setInterval(() => {
                 const from = sample[Math.floor(Math.random()*sample.length)];
-                let to = sample[Math.floor(Math.random()*sample.length)];
-                if (to === from) to = 'BCAST';
+                let to = sample[Math.floor(Math.random()*sample.length)]; if (to === from) to = 'BCAST';
                 const rssi = Math.floor(Math.random()*45) - 115;
                 processSerialLine(`[LoRa] RX from=${from} to=${to} type=${types[Math.floor(Math.random()*types.length)]} rssi=${rssi}`);
             }, 650);
@@ -560,11 +601,8 @@
 
         function clearAll() {
             document.getElementById('log-container').innerHTML = '';
-            logLines = [];
-            packets = [];
-            document.getElementById('packet-table-body').innerHTML = '';
-            nodes.clear();
-            document.getElementById('nodes-list').innerHTML = '';
+            logLines = []; packets = []; document.getElementById('packet-table-body').innerHTML = '';
+            nodes.clear(); document.getElementById('nodes-list').innerHTML = '';
             document.getElementById('node-count-badge').textContent = '0';
             packetCount = 0;
             document.getElementById('stat-packets').textContent = '0';
@@ -574,14 +612,11 @@
             meshNodes = [];
         }
 
-        function clearPackets() {
-            packets = [];
-            document.getElementById('packet-table-body').innerHTML = '';
-        }
+        function clearPackets() { packets = []; document.getElementById('packet-table-body').innerHTML = ''; }
 
         function copyLog() {
             const text = Array.from(document.querySelectorAll('#log-container .log-line')).map(el => el.textContent).join('\n');
-            navigator.clipboard.writeText(text).then(() => alert('Log copied to clipboard'));
+            navigator.clipboard.writeText(text).then(() => alert('Log copied'));
         }
 
         function init() {
@@ -591,13 +626,11 @@
             setTimeout(() => {
                 const log = document.getElementById('log-container');
                 if (log.children.length === 0) {
-                    log.innerHTML = `<div style="padding:40px 20px;text-align:center;color:#64748b;font-size:13px">
-                        Click <strong>Connect to Node</strong> or <strong>Simulate Traffic</strong> to start.
-                    </div>`;
+                    log.innerHTML = `<div style="padding:40px 20px;text-align:center;color:#64748b;font-size:13px">Click <strong>Connect to Node</strong> or <strong>Simulate Traffic</strong> to start monitoring.</div>`;
                 }
             }, 1200);
 
-            console.log('%c[PLSChat Monitor] Full working version with mesh visualization loaded.', 'color:#22c55e');
+            console.log('%c[PLSChat Monitor] Node detail modal + improved mesh ready.', 'color:#22c55e');
         }
 
         window.onload = init;
