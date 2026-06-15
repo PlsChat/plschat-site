@@ -9,48 +9,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
-    
-    body {
-      font-family: 'Inter', system_ui, sans-serif;
-    }
-    
-    .font-display {
-      font-family: 'Space Grotesk', 'Inter', sans-serif;
-      font-weight: 600;
-    }
-
-    .gradient-text {
-      background: linear-gradient(90deg, #a855f7, #d946ef, #67e8f9);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .section-header {
-      font-size: 2.25rem;
-      line-height: 2.5rem;
-      font-weight: 700;
-    }
-
-    .feature-card {
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .feature-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    }
-
-    .nav-link {
-      transition: color 0.1s ease;
-    }
-    
-    .nav-link:hover {
-      color: #c026d3;
-    }
+    body { font-family: 'Inter', system_ui, sans-serif; }
+    .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
+    .gradient-text { background: linear-gradient(90deg, #a855f7, #d946ef, #67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   </style>
 </head>
 <body class="bg-[#0a0c1f] text-zinc-200">
-  <!-- Navbar -->
+  <!-- Navbar with PLS Logo -->
   <nav class="border-b border-white/10 bg-[#0a0c1f]/95 backdrop-blur-lg sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-6">
       <div class="flex items-center justify-between h-20">
@@ -69,7 +34,7 @@
           <span class="font-display text-3xl font-semibold tracking-tighter">PLSChat</span>
         </div>
 
-        <div class="hidden md:flex items-center gap-x-9 text-sm font-medium">
+        <div class="hidden md:flex items-center gap-x-8 text-sm font-medium">
           <a href="#what" class="nav-link text-zinc-400 hover:text-white">What is it?</a>
           <a href="#capabilities" class="nav-link text-zinc-400 hover:text-white">Capabilities</a>
           <a href="#limitations" class="nav-link text-zinc-400 hover:text-white">Realistic Limits</a>
@@ -78,15 +43,12 @@
         </div>
 
         <div class="flex items-center gap-x-3">
-          <a href="flasher.html" class="hidden sm:inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/20 hover:bg-white/5 transition-colors">
-            <i class="fa-solid fa-microchip mr-2"></i>
-            <span>Web Flasher</span>
+          <a href="flasher.html" class="hidden sm:inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/20 hover:bg-white/5 transition-colors">
+            <i class="fa-solid fa-microchip mr-2"></i> <span>Web Flasher</span>
           </a>
-          <a href="device-manager.html" class="inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold bg-white text-[#0a0c1f] rounded-2xl hover:bg-zinc-100 transition-all active:scale-[0.985]">
-            <i class="fa-solid fa-plug mr-2"></i>
-            <span class="font-bold">Device Manager</span>
+          <a href="device-manager.html" class="inline-flex items-center px-6 py-2.5 text-sm font-semibold bg-white text-[#0a0c1f] rounded-2xl hover:bg-zinc-100 transition-all active:scale-[0.985]">
+            <i class="fa-solid fa-plug mr-2"></i> <span class="font-bold">Device Manager</span>
           </a>
-          
           <button id="mobile-menu-btn" class="md:hidden w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-white">
             <i class="fa-solid fa-bars text-xl"></i>
           </button>
@@ -95,12 +57,13 @@
     </div>
   </nav>
 
+  <!-- Mobile Menu -->
   <div id="mobile-menu" class="hidden md:hidden border-b border-white/10 bg-[#0a0c1f]">
     <div class="px-6 py-4 flex flex-col gap-y-1 text-sm">
       <a href="#what" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">What is it?</a>
       <a href="#capabilities" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Capabilities</a>
       <a href="#limitations" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Realistic Limits</a>
-      <a href="#security" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Security & Resilience</a>
+      <a href="#security" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Security</a>
       <a href="#get-started" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Get Started</a>
       <div class="pt-3 border-t border-white/10 mt-2">
         <a href="flasher.html" class="block py-2.5 px-4 text-fuchsia-400">Web Flasher →</a>
@@ -108,6 +71,7 @@
     </div>
   </div>
 
+  <!-- Hero -->
   <header class="max-w-5xl mx-auto px-6 pt-16 pb-20 text-center">
     <div class="inline-flex items-center gap-x-2 px-4 py-1.5 rounded-3xl bg-white/5 border border-white/10 text-xs font-medium tracking-[1.5px] mb-6">
       <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
@@ -120,20 +84,14 @@
       Communication
     </h1>
     
-    <p class="max-w-2xl mx-auto text-xl text-zinc-400 mb-10">
-      Real-world resilient group messaging that works when the internet doesn't. 
-      Self-healing radio mesh with persistent Room Servers. No central servers. No KYC.
-    </p>
+    <p class="max-w-2xl mx-auto text-xl text-zinc-400 mb-10">Real-world resilient group messaging that works when the internet doesn't.<br>Self-healing radio mesh with persistent Room Servers. No central servers. No KYC.</p>
 
     <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
       <a href="flasher.html" class="group w-full sm:w-auto inline-flex items-center justify-center gap-x-3 px-8 py-4 text-lg font-semibold bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 text-white rounded-3xl hover:brightness-105 transition-all active:scale-[0.985]">
-        <i class="fa-solid fa-satellite fa-fw"></i>
-        <span>Flash Device & Get Started</span>
+        <i class="fa-solid fa-satellite fa-fw"></i> <span>Flash Device & Get Started</span>
       </a>
-      
       <a href="device-manager.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-x-3 px-8 py-4 text-lg font-semibold border border-white/30 hover:bg-white/5 rounded-3xl transition-all">
-        <i class="fa-solid fa-plug fa-fw"></i>
-        <span>Open Device Manager</span>
+        <i class="fa-solid fa-plug fa-fw"></i> <span>Open Device Manager</span>
       </a>
     </div>
 
@@ -144,6 +102,7 @@
     </div>
   </header>
 
+  <!-- Use Cases -->
   <div class="border-y border-white/10 bg-white/[0.015]">
     <div class="max-w-6xl mx-auto px-6 py-8">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
@@ -155,17 +114,19 @@
     </div>
   </div>
 
+  <!-- What is PLSChat -->
   <section id="what" class="max-w-5xl mx-auto px-6 pt-20 pb-16">
     <div class="max-w-3xl">
       <div class="uppercase tracking-[2px] text-xs font-semibold text-fuchsia-400 mb-3">THE PROJECT</div>
       <h2 class="section-header tracking-tighter mb-6">What is PLSChat?</h2>
       <div class="prose prose-invert text-lg text-zinc-300 max-w-none">
         <p>PLSChat is a <strong>lightweight, secure LoRa mesh platform</strong> built for real-world off-grid use. It turns compatible ESP32 LoRa devices (Heltec V4 recommended) into a self-healing radio network where messages hop between nodes without any internet, cellular towers, or central infrastructure.</p>
-        <p class="mt-4">Its standout feature is <strong>Room Servers</strong> — persistent group chat rooms that store the last ~32 messages. Participants can retrieve missed messages even after being offline for hours or days.</p>
+        <p class="mt-4">Its standout feature is <strong>Room Servers</strong> — persistent group chat rooms that store the last ~32 messages so you can catch up even after being offline for hours or days.</p>
       </div>
     </div>
   </section>
 
+  <!-- Capabilities -->
   <section id="capabilities" class="max-w-6xl mx-auto px-6 pb-20">
     <div class="flex items-end justify-between mb-8">
       <div>
@@ -209,6 +170,7 @@
     </div>
   </section>
 
+  <!-- Realistic Limitations -->
   <section id="limitations" class="bg-zinc-950 border-y border-white/10 py-16">
     <div class="max-w-5xl mx-auto px-6">
       <div class="max-w-3xl mb-10">
@@ -255,6 +217,7 @@
     </div>
   </section>
 
+  <!-- Security -->
   <section id="security" class="max-w-5xl mx-auto px-6 py-20">
     <div class="grid md:grid-cols-12 gap-x-12 items-center">
       <div class="md:col-span-7">
@@ -289,6 +252,7 @@
     </div>
   </section>
 
+  <!-- Get Started with REAL photo in STEP 01 -->
   <section id="get-started" class="border-t border-white/10 bg-zinc-950 py-16">
     <div class="max-w-5xl mx-auto px-6">
       <div class="text-center mb-10">
@@ -298,21 +262,24 @@
       </div>
       
       <div class="grid md:grid-cols-3 gap-6">
-        <!-- STEP 01 with REAL edited photo -->
-        <div class="bg-zinc-900 border border-white/10 rounded-3xl p-7 flex flex-col">
-          <div class="text-fuchsia-400 font-mono text-xs mb-3 tracking-widest">STEP 01 — HARDWARE</div>
-          <div class="font-semibold text-xl mb-4">Get a Heltec V4 <span class="text-emerald-400">(Recommended)</span></div>
+        <!-- STEP 01 - REAL PHOTO -->
+        <div class="bg-zinc-900 border border-white/10 rounded-3xl p-7">
+          <div class="text-fuchsia-400 font-mono text-xs mb-2 tracking-[1.5px]">STEP 01 — HARDWARE</div>
+          <div class="font-semibold text-2xl mb-1">Get a Heltec V4 <span class="text-emerald-400">(Recommended)</span></div>
           
-          <div class="mb-5 rounded-2xl overflow-hidden border border-white/10 shadow-lg">
-            <img src="heltec-v4-plschat.jpg" alt="Heltec V4 device running PLSChat - OLED clearly shows PLSChat logo, MODE: MESH, battery 85%, node info, LoRa OK at 433.9MHz" class="w-full h-auto">
+          <!-- REAL EDITED PHOTO -->
+          <div class="my-4 rounded-2xl overflow-hidden border border-white/10 shadow-lg">
+            <img src="heltec-v4-plschat.jpg" 
+                 alt="Heltec V4 running PLSChat firmware - OLED shows PLSChat logo, MODE: MESH, battery 85%, node info, LoRa OK at 433.9MHz" 
+                 class="w-full h-auto">
           </div>
           
-          <p class="text-sm text-zinc-300 flex-1">The Heltec V4 is currently the best supported and recommended board. It features a beautiful built-in OLED that displays real-time PLSChat status, mesh info, battery, and more.</p>
+          <p class="text-sm text-zinc-300">The Heltec V4 is currently the best supported and recommended board. It features a beautiful built-in OLED that displays real-time PLSChat status, mesh info, battery, and more.</p>
         </div>
 
         <div class="bg-zinc-900 border border-white/10 rounded-3xl p-7 flex flex-col">
-          <div class="text-fuchsia-400 font-mono text-xs mb-3 tracking-widest">STEP 02 — FLASH</div>
-          <div class="font-semibold text-xl mb-3">Flash Firmware</div>
+          <div class="text-fuchsia-400 font-mono text-xs mb-2 tracking-[1.5px]">STEP 02 — FLASH</div>
+          <div class="font-semibold text-2xl mb-3">Flash Firmware</div>
           <p class="text-sm text-zinc-400 flex-1">Use the browser-based Web Flasher. Works directly in Chrome or Edge. Hold the BOOT button on your Heltec V4 when prompted.</p>
           <a href="flasher.html" class="mt-auto inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:brightness-105 transition">
             Open Web Flasher <i class="fa-solid fa-arrow-right ml-2"></i>
@@ -320,8 +287,8 @@
         </div>
 
         <div class="bg-zinc-900 border border-white/10 rounded-3xl p-7 flex flex-col">
-          <div class="text-fuchsia-400 font-mono text-xs mb-3 tracking-widest">STEP 03 — ACTIVATE</div>
-          <div class="font-semibold text-xl mb-3">Activate & Connect</div>
+          <div class="text-fuchsia-400 font-mono text-xs mb-2 tracking-[1.5px]">STEP 03 — ACTIVATE</div>
+          <div class="font-semibold text-2xl mb-3">Activate & Connect</div>
           <p class="text-sm text-zinc-400 flex-1">Buy PLSC tokens, activate your device license via Device Manager, then create or join Room Servers and start messaging off-grid.</p>
           <a href="device-manager.html" class="mt-auto inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/30 hover:bg-white/5 transition">
             Open Device Manager <i class="fa-solid fa-plug ml-2"></i>
@@ -349,18 +316,14 @@
   <script>
     const mobileBtn = document.getElementById('mobile-menu-btn');
     const mobileMenu = document.getElementById('mobile-menu');
-    
     if (mobileBtn && mobileMenu) {
       mobileBtn.addEventListener('click', () => {
         mobileMenu.classList.toggle('hidden');
         const icon = mobileBtn.querySelector('i');
         if (icon) { icon.classList.toggle('fa-bars'); icon.classList.toggle('fa-times'); }
       });
-      mobileMenu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => { mobileMenu.classList.add('hidden'); });
-      });
+      mobileMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => mobileMenu.classList.add('hidden')));
     }
-    
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function(e) {
         const target = document.querySelector(this.getAttribute('href'));
@@ -373,12 +336,10 @@
         }
       });
     });
-    
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && mobileMenu && !mobileMenu.classList.contains('hidden')) { mobileMenu.classList.add('hidden'); }
+      if (e.key === 'Escape' && mobileMenu && !mobileMenu.classList.contains('hidden')) mobileMenu.classList.add('hidden');
     });
-    
-    console.log('%c[PLSChat] Updated with real rotated Heltec V4 photo.', 'color:#64748b');
+    console.log('%c[PLSChat] STEP 01 card now shows the real rotated Heltec V4 photo with enhanced OLED.', 'color:#64748b');
   </script>
 </body>
 </html>
