@@ -1,6 +1,6 @@
 {
   "name": "PLSChat Firmware",
-  "version": "2.19",
+  "version": "2.42",
   "new_install_prompt_erase": true,
   "builds": [
     {
@@ -8,7 +8,7 @@
       "parts": [
         { "path": "flasher/bootloader.bin", "offset": 0 },
         { "path": "flasher/boot_app0.bin", "offset": 57344 },
-        { "path": "flasher/PLSchat.ino.bin", "offset": 65536 }
+        { "path": "flasher/PLSChat_v2_42.bin", "offset": 65536 }
       ]
     }
   ]
