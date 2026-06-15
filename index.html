@@ -302,6 +302,7 @@
           <ul class="space-y-3 text-[15px] text-zinc-300">
             <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> LoRa prioritizes long range and low power. Best suited for short-to-medium text messages and group coordination.</li>
             <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Not ideal for high-volume chat, large files, images, voice notes, or streaming. Data rates are inherently limited.</li>
+            <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Not ideal for high-volume chat, large files, images, voice notes, or streaming. Data rates are inherently limited.</li>
             <li class="flex gap-3"><span class="text-amber-400 mt-1">•</span> Room Servers currently store only the most recent ~32 messages. Retrieve important history promptly.</li>
           </ul>
         </div>
@@ -399,19 +400,17 @@
       </div>
       
       <div class="grid md:grid-cols-3 gap-6">
-        <!-- STEP 01 - Heltec V4 focused with image reference -->
+        <!-- STEP 01 - Heltec V4 with real device image -->
         <div class="bg-zinc-900 border border-white/10 rounded-3xl p-7 flex flex-col">
           <div class="text-fuchsia-400 font-mono text-xs mb-3 tracking-widest">STEP 01 — HARDWARE</div>
           <div class="font-semibold text-xl mb-3">Get a Heltec V4 <span class="text-emerald-400">(Recommended)</span></div>
           
-          <!-- Nice visual card for the device image -->
-          <div class="mt-2 mb-4 rounded-2xl overflow-hidden border border-white/10 bg-zinc-950 flex items-center justify-center p-4">
-            <div class="text-center">
-              <i class="fa-solid fa-microchip text-5xl text-fuchsia-400 mb-3"></i>
-              <div class="text-sm font-medium">Heltec V4 running PLSChat</div>
-              <div class="text-[10px] text-zinc-500 mt-1">OLED shows: MODE: MESH • Connected nodes • Battery status</div>
-              <div class="mt-3 text-[10px] text-emerald-400">Photo reference: Your device will look like this when flashed</div>
-            </div>
+          <!-- Real device photo -->
+          <div class="mt-2 mb-4">
+            <img src="assets/heltec-v4-plschat.jpg" 
+                 alt="Heltec V4 running PLSChat showing OLED with licence, mode, PLSC, and uptime" 
+                 class="w-full rounded-2xl border border-white/10 shadow-lg">
+            <p class="text-center text-[10px] text-emerald-400 mt-2">Real Heltec V4 running PLSChat</p>
           </div>
           
           <p class="text-sm text-zinc-400 flex-1">The Heltec V4 is currently the best supported and recommended board. It has a built-in OLED that beautifully displays PLSChat status, mesh info, and more.</p>
