@@ -54,6 +54,13 @@
       margin-bottom: 15px;
       box-shadow: 0 4px 15px rgba(185, 28, 28, 0.3);
     }
+    .btn-help {
+      background: #334155;
+      color: #e2e8f0;
+      padding: 12px 24px;
+      font-size: 0.95em;
+      margin-top: 20px;
+    }
     .status {
       background: #1e2937;
       padding: 20px;
@@ -93,6 +100,36 @@
       gap: 8px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(10, 12, 31, 0.9);
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    .modal-content {
+      background: #1e2937;
+      padding: 40px;
+      border-radius: 20px;
+      max-width: 520px;
+      text-align: left;
+      border: 1px solid #475569;
+    }
+    .modal-content h3 {
+      margin-top: 0;
+      color: #f87171;
+    }
+    .modal-content ol {
+      padding-left: 20px;
+      line-height: 1.7;
+    }
+    .modal-content li {
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 <body>
@@ -102,7 +139,7 @@
     <a href="device-manager.html" class="back-btn">← Back</a>
 
     <h1>PLSChat Web Flasher</h1>
-    <p class="subtitle">Flash PLSChat v2.42 firmware to your Heltec V4</p>
+    <p class="subtitle">Flash firmware to your Heltec V4</p>
 
     <!-- Firmware Section -->
     <div class="section">
@@ -112,13 +149,16 @@
       <button onclick="showEraseInstructions()" class="btn-erase">🗑️ Erase Device First (Recommended)</button>
       <br>
       
-      <esp-web-install-button manifest="manifest.json">
-        <button slot="activate" class="btn-primary">⚡ Flash PLSChat v2.42</button>
+      <esp-web-install-button manifest="flasher/manifest.json">
+        <button slot="activate" class="btn-primary">⚡ Flash Firmware</button>
       </esp-web-install-button>
 
       <p class="note">
         <strong>Tip:</strong> Hold the <strong>BOOT button</strong> on the Heltec V4 while clicking "Connect".
       </p>
+
+      <!-- Help Button -->
+      <button onclick="showBootloaderHelp()" class="btn-help">⚠️ Having trouble? (Boot loop / Connection issues)</button>
     </div>
 
     <!-- Licence Section -->
@@ -139,6 +179,30 @@
 
   </div>
 
+  <!-- Bootloader Help Modal -->
+  <div id="helpModal" class="modal" onclick="if (event.target.id === 'helpModal') closeHelpModal()">
+    <div class="modal-content">
+      <h3>⚠️ Device stuck in boot loop?</h3>
+      <p>Follow these steps exactly to force the device into download mode:</p>
+      
+      <ol>
+        <li><strong>Unplug</strong> the USB cable from the device.</li>
+        <li>Hold down the <strong>BOOT button</strong> (small button next to USB-C).</li>
+        <li>While still holding BOOT, <strong>plug the USB cable back in</strong>.</li>
+        <li>Keep holding the BOOT button for 2–3 seconds, then release it.</li>
+        <li>The device should now stop resetting and be ready for flashing.</li>
+      </ol>
+
+      <p style="margin-top:20px; color:#94a3b8; font-size:0.9em;">
+        After doing this, click <strong>Erase Device</strong> on this page, then try flashing again.
+      </p>
+
+      <button onclick="closeHelpModal()" class="btn-primary" style="width:100%; margin-top:20px;">
+        Got it, close this
+      </button>
+    </div>
+  </div>
+
   <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 
   <script>
@@ -148,13 +212,21 @@
     function showEraseInstructions() {
       alert(
         'How to Erase the Device (Important!)\n\n' +
-        '1. Click the purple "Flash PLSChat v2.42" button below.\n' +
+        '1. Click the purple "Flash Firmware" button below.\n' +
         '2. In the popup window, click the "Connect" button.\n' +
         '3. Hold the BOOT button on your Heltec V4, then select the port and click Connect.\n' +
         '4. Once connected, look in the TOP RIGHT of the popup for a small gear icon (⚙️).\n' +
         '5. Click the gear icon → choose "Erase device" → confirm.\n\n' +
-        'This fixes the flashing / SHA-256 errors you were seeing.'
+        'This fixes most flashing / SHA-256 errors.'
       );
+    }
+
+    function showBootloaderHelp() {
+      document.getElementById('helpModal').style.display = 'flex';
+    }
+
+    function closeHelpModal() {
+      document.getElementById('helpModal').style.display = 'none';
     }
 
     async function connectDevice() {
