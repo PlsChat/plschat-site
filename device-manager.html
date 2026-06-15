@@ -3,171 +3,260 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PLSChat - Device Manager</title>
+  <title>PLSChat • Device Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
     
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', system_ui, sans-serif;
       background: #0a0c1f;
       color: #c9d1d9;
-      margin: 0;
-      padding: 40px 20px;
-      min-height: 100vh;
-      position: relative;
-      overflow-y: auto;
     }
     
+    .font-display {
+      font-family: 'Space Grotesk', 'Inter', sans-serif;
+      font-weight: 600;
+    }
+
+    .gradient-text {
+      background: linear-gradient(90deg, #a855f7, #d946ef, #67e8f9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
     #mesh-bg {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       z-index: -1;
-      opacity: 0.9;
+      opacity: 0.85;
+    }
+
+    .action-card {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
     }
     
-    .container {
-      max-width: 960px;
-      margin: 0 auto;
-      text-align: center;
-      position: relative;
-      z-index: 2;
-    }
-    
-    h1 {
-      font-size: 3.6em;
-      font-weight: 700;
-      background: linear-gradient(90deg, #a855f7, #67e8f9, #58a6ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 8px;
-    }
-    
-    .subtitle {
-      color: #94a3b8;
-      font-size: 1.3em;
-      margin-bottom: 30px;
-    }
-    
-    .top-nav {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-    }
-    
-    .buttons {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 14px;
-      margin: 40px 0;
-      max-width: 800px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    
-    button {
-      padding: 18px 24px;
-      font-size: 1.1em;
-      font-weight: 600;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.3s;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6, #a855f7);
-      color: white;
-      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
-    }
-    
-    button::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -150%;
-      width: 60%;
-      height: 200%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-      transition: 0.7s;
-    }
-    
-    button:hover::before {
-      left: 250%;
-    }
-    
-    button:hover {
+    .action-card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 15px 30px rgba(139, 92, 246, 0.6);
-    }
-    
-    .success-box {
-      background: rgba(34, 211, 238, 0.15);
-      border: 2px solid #22d3ee;
-      padding: 20px;
-      border-radius: 16px;
-      margin: 30px auto;
-      color: #67e8f9;
-      font-size: 1.5em;
-      font-weight: 600;
-      max-width: 500px;
-    }
-    
-    .bottom-nav {
-      margin-top: 40px;
+      border-color: rgba(192, 38, 211, 0.3);
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
     }
 
-    .map-button {
-      background: linear-gradient(135deg, #22c55e, #16a34a) !important;
-      box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4) !important;
+    .action-btn {
+      transition: all 0.2s ease;
+    }
+    
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
     }
 
-    .map-button:hover {
-      box-shadow: 0 15px 30px rgba(34, 197, 94, 0.6) !important;
+    .nav-link {
+      transition: color 0.1s ease;
+    }
+    
+    .nav-link:hover {
+      color: #c026d3;
     }
   </style>
 </head>
 <body>
   <canvas id="mesh-bg"></canvas>
-  
-  <div class="container">
-    <!-- Top Left Back Button -->
-    <div class="top-nav">
-      <button onclick="window.location.href='index.html'" style="padding:10px 16px; font-size:1em; background:#334155;">Back to Home</button>
+
+  <!-- Navbar (matching index) -->
+  <nav class="border-b border-white/10 bg-[#0a0c1f]/95 backdrop-blur-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex items-center justify-between h-20">
+        <!-- Logo -->
+        <div class="flex items-center gap-x-3">
+          <svg width="38" height="38" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+            <defs>
+              <linearGradient id="plsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3b82f6"/>
+                <stop offset="50%" stop-color="#c026d3"/>
+                <stop offset="100%" stop-color="#ec4899"/>
+              </linearGradient>
+            </defs>
+            <path d="M50 5 L90 27.5 L90 72.5 L50 95 L10 72.5 L10 27.5 Z" fill="url(#plsGrad)" stroke="#fff" stroke-width="3"/>
+            <polyline points="25,50 35,50 40,35 48,65 55,42 62,58 68,50 75,50" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <span class="font-display text-3xl font-semibold tracking-tighter">PLSChat</span>
+          </div>
+        </div>
+
+        <!-- Desktop Nav -->
+        <div class="hidden md:flex items-center gap-x-8 text-sm font-medium">
+          <a href="index.html" class="nav-link text-zinc-400 hover:text-white">Home</a>
+          <a href="coverage-map.html" class="nav-link text-emerald-400 hover:text-emerald-300 font-medium">Coverage Map</a>
+          <a href="flasher.html" class="nav-link text-zinc-400 hover:text-white">Web Flasher</a>
+        </div>
+
+        <div class="flex items-center gap-x-3">
+          <a href="index.html" 
+             class="hidden sm:inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/20 hover:bg-white/5 transition-colors">
+            Back to Home
+          </a>
+          <button id="mobile-menu-btn" class="md:hidden w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-white">
+            <i class="fa-solid fa-bars text-xl"></i>
+          </button>
+        </div>
+      </div>
     </div>
-    
-    <h1>PULSE CHAT</h1>
-    <p class="subtitle">Decentralised LoRa Mesh Communication</p>
- 
-    <div class="buttons">
-      <button onclick="window.location.href='flasher.html'">Open Web Flasher</button>
-      <button onclick="window.location.href='monitor.html'">Network Monitor</button>
-      <!-- Replaced Connect Device with Coverage Map button -->
-      <a href="coverage-map.html" style="text-decoration: none; width: 100%;">
-        <button class="map-button" style="width: 100%;">
-          <span>View Coverage Map</span>
-        </button>
-      </a>
-      <button onclick="window.location.href='buy.html'">Buy License</button>
-      <button onclick="claimRewards()">Claim Rewards</button>
-      <button onclick="window.location.href='configure.html'">Configure Device</button>
-    </div>
-    
-    <div id="output"></div>
-   
-    <!-- Bottom Centered Back Button -->
-    <div class="bottom-nav">
-      <button onclick="window.location.href='index.html'" style="padding:14px 32px; font-size:1.1em; background:#334155; color:#c9d1d9;">Back to Home</button>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="hidden md:hidden border-b border-white/10 bg-[#0a0c1f]">
+    <div class="px-6 py-4 flex flex-col gap-y-1 text-sm">
+      <a href="index.html" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Home</a>
+      <a href="coverage-map.html" class="py-2.5 px-4 text-emerald-400 hover:bg-white/5 rounded-2xl font-medium">Coverage Map</a>
+      <a href="flasher.html" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Web Flasher</a>
     </div>
   </div>
 
+  <!-- Hero Section -->
+  <div class="max-w-4xl mx-auto px-6 pt-16 pb-12 text-center">
+    <div class="inline-flex items-center gap-x-2 px-4 py-1.5 rounded-3xl bg-white/5 border border-white/10 text-xs font-medium tracking-[1.5px] mb-6">
+      <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+      <span>MANAGE YOUR MESH NODES</span>
+    </div>
+
+    <h1 class="font-display text-6xl md:text-7xl tracking-tighter leading-none mb-4">
+      Device <span class="gradient-text">Manager</span>
+    </h1>
+    <p class="max-w-2xl mx-auto text-xl text-zinc-400">
+      Control your PLSChat nodes, view the network, activate licenses, and claim rewards — all in one place.
+    </p>
+  </div>
+
+  <!-- Action Cards -->
+  <div class="max-w-5xl mx-auto px-6 pb-20">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      
+      <!-- Coverage Map (Prominent) -->
+      <a href="coverage-map.html" class="action-card group block rounded-3xl p-8 hover:border-fuchsia-500/30">
+        <div class="flex items-start gap-x-4">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-400/10 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-map text-emerald-400 text-2xl"></i>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-semibold text-2xl mb-2 group-hover:text-emerald-400 transition-colors">Coverage Map</h3>
+            <p class="text-zinc-400 text-[15px] mb-4">See the privacy-first mesh coverage. 1km grid precision. No exact locations ever shown.</p>
+            <div class="inline-flex items-center text-sm font-medium text-emerald-400 group-hover:gap-x-2 transition-all">
+              Explore the map <i class="fa-solid fa-arrow-right ml-2"></i>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Web Flasher -->
+      <a href="flasher.html" class="action-card group block rounded-3xl p-8 hover:border-fuchsia-500/30">
+        <div class="flex items-start gap-x-4">
+          <div class="w-12 h-12 rounded-2xl bg-violet-400/10 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-microchip text-violet-400 text-2xl"></i>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-semibold text-2xl mb-2 group-hover:text-violet-400 transition-colors">Web Flasher</h3>
+            <p class="text-zinc-400 text-[15px] mb-4">Flash the latest PLSChat firmware directly from your browser onto Heltec V4 and other supported boards.</p>
+            <div class="inline-flex items-center text-sm font-medium text-violet-400 group-hover:gap-x-2 transition-all">
+              Open Flasher <i class="fa-solid fa-arrow-right ml-2"></i>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Network Monitor -->
+      <a href="monitor.html" class="action-card group block rounded-3xl p-8 hover:border-fuchsia-500/30">
+        <div class="flex items-start gap-x-4">
+          <div class="w-12 h-12 rounded-2xl bg-sky-400/10 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-chart-line text-sky-400 text-2xl"></i>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-semibold text-2xl mb-2 group-hover:text-sky-400 transition-colors">Network Monitor</h3>
+            <p class="text-zinc-400 text-[15px] mb-4">View live network statistics, connected nodes, and overall mesh health.</p>
+            <div class="inline-flex items-center text-sm font-medium text-sky-400 group-hover:gap-x-2 transition-all">
+              Open Monitor <i class="fa-solid fa-arrow-right ml-2"></i>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Buy License -->
+      <a href="buy.html" class="action-card group block rounded-3xl p-8 hover:border-fuchsia-500/30">
+        <div class="flex items-start gap-x-4">
+          <div class="w-12 h-12 rounded-2xl bg-amber-400/10 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-shopping-cart text-amber-400 text-2xl"></i>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-semibold text-2xl mb-2 group-hover:text-amber-400 transition-colors">Buy PLSC License</h3>
+            <p class="text-zinc-400 text-[15px] mb-4">Purchase device-bound PLSC licenses to unlock premium features and support the network.</p>
+            <div class="inline-flex items-center text-sm font-medium text-amber-400 group-hover:gap-x-2 transition-all">
+              Buy License <i class="fa-solid fa-arrow-right ml-2"></i>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Claim Rewards -->
+      <a href="claim.html" class="action-card group block rounded-3xl p-8 hover:border-fuchsia-500/30">
+        <div class="flex items-start gap-x-4">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-400/10 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-coins text-emerald-400 text-2xl"></i>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-semibold text-2xl mb-2 group-hover:text-emerald-400 transition-colors">Claim Rewards</h3>
+            <p class="text-zinc-400 text-[15px] mb-4">Claim your PLSC rewards for running nodes and contributing to the mesh coverage.</p>
+            <div class="inline-flex items-center text-sm font-medium text-emerald-400 group-hover:gap-x-2 transition-all">
+              Claim Rewards <i class="fa-solid fa-arrow-right ml-2"></i>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Configure Device -->
+      <a href="configure.html" class="action-card group block rounded-3xl p-8 hover:border-fuchsia-500/30">
+        <div class="flex items-start gap-x-4">
+          <div class="w-12 h-12 rounded-2xl bg-rose-400/10 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-cog text-rose-400 text-2xl"></i>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-semibold text-2xl mb-2 group-hover:text-rose-400 transition-colors">Configure Device</h3>
+            <p class="text-zinc-400 text-[15px] mb-4">Adjust node settings, Room Server configuration, and advanced mesh parameters.</p>
+            <div class="inline-flex items-center text-sm font-medium text-rose-400 group-hover:gap-x-2 transition-all">
+              Configure <i class="fa-solid fa-arrow-right ml-2"></i>
+            </div>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/10 py-8 text-xs text-zinc-500">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row md:items-center justify-between gap-y-3 text-center md:text-left">
+      <div>
+        PLSChat Device Manager • Secure node management for the decentralized mesh
+      </div>
+      <div>
+        <a href="index.html" class="hover:text-zinc-300">Back to Homepage</a>
+      </div>
+    </div>
+  </footer>
+
   <script>
-    // ==================== WORKING ANIMATED MESH BACKGROUND ====================
+    // Tailwind config
+    function initTailwind() {
+      // Already loaded
+    }
+
+    // Animated Mesh Background (kept from original - nice touch)
     const canvas = document.getElementById('mesh-bg');
     const ctx = canvas.getContext('2d');
-    
+
     function resizeCanvas() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -199,24 +288,21 @@
       mouse.y = e.clientY;
       mouse.active = true;
     });
-    
-    window.addEventListener('mouseleave', () => {
-      mouse.active = false;
-    });
+
+    window.addEventListener('mouseleave', () => { mouse.active = false; });
 
     function drawMesh() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw connections
-      ctx.strokeStyle = 'rgba(103, 232, 249, 0.12)';
+
+      ctx.strokeStyle = 'rgba(192, 38, 211, 0.12)';
       ctx.lineWidth = 1;
-      
+
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
           const dx = nodes[i].x - nodes[j].x;
           const dy = nodes[i].y - nodes[j].y;
           const distance = Math.hypot(dx, dy);
-          
+
           if (distance < 160) {
             ctx.beginPath();
             ctx.moveTo(nodes[i].x, nodes[i].y);
@@ -225,50 +311,54 @@
           }
         }
       }
-      
-      // Draw nodes + mouse interaction
+
       nodes.forEach(node => {
-        // Mouse repulsion
         if (mouse.active) {
           const dx = node.x - mouse.x;
           const dy = node.y - mouse.y;
           const dist = Math.hypot(dx, dy);
-          
+
           if (dist < 220 && dist > 0) {
             const force = (220 - dist) / 220;
             node.vx += (dx / dist) * force * 0.8;
             node.vy += (dy / dist) * force * 0.8;
           }
         }
-        
-        // Update position
+
         node.x += node.vx;
         node.y += node.vy;
-        
-        // Bounce off edges
+
         const margin = 30;
         if (node.x < margin || node.x > canvas.width - margin) node.vx *= -1;
         if (node.y < margin || node.y > canvas.height - margin) node.vy *= -1;
-        
-        // Draw node
+
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-        ctx.fillStyle = '#67e8f9';
+        ctx.fillStyle = '#c026d3';
         ctx.fill();
       });
-      
+
       requestAnimationFrame(drawMesh);
     }
-    
-    drawMesh();
-    // ==================== END OF ANIMATION ====================
 
-    // ==================== DEVICE MANAGER FUNCTIONS ====================
-    function claimRewards() {
-      window.location.href = 'claim.html';
+    drawMesh();
+
+    // Mobile menu
+    const mobileBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    if (mobileBtn && mobileMenu) {
+      mobileBtn.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+        const icon = mobileBtn.querySelector('i');
+        if (icon) {
+          icon.classList.toggle('fa-bars');
+          icon.classList.toggle('fa-times');
+        }
+      });
     }
 
-    // Note: connectDevice() function removed as the button was replaced with Coverage Map
+    initTailwind();
   </script>
 </body>
 </html>
