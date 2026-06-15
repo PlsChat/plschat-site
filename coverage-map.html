@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLSChat • Coverage Map • Privacy-First Mesh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        :root {
+            --primary: #22c55e;
+        }
+        
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        .mesh-gradient {
+            background: linear-gradient(135deg, #052e16 0%, #0a3d1f 50%, #052e16 100%);
+        }
+
+        .section-header {
+            font-size: 2.25rem;
+            line-height: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .privacy-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .privacy-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        #map {
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+            border: 1px solid #166534;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: #052e16;
+            color: #f1f5f9;
+            border-radius: 12px;
+            border: 1px solid #166534;
+        }
+        
+        .leaflet-popup-tip {
+            background: #052e16;
+            border: 1px solid #166534;
+        }
+
+        .coverage-circle {
+            transition: fill-opacity 0.3s ease;
+        }
+
+        .stat-number {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .nav-active {
+            color: #22c55e;
+            position: relative;
+        }
+        
+        .nav-active:after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #22c55e;
+        }
+
+        .grid-label {
+            font-size: 10px;
+            font-family: ui-monospace, monospace;
+        }
+
+        .security-badge {
+            background: linear-gradient(90deg, #052e16, #166534);
+            border: 1px solid #4ade80;
+        }
+
+        .data-table th {
+            background: #052e16;
+            color: #86efac;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-200">
+    <!-- NAV -->
+    <nav class="bg-zinc-900/95 backdrop-blur-lg border-b border-zinc-800 sticky top-0 z-50">
+        <div class="max-w-screen-2xl mx-auto">
+            <div class="px-8 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-x-3">
+                    <!-- Logo -->
+                    <div class="flex items-center gap-x-2">
+                        <div class="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-zinc-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20.5v-3.5m0 0a5.5 5.5 0 01-5.5-5.5 5.5 5.5 0 015.5-5.5 5.5 5.5 0 015.5 5.5 5.5 5.5 0 01-5.5 5.5z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="font-display text-2xl font-semibold tracking-tighter">PLS</span>
+                            <span class="font-display text-2xl font-semibold tracking-tighter text-emerald-400">Chat</span>
+                        </div>
+                    </div>
+                    <div class="hidden md:block px-3 py-1 text-xs font-mono bg-emerald-950 text-emerald-400 rounded-full border border-emerald-800">v2 • LoRa Mesh</div>
+                </div>
+
+                <!-- Desktop Nav -->
+                <div class="hidden md:flex items-center gap-x-8 text-sm">
+                    <a href="index.html" class="hover:text-emerald-400 transition-colors">Home</a>
+                    <a href="device-manager.html" class="hover:text-emerald-400 transition-colors">Device Manager</a>
+                    <a href="flasher.html" class="hover:text-emerald-400 transition-colors">Web Flasher</a>
+                    <a href="coverage-map.html" class="nav-active font-medium">Coverage Map</a>
+                    <a href="buy.html" class="hover:text-emerald-400 transition-colors">Buy PLSC</a>
+                </div>
+
+                <div class="flex items-center gap-x-3">
+                    <div class="hidden sm:flex items-center gap-x-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-2xl text-xs">
+                        <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                        <span class="font-mono text-emerald-400">12,847 nodes • live</span>
+                    </div>
+                    <a href="device-manager.html" 
+                       class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 transition-all text-zinc-950 font-semibold rounded-2xl text-sm flex items-center gap-x-2">
+                        <span>Open Device Manager</span>
+                    </a>
+                    
+                    <!-- Mobile menu -->
+                    <button class="md:hidden p-2 text-zinc-400 hover:text-white" onclick="toggleMobileNav()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="max-w-screen-2xl mx-auto px-8 pt-16 pb-12">
+        <div class="max-w-4xl">
+            <div class="inline-flex items-center gap-x-2 px-4 py-1.5 rounded-3xl bg-emerald-950 border border-emerald-900 text-emerald-400 text-sm mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 8.944 11.922" />
+                </svg>
+                <span class="font-medium">PRIVACY BY DEFAULT • SECURITY FIRST</span>
+            </div>
+            
+            <h1 class="section-header tracking-tighter">Prove the network exists.<br>Prove <span class="mesh-text">nothing else</span>.</h1>
+            <p class="mt-4 max-w-xl text-xl text-zinc-400">The world's first coverage map that shows real mesh activity without ever revealing node locations, owners, or traffic patterns.</p>
+            
+            <div class="flex flex-wrap items-center gap-x-4 mt-8">
+                <button onclick="document.getElementById('map-section').scrollIntoView({ behavior: 'smooth' })" 
+                        class="px-8 py-4 bg-white text-zinc-950 hover:bg-zinc-100 font-semibold rounded-3xl flex items-center gap-x-3 transition-all active:scale-[0.985]">
+                    <span>Explore the live map</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <button onclick="showPrivacyModal()" 
+                        class="px-6 py-4 border border-zinc-700 hover:bg-zinc-900 font-medium rounded-3xl flex items-center gap-x-2 transition-all">
+                    <span>Why this design protects everyone</span>
+                </button>
+            </div>
+            
+            <div class="mt-6 flex items-center gap-x-6 text-sm text-zinc-500">
+                <div class="flex items-center gap-x-1.5">
+                    <span class="font-mono">1km</span> 
+                    <span>grid precision</span>
+                </div>
+                <div class="w-px h-3 bg-zinc-800"></div>
+                <div>Ephemeral Node IDs</div>
+                <div class="w-px h-3 bg-zinc-800"></div>
+                <div>Aggregate-only telemetry</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS BAR -->
+    <div class="max-w-screen-2xl mx-auto px-8 pb-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
+                <div class="text-emerald-400 text-xs tracking-[1px] font-mono">GLOBAL COVERAGE</div>
+                <div class="mt-1 flex items-baseline gap-x-2">
+                    <span id="regions-covered" class="stat-number text-4xl font-semibold tabular-nums">187</span>
+                    <span class="text-emerald-400 text-sm">regions</span>
+                </div>
+                <div class="text-xs text-zinc-500 mt-1">across 41 countries</div>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
+                <div class="text-emerald-400 text-xs tracking-[1px] font-mono">ACTIVE NODES (EST.)</div>
+                <div class="mt-1 flex items-baseline gap-x-2">
+                    <span id="active-nodes" class="stat-number text-4xl font-semibold tabular-nums">12,847</span>
+                    <span class="text-emerald-400 text-sm">–14,203</span>
+                </div>
+                <div class="text-xs text-zinc-500 mt-1">fuzzy range • updated live</div>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
+                <div class="text-emerald-400 text-xs tracking-[1px] font-mono">MESSAGES RELAYED (24H)</div>
+                <div class="mt-1 flex items-baseline gap-x-2">
+                    <span id="messages-relayed" class="stat-number text-4xl font-semibold tabular-nums">2.84</span>
+                    <span class="text-emerald-400 text-sm">million</span>
+                </div>
+                <div class="text-xs text-zinc-500 mt-1">aggregate only • no timing leaks</div>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 flex flex-col justify-between">
+                <div>
+                    <div class="text-emerald-400 text-xs tracking-[1px] font-mono">NEEDED REPEATERS</div>
+                    <div class="mt-1 text-4xl font-semibold tabular-nums">312</div>
+                </div>
+                <div class="text-xs text-amber-400 flex items-center gap-x-1">
+                    <span>Priority gaps identified</span>
+                    <button onclick="document.getElementById('needed-section').scrollIntoView({ behavior: 'smooth' })" class="underline hover:no-underline">View list →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAP SECTION -->
+    <div id="map-section" class="max-w-screen-2xl mx-auto px-8 pb-16">
+        <div class="flex items-end justify-between mb-4">
+            <div>
+                <h2 class="text-3xl font-semibold tracking-tight">Live Coverage Map</h2>
+                <p class="text-zinc-400 mt-1">1km grid squares • Heatmap density • No pins. No owners. No exact locations.</p>
+            </div>
+            <div class="flex items-center gap-x-3">
+                <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-2xl p-1 text-xs">
+                    <div class="px-3 py-1.5 bg-emerald-600 text-white rounded-[14px] flex items-center gap-x-1.5">
+                        <div class="w-2 h-2 bg-white rounded-full"></div>
+                        <span class="font-medium">Active Coverage</span>
+                    </div>
+                    <div onclick="highlightNeededAreas()" class="px-3 py-1.5 hover:bg-zinc-800 cursor-pointer rounded-[14px] flex items-center gap-x-1.5 text-amber-400">
+                        <div class="w-2 h-2 bg-amber-400 rounded-full"></div>
+                        <span>Needed Areas</span>
+                    </div>
+                </div>
+                <button onclick="simulateGrowth()" 
+                        class="px-4 py-2 text-sm font-medium bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 rounded-2xl flex items-center gap-x-2 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7-7 7m-4-7h11" />
+                    </svg>
+                    <span>Simulate Growth</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- MAP CONTAINER -->
+        <div class="relative">
+            <div id="map" class="w-full h-[620px] z-10"></div>
+            
+            <!-- Floating privacy enforcement badge -->
+            <div class="absolute top-4 right-4 bg-zinc-900/90 backdrop-blur border border-emerald-800 text-emerald-400 px-4 py-2 rounded-2xl text-xs flex items-center gap-x-2 z-[1000]">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V9a4 4 0 00-8 0v3" />
+                </svg>
+                <span class="font-medium">Exact GPS never leaves device</span>
+            </div>
+            
+            <!-- Legend -->
+            <div class="absolute bottom-4 left-4 bg-zinc-900/95 border border-zinc-700 rounded-2xl p-3 text-xs z-[1000] max-w-[220px]">
+                <div class="font-mono text-[10px] tracking-widest text-emerald-400 mb-2 px-1">LEGEND</div>
+                <div class="space-y-1.5 text-zinc-300">
+                    <div class="flex items-center gap-x-2">
+                        <div class="w-4 h-4 rounded-full bg-emerald-500/70 border border-emerald-400"></div>
+                        <span>Active coverage (1km grid)</span>
+                    </div>
+                    <div class="flex items-center gap-x-2">
+                        <div class="w-4 h-4 rounded-full bg-amber-400/30 border border-amber-400 border-dashed"></div>
+                        <span>Priority gap / Needed repeater</span>
+                    </div>
+                    <div class="text-[10px] text-zinc-500 pt-1">Click any area to simulate adding coverage</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3 text-center text-[10px] text-zinc-500 font-mono tracking-widest">DATA IS AGGREGATED • REFRESHED EVERY ~15 MINUTES • NO INDIVIDUAL NODE DATA EVER PUBLISHED</div>
+    </div>
+
+    <!-- PRIVACY TABLE / ARCHITECTURE -->
+    <div class="max-w-screen-2xl mx-auto px-8 pb-16 border-t border-zinc-800 pt-16">
+        <div class="max-w-3xl mb-10">
+            <div class="uppercase tracking-[2px] text-emerald-400 text-xs font-semibold">CORE PRINCIPLE</div>
+            <h2 class="text-4xl font-semibold tracking-tighter mt-1">What the map shows — and what it deliberately never can.</h2>
+            <p class="text-lg text-zinc-400 mt-3">A public map of exact node locations would be an attack surface. This map is engineered to be the opposite: a trust signal that strengthens the network while protecting every participant.</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+            <!-- Public column -->
+            <div class="bg-zinc-900 border border-emerald-900/60 rounded-3xl p-7 privacy-card">
+                <div class="flex items-center gap-x-3 mb-5">
+                    <div class="px-3 py-1 bg-emerald-950 text-emerald-400 text-xs font-bold tracking-widest rounded-2xl">PUBLIC • SAFE TO SHOW</div>
+                </div>
+                <div class="space-y-4 text-sm">
+                    <div class="flex gap-3">
+                        <span class="mt-1 text-emerald-400">✓</span>
+                        <div><span class="font-medium">Approximate coverage area</span> (snapped to 1km grid squares)</div>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="mt-1 text-emerald-400">✓</span>
+                        <div><span class="font-medium">Node count per broad region</span> (ranges only, never exact)</div>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="mt-1 text-emerald-400">✓</span>
+                        <div><span class="font-medium">Total messages relayed</span> (global &amp; regional aggregates, no timing)</div>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="mt-1 text-emerald-400">✓</span>
+                        <div><span class="font-medium">Mesh density overlay</span> (heatmap style, no hop lines or paths)</div>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="mt-1 text-emerald-400">✓</span>
+                        <div><span class="font-medium">Needed repeater target squares</span> (grid only — "Active" when filled)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Private column -->
+            <div class="bg-zinc-900 border border-red-900/40 rounded-3xl p-7 privacy-card">
+                <div class="flex items-center gap-x-3 mb-5">
+                    <div class="px-3 py-1 bg-red-950 text-red-400 text-xs font-bold tracking-widest rounded-2xl">NEVER PUBLISHED • HARD REJECTED</div>
+                </div>
+                <div class="space-y-4 text-sm">
+                    <div class="flex gap-3">
+                        <span class="mt-1 text-red-400">✕</span>
+                        <div><span class="font-medium">Exact node GPS coordinates</span> — physical security risk</div>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="mt-1 text-red-400">✕</span>
+                        <div><span class="font-medium">Node owner identity or wallet</span> — defeats anonymity</div>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="mt-1 text-red-400">✕</span>
+                        <div><span class="font-medium">Individual node uptime or stats</span> — fingerprinting / targeting risk</div>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="mt-1 text-red-400">✕</span>
+                        <div><span class="font-medium">Live traffic timing or patterns</span> — traffic analysis vector</div>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="mt-1 text-red-400">✕</span>
+                        <div><span class="font-medium">Persistent Node ID across months</span> — long-term tracking</div>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="mt-1 text-red-400">✕</span>
+                        <div><span class="font-medium">Hop-by-hop paths or RSSI per node</span> — reveals topology</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-6 text-center">
+            <button onclick="showPrivacyModal()" class="text-emerald-400 hover:text-emerald-300 text-sm flex items-center gap-x-2 mx-auto">
+                Read the full threat model and implementation details 
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7-7 7m-4-7h11" /></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- NEEDED REPEATERS SECTION -->
+    <div id="needed-section" class="max-w-screen-2xl mx-auto px-8 pb-16">
+        <div class="flex justify-between items-end mb-6">
+            <div>
+                <h3 class="text-2xl font-semibold tracking-tight">Priority Areas Needing Repeaters</h3>
+                <p class="text-zinc-400">Target 1km grid squares. When covered, status flips to “Active”. No names. No owners.</p>
+            </div>
+            <button onclick="nominateArea()" class="text-sm px-5 py-2.5 border border-amber-700 hover:bg-amber-950 text-amber-400 rounded-2xl flex items-center gap-x-2">
+                <span>Nominate a new priority area</span>
+            </button>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-4">
+            <!-- Needed cards (interactive) -->
+            <div onclick="focusOnMapArea(51.48, -0.01, 'London East - Tower Hamlets')" class="cursor-pointer group bg-zinc-900 border border-amber-900/50 hover:border-amber-700 rounded-3xl p-5 transition-all">
+                <div class="flex justify-between">
+                    <div>
+                        <div class="font-mono text-xs text-amber-400">GRID • 51.48, -0.01</div>
+                        <div class="font-semibold mt-1">London East • Tower Hamlets</div>
+                    </div>
+                    <div class="px-3 py-1 h-fit text-xs bg-amber-950 text-amber-400 rounded-2xl self-start">NEEDED</div>
+                </div>
+                <div class="mt-4 text-xs text-zinc-400">Low mesh density • 3+ repeaters would close major gap for East London events &amp; river communities.</div>
+                <div class="mt-4 text-emerald-400 text-xs group-hover:underline">Click to focus on map →</div>
+            </div>
+
+            <div onclick="focusOnMapArea(40.71, -74.01, 'NYC • Lower Manhattan')" class="cursor-pointer group bg-zinc-900 border border-amber-900/50 hover:border-amber-700 rounded-3xl p-5 transition-all">
+                <div class="flex justify-between">
+                    <div>
+                        <div class="font-mono text-xs text-amber-400">GRID • 40.71, -74.01</div>
+                        <div class="font-semibold mt-1">New York • Lower Manhattan</div>
+                    </div>
+                    <div class="px-3 py-1 h-fit text-xs bg-amber-950 text-amber-400 rounded-2xl self-start">NEEDED</div>
+                </div>
+                <div class="mt-4 text-xs text-zinc-400">High foot traffic area with poor existing coverage. Strong candidate for event &amp; emergency use.</div>
+                <div class="mt-4 text-emerald-400 text-xs group-hover:underline">Click to focus on map →</div>
+            </div>
+
+            <div onclick="focusOnMapArea(52.52, 13.40, 'Berlin • Mitte')" class="cursor-pointer group bg-zinc-900 border border-amber-900/50 hover:border-amber-700 rounded-3xl p-5 transition-all">
+                <div class="flex justify-between">
+                    <div>
+                        <div class="font-mono text-xs text-amber-400">GRID • 52.52, 13.40</div>
+                        <div class="font-semibold mt-1">Berlin • Mitte &amp; Kreuzberg</div>
+                    </div>
+                    <div class="px-3 py-1 h-fit text-xs bg-amber-950 text-amber-400 rounded-2xl self-start">NEEDED</div>
+                </div>
+                <div class="mt-4 text-xs text-zinc-400">Cultural hub with growing community interest. Gap between existing clusters.</div>
+                <div class="mt-4 text-emerald-400 text-xs group-hover:underline">Click to focus on map →</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOW NODES REPORT (TECHNICAL) -->
+    <div class="max-w-screen-2xl mx-auto px-8 pb-16 border-t border-zinc-800 pt-12">
+        <div class="max-w-3xl">
+            <h3 class="text-2xl font-semibold tracking-tight">How a node contributes to the map — without ever leaking location</h3>
+            <p class="text-zinc-400 mt-2">Everything happens locally on the device first. The map service only ever sees a 1km grid square + signed aggregates.</p>
+        </div>
+
+        <div class="mt-8 grid md:grid-cols-4 gap-4 text-sm">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+                <div class="text-emerald-400 font-mono text-xs mb-3">STEP 01 — LOCAL ONLY</div>
+                <div class="font-semibold">Device generates ephemeral Node ID</div>
+                <div class="text-xs text-zinc-400 mt-2">Random 128-bit ID created at boot. Rotates automatically every 30 days. Never reused. No link to wallet or owner.</div>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+                <div class="text-emerald-400 font-mono text-xs mb-3">STEP 02 — LOCAL ONLY</div>
+                <div class="font-semibold">GPS snapped to 1km grid square</div>
+                <div class="text-xs text-zinc-400 mt-2">Exact coordinates never leave the ESP32. Simple rounding math produces grid ID (e.g. g1km_51.51_-0.13). Exact location is discarded immediately.</div>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+                <div class="text-emerald-400 font-mono text-xs mb-3">STEP 03</div>
+                <div class="font-semibold">Sign aggregate attestation</div>
+                <div class="text-xs text-zinc-400 mt-2">Device signs (uptime hours, messages relayed count, license proof) using its private key tied to PLSC device-bound license. Signature is verifiable but reveals nothing about location.</div>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+                <div class="text-emerald-400 font-mono text-xs mb-3">STEP 04</div>
+                <div class="font-semibold">Submit grid + aggregates only</div>
+                <div class="text-xs text-zinc-400 mt-2">Only {grid_id, stats, signature, timestamp} is sent (optionally via Tor or room server gateway). Map backend aggregates and discards any potential identifiers.</div>
+            </div>
+        </div>
+        
+        <div class="mt-6 p-4 bg-zinc-900/70 border border-zinc-800 rounded-2xl text-xs text-zinc-400 flex gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 flex-shrink-0 text-emerald-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4v.01M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 4.01V8" />
+            </svg>
+            <div><strong class="text-emerald-400">Security note:</strong> Even if the map server is fully compromised or seized, the attacker learns only which broad 1km squares have activity. They cannot identify which device, who owns it, or its precise position. This is intentional and non-negotiable.</div>
+        </div>
+    </div>
+
+    <!-- REWARDS PRIVACY -->
+    <div class="max-w-screen-2xl mx-auto px-8 pb-20">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 md:p-10">
+            <div class="md:flex gap-10">
+                <div class="md:w-5/12">
+                    <div class="uppercase text-emerald-400 tracking-[1.5px] text-xs font-semibold">INCENTIVES WITHOUT COMPROMISE</div>
+                    <h3 class="text-3xl font-semibold tracking-tight mt-2">PLSC rewards stay private too.</h3>
+                    <p class="mt-3 text-zinc-400">Coverage and uptime earn PLSC. But the reward system is deliberately designed so the map and the blockchain cannot be correlated to physical locations.</p>
+                </div>
+                <div class="md:w-7/12 mt-8 md:mt-0 text-sm space-y-4 text-zinc-300">
+                    <div class="flex gap-4">
+                        <div class="font-mono text-emerald-400 mt-0.5">01</div>
+                        <div>Uptime &amp; relay stats are attested locally and submitted directly to the PLSC smart contract (or via a privacy-preserving oracle) — <span class="text-zinc-400">never through the public map service</span>.</div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="font-mono text-emerald-400 mt-0.5">02</div>
+                        <div>Rewards are paid to the license holder address. Because licenses can be acquired privately and device keys are not linked to on-chain identity in the map, there is no reliable way to connect a reward payout to a specific grid square.</div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="font-mono text-emerald-400 mt-0.5">03</div>
+                        <div>Future roadmap: Zero-knowledge proofs for coverage claims (e.g. zkSNARKs proving "I relayed X messages in a valid grid without revealing which grid"). This makes even the reward contract unable to learn location.</div>
+                    </div>
+                    <div class="pt-2 text-xs border-t border-zinc-700 text-emerald-400/70">Result: Operators are incentivized to deploy nodes in high-value areas, but adversaries gain zero actionable intelligence from either the map or the blockchain.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER / CTA -->
+    <footer class="border-t border-zinc-800 bg-zinc-900/50">
+        <div class="max-w-screen-2xl mx-auto px-8 py-10 text-sm">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-y-6">
+                <div class="text-zinc-400">
+                    PLSChat • Decentralized LoRa Mesh • Powered by PLSC<br>
+                    <span class="text-xs">Security &amp; anonymity are not features — they are the foundation.</span>
+                </div>
+                <div class="flex flex-wrap gap-x-6 gap-y-2 text-xs text-zinc-400">
+                    <a href="https://github.com/PlsChat" class="hover:text-white">GitHub</a>
+                    <a href="#" class="hover:text-white">Docs &amp; Protocol</a>
+                    <a href="#" onclick="showPrivacyModal()" class="hover:text-white">Full Privacy Architecture</a>
+                    <a href="claim.html" class="hover:text-white">Claim PLSC Rewards</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Privacy Modal -->
+    <div id="privacy-modal" onclick="if (event.target.id === 'privacy-modal') hidePrivacyModal()" class="hidden fixed inset-0 bg-black/80 z-[2000] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" class="max-w-2xl w-full bg-zinc-900 border border-zinc-700 rounded-3xl p-8 max-h-[85vh] overflow-auto">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-2xl font-semibold">Privacy-First Map Architecture</h3>
+                    <p class="text-emerald-400 text-sm mt-1">Threat model • Design decisions • Why we reject "more data = better"</p>
+                </div>
+                <button onclick="hidePrivacyModal()" class="text-zinc-400 hover:text-white">✕</button>
+            </div>
+            
+            <div class="prose prose-invert prose-sm mt-6 text-zinc-300">
+                <h4 class="font-semibold text-white">The Core Tension (and why we solved it this way)</h4>
+                <p>A traditional coverage map helps growth but creates catastrophic risks for a privacy-first mesh:</p>
+                <ul class="list-disc pl-5 space-y-1 text-xs">
+                    <li>Exact locations → physical attacks, seizure, or targeted jamming</li>
+                    <li>Owner identities → defeats the entire anonymity proposition of PLSChat</li>
+                    <li>Live traffic → reveals when and where people are communicating (opsec disaster)</li>
+                    <li>Wallet linkage → on-chain de-anonymization of node operators</li>
+                </ul>
+                
+                <h4 class="font-semibold text-white mt-6">Our Solution: Fuzzy Public Data Only</h4>
+                <p>Show enough to prove the network is real and growing. Never enough to harm participants.</p>
+                
+                <h4 class="font-semibold text-white mt-6">Implementation Roadmap</h4>
+                <ol class="list-decimal pl-5 space-y-1 text-xs">
+                    <li><strong>Phase 1 (Current)</strong>: Static prototype + simulated aggregates (this page). Perfect for launch and community building.</li>
+                    <li><strong>Phase 2</strong>: Lightweight backend (Cloudflare Workers / Fly.io) that accepts only validated grid submissions + signatures. Strict rate limiting, no persistent logs, automatic aggregation into public GeoJSON every 15min. IP addresses stripped immediately.</li>
+                    <li><strong>Phase 3</strong>: On-chain reward integration. Uptime attestations submitted directly to PLSC contract. Map never touches reward data.</li>
+                    <li><strong>Phase 4 (Advanced)</strong>: Fully decentralized map data (IPFS + The Graph or custom subgraph) + optional ZK coverage proofs so even the aggregator learns nothing.</li>
+                </ol>
+                
+                <div class="mt-6 p-4 bg-zinc-950 border border-emerald-900 rounded-2xl text-xs">
+                    <strong class="text-emerald-400">Non-negotiable rule:</strong> Any proposed feature that would allow correlation between public map data and a specific physical device or person is rejected by design. We would rather have a slightly less "impressive" map than compromise a single node operator.
+                </div>
+            </div>
+            
+            <div class="mt-8 flex justify-end">
+                <button onclick="hidePrivacyModal()" class="px-6 py-2.5 text-sm bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-medium">I understand — close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tailwind script
+        function initTailwind() {
+            document.documentElement.style.setProperty('--accent', '#22c55e');
+            
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            'display': ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif']
+                        }
+                    }
+                }
+            };
+        }
+
+        // Leaflet Map
+        let map;
+        let coverageLayer;
+        let neededLayer;
+
+        const coverageData = [
+            { id: 1, lat: 51.5074, lng: -0.1278, radius: 1800, density: 0.85, region: "Central London", nodes: "47–92", msgs: "184,300", status: "active" },
+            { id: 2, lat: 40.7128, lng: -74.0060, radius: 2200, density: 0.78, region: "Manhattan NYC", nodes: "31–68", msgs: "142,700", status: "active" },
+            { id: 3, lat: 52.5200, lng: 13.4050, radius: 1600, density: 0.65, region: "Berlin Mitte", nodes: "19–41", msgs: "67,900", status: "active" },
+            { id: 4, lat: 37.7749, lng: -122.4194, radius: 2500, density: 0.72, region: "San Francisco Bay", nodes: "28–55", msgs: "98,400", status: "active" },
+            { id: 5, lat: 48.8566, lng: 2.3522, radius: 1900, density: 0.58, region: "Paris Centre", nodes: "14–33", msgs: "41,200", status: "active" },
+            { id: 6, lat: 35.6762, lng: 139.6503, radius: 2100, density: 0.81, region: "Tokyo Shibuya", nodes: "52–104", msgs: "231,800", status: "active" },
+            { id: 7, lat: -33.8688, lng: 151.2093, radius: 1700, density: 0.49, region: "Sydney CBD", nodes: "9–22", msgs: "28,600", status: "active" },
+            { id: 8, lat: 55.7558, lng: 37.6173, radius: 2300, density: 0.61, region: "Moscow Centre", nodes: "22–47", msgs: "73,100", status: "active" },
+            { id: 9, lat: 19.4326, lng: -99.1332, radius: 2000, density: 0.55, region: "Mexico City", nodes: "17–38", msgs: "54,900", status: "active" },
+            { id: 10, lat: 1.3521, lng: 103.8198, radius: 1800, density: 0.67, region: "Singapore", nodes: "24–51", msgs: "89,300", status: "active" }
+        ];
+
+        const neededAreas = [
+            { id: 101, lat: 51.48, lng: -0.01, radius: 1400, region: "London East • Tower Hamlets" },
+            { id: 102, lat: 40.71, lng: -74.01, radius: 1600, region: "NYC • Lower Manhattan" },
+            { id: 103, lat: 52.52, lng: 13.40, radius: 1300, region: "Berlin • Mitte / Kreuzberg" },
+            { id: 104, lat: 34.0522, lng: -118.2437, radius: 1500, region: "Los Angeles • Downtown" }
+        ];
+
+        function initMap() {
+            map = L.map('map', {
+                zoomControl: true,
+                attributionControl: false
+            }).setView([25, 10], 2.2);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                className: 'map-tiles',
+                opacity: 0.85
+            }).addTo(map);
+
+            coverageLayer = L.layerGroup().addTo(map);
+            neededLayer = L.layerGroup().addTo(map);
+
+            // Add coverage circles
+            coverageData.forEach(item => {
+                const circle = L.circle([item.lat, item.lng], {
+                    radius: item.radius,
+                    color: '#22c55e',
+                    weight: 1.5,
+                    fillColor: '#22c55e',
+                    fillOpacity: item.density * 0.35,
+                    className: 'coverage-circle'
+                }).addTo(coverageLayer);
+
+                circle.bindPopup(`
+                    <div class="p-1">
+                        <div class="font-semibold text-emerald-400">Active Coverage • ${item.region}</div>
+                        <div class="text-xs text-zinc-400 mt-1 mb-2">1km grid precision — exact location never shared</div>
+                        
+                        <div class="grid grid-cols-2 gap-x-4 text-xs">
+                            <div>
+                                <div class="text-zinc-400">Contributing nodes</div>
+                                <div class="font-mono text-lg text-white">${item.nodes}</div>
+                            </div>
+                            <div>
+                                <div class="text-zinc-400">Messages relayed (24h)</div>
+                                <div class="font-mono text-lg text-white">${item.msgs}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 pt-3 border-t border-zinc-700 text-[10px] text-emerald-300/70">
+                            Status: Verified active this week<br>
+                            Grid ID: g1km_${item.lat.toFixed(2)}_${item.lng.toFixed(2)}
+                        </div>
+                    </div>
+                `, { minWidth: 260, maxWidth: 280 });
+            });
+
+            // Add needed areas (dashed style via options)
+            neededAreas.forEach(item => {
+                const circle = L.circle([item.lat, item.lng], {
+                    radius: item.radius,
+                    color: '#f59e0b',
+                    weight: 2,
+                    fillColor: '#f59e0b',
+                    fillOpacity: 0.12,
+                    dashArray: '4, 6'
+                }).addTo(neededLayer);
+
+                circle.bindPopup(`
+                    <div class="p-1">
+                        <div class="font-semibold text-amber-400">Coverage Needed • ${item.region}</div>
+                        <div class="text-xs text-zinc-400 mt-1">This 1km grid square has low or no reported mesh activity.</div>
+                        
+                        <div class="mt-3">
+                            <button onclick="simulateCoverNeeded(${item.id}, ${item.lat}, ${item.lng}, '${item.region}'); event.target.closest('.leaflet-popup').remove();" 
+                                    class="w-full text-xs px-4 py-2 bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white font-medium rounded-2xl transition-colors">
+                                Simulate adding coverage here
+                            </button>
+                        </div>
+                        <div class="text-[10px] text-center mt-2 text-zinc-500">Becomes "Active" instantly in demo</div>
+                    </div>
+                `, { minWidth: 240 });
+            });
+
+            // Click anywhere to add new coverage (privacy demo)
+            map.on('click', function(e) {
+                const snapped = snapToGrid(e.latlng.lat, e.latlng.lng);
+                
+                if (confirm(`Add demo coverage at snapped 1km grid?\n\nSnapped position: ${snapped[0].toFixed(4)}, ${snapped[1].toFixed(4)}\n\nThis simulates a node reporting only the grid square (exact GPS is never sent).`)) {
+                    addNewCoverage(snapped[0], snapped[1], "User Demo Area");
+                }
+            });
+
+            // Initial stats animation
+            animateStats();
+        }
+
+        function snapToGrid(lat, lng) {
+            // Approximate 1km grid snapping
+            const kmPerDegLat = 111.0;
+            const gridKm = 1.0;
+            
+            const latSnap = Math.round(lat * kmPerDegLat / gridKm) * gridKm / kmPerDegLat;
+            
+            // Rough longitude adjustment for latitude
+            const cosLat = Math.cos(lat * Math.PI / 180);
+            const kmPerDegLng = kmPerDegLat * cosLat;
+            const lngSnap = Math.round(lng * kmPerDegLng / gridKm) * gridKm / kmPerDegLng;
+            
+            return [latSnap, lngSnap];
+        }
+
+        function addNewCoverage(lat, lng, regionName) {
+            const snapped = snapToGrid(lat, lng);
+            
+            const newCircle = L.circle([snapped[0], snapped[1]], {
+                radius: 1600 + Math.random() * 600,
+                color: '#22c55e',
+                weight: 1.5,
+                fillColor: '#22c55e',
+                fillOpacity: 0.45 + Math.random() * 0.25,
+                className: 'coverage-circle new-added'
+            }).addTo(coverageLayer);
+
+            const nodesRange = `${Math.floor(4 + Math.random() * 18)}–${Math.floor(22 + Math.random() * 35)}`;
+            const msgs = (Math.floor(8000 + Math.random() * 42000)).toLocaleString();
+
+            newCircle.bindPopup(`
+                <div class="p-1">
+                    <div class="font-semibold text-emerald-400">Newly Reported Coverage • ${regionName}</div>
+                    <div class="text-xs text-zinc-400 mt-1">1km grid • Added in this demo session</div>
+                    
+                    <div class="grid grid-cols-2 gap-x-4 text-xs mt-3">
+                        <div>
+                            <div class="text-zinc-400">Contributing nodes (est.)</div>
+                            <div class="font-mono text-lg">${nodesRange}</div>
+                        </div>
+                        <div>
+                            <div class="text-zinc-400">Messages relayed (demo)</div>
+                            <div class="font-mono text-lg">${msgs}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 text-[10px] text-emerald-300/60">Grid ID: g1km_${snapped[0].toFixed(2)}_${snapped[1].toFixed(2)}</div>
+                </div>
+            `);
+
+            // Update live stats
+            updateLiveStatsAfterAdd();
+            
+            // Flash effect
+            setTimeout(() => {
+                newCircle.setStyle({ fillOpacity: 0.75 });
+                setTimeout(() => {
+                    if (newCircle._map) newCircle.setStyle({ fillOpacity: 0.45 + Math.random() * 0.25 });
+                }, 600);
+            }, 120);
+        }
+
+        function updateLiveStatsAfterAdd() {
+            const nodesEl = document.getElementById('active-nodes');
+            const msgsEl = document.getElementById('messages-relayed');
+            
+            if (nodesEl) {
+                const current = parseInt(nodesEl.textContent.replace(',', ''));
+                nodesEl.textContent = (current + Math.floor(Math.random() * 7) + 3).toLocaleString();
+            }
+            if (msgsEl) {
+                const currentM = parseFloat(msgsEl.textContent);
+                msgsEl.textContent = (currentM + 0.03 + Math.random() * 0.07).toFixed(2);
+            }
+        }
+
+        function animateStats() {
+            // Subtle live updating of stats
+            setInterval(() => {
+                const nodesEl = document.getElementById('active-nodes');
+                const msgsEl = document.getElementById('messages-relayed');
+                const regionsEl = document.getElementById('regions-covered');
+                
+                if (nodesEl && Math.random() > 0.6) {
+                    const current = parseInt(nodesEl.textContent.replace(',', ''));
+                    const delta = Math.floor(Math.random() * 5) - 1;
+                    nodesEl.textContent = Math.max(12400, current + delta).toLocaleString();
+                }
+                
+                if (msgsEl && Math.random() > 0.7) {
+                    const currentM = parseFloat(msgsEl.textContent);
+                    msgsEl.textContent = (currentM + 0.01 + Math.random() * 0.04).toFixed(2);
+                }
+                
+                if (regionsEl && Math.random() > 0.85) {
+                    const currentR = parseInt(regionsEl.textContent);
+                    regionsEl.textContent = currentR + (Math.random() > 0.5 ? 1 : 0);
+                }
+            }, 14000);
+        }
+
+        function simulateGrowth() {
+            const btns = event.currentTarget;
+            
+            // Add 2-3 new random coverage areas in plausible spots
+            const newSpots = [
+                [45.4642, 9.1900, "Milan • Lombardy"],
+                [59.3293, 18.0686, "Stockholm"],
+                [-23.5505, -46.6333, "São Paulo"],
+                [30.0444, 31.2357, "Cairo"]
+            ];
+            
+            const toAdd = newSpots.sort(() => 0.5 - Math.random()).slice(0, 2 + Math.floor(Math.random()*2));
+            
+            toAdd.forEach((spot, idx) => {
+                setTimeout(() => {
+                    const snapped = snapToGrid(spot[0], spot[1]);
+                    addNewCoverage(snapped[0], snapped[1], spot[2]);
+                }, idx * 380);
+            });
+            
+            // Bonus: update needed status on one random needed area
+            setTimeout(() => {
+                const neededCircles = neededLayer.getLayers();
+                if (neededCircles.length > 0) {
+                    const randomNeeded = neededCircles[Math.floor(Math.random() * neededCircles.length)];
+                    randomNeeded.setStyle({ color: '#22c55e', fillColor: '#22c55e', fillOpacity: 0.35, dashArray: null });
+                    
+                    // Change popup content if open
+                    setTimeout(() => {
+                        if (randomNeeded.getPopup() && randomNeeded.getPopup().isOpen()) {
+                            randomNeeded.closePopup();
+                        }
+                    }, 800);
+                }
+            }, 1200);
+        }
+
+        function highlightNeededAreas() {
+            neededLayer.eachLayer(layer => {
+                layer.setStyle({ fillOpacity: 0.35, weight: 3 });
+                setTimeout(() => {
+                    if (layer._map) layer.setStyle({ fillOpacity: 0.12, weight: 2 });
+                }, 2200);
+            });
+            
+            // Briefly zoom out to show global picture
+            map.flyTo([20, 10], 2, { duration: 1.6 });
+        }
+
+        function focusOnMapArea(lat, lng, label) {
+            map.flyTo([lat, lng], 11, { duration: 1.1 });
+            
+            // Highlight the needed circle if exists
+            setTimeout(() => {
+                neededLayer.eachLayer(layer => {
+                    const center = layer.getLatLng();
+                    if (Math.abs(center.lat - lat) < 0.05 && Math.abs(center.lng - lng) < 0.05) {
+                        layer.setStyle({ fillOpacity: 0.4, weight: 3, color: '#fbbf24' });
+                        setTimeout(() => {
+                            if (layer._map) layer.setStyle({ fillOpacity: 0.12, weight: 2, color: '#f59e0b' });
+                        }, 2800);
+                    }
+                });
+            }, 900);
+        }
+
+        function simulateCoverNeeded(neededId, lat, lng, region) {
+            // Find and "convert" the needed circle
+            neededLayer.eachLayer(layer => {
+                const center = layer.getLatLng();
+                if (Math.abs(center.lat - lat) < 0.02 && Math.abs(center.lng - lng) < 0.02) {
+                    neededLayer.removeLayer(layer);
+                }
+            });
+            
+            // Add as active coverage
+            const snapped = snapToGrid(lat, lng);
+            addNewCoverage(snapped[0], snapped[1], region + " (now covered)");
+            
+            // Update global needed count in UI (demo only)
+            const neededSection = document.getElementById('needed-section');
+            if (neededSection) {
+                neededSection.style.transition = 'opacity 0.3s';
+                setTimeout(() => {
+                    const countEl = neededSection.querySelector('.text-4xl');
+                    if (countEl) {
+                        let num = parseInt(countEl.textContent);
+                        countEl.textContent = Math.max(280, num - 1);
+                    }
+                }, 400);
+            }
+        }
+
+        function updateStatsPeriodically() {
+            // Already handled in animateStats + addNewCoverage
+        }
+
+        function showPrivacyModal() {
+            document.getElementById('privacy-modal').classList.remove('hidden');
+            document.getElementById('privacy-modal').classList.add('flex');
+        }
+
+        function hidePrivacyModal() {
+            const modal = document.getElementById('privacy-modal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        function nominateArea() {
+            const area = prompt("Enter approximate area / city / grid you want to nominate as high priority for repeaters (e.g. 'Rural Yorkshire Dales' or 'Austin TX downtown'):");
+            if (!area) return;
+            
+            alert(`Thank you. "${area}" has been added to the internal priority list.\n\nNote: Nominations are reviewed manually. We never publish or store any personal information with nominations. The map will only ever show the 1km grid once coverage is live.`);
+            
+            // In real version this would POST to a minimal endpoint
+            console.log('%c[PLSChat Map] New priority nomination logged (demo):', 'color:#64748b', area);
+        }
+
+        function toggleMobileNav() {
+            const nav = document.createElement('div');
+            nav.className = `fixed inset-0 bg-black/90 z-[3000] md:hidden flex flex-col p-8`;
+            nav.innerHTML = `
+                <div class="flex justify-between items-center mb-8">
+                    <div class="flex items-center gap-x-2">
+                        <div class="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5 text-zinc-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20.5v-3.5" /></svg>
+                        </div>
+                        <span class="font-display text-2xl font-semibold tracking-tighter">PLSChat</span>
+                    </div>
+                    <button class="text-3xl leading-none text-zinc-400 hover:text-white" onclick="this.closest('.fixed').remove()">×</button>
+                </div>
+                
+                <div class="flex flex-col text-xl gap-y-2">
+                    <a href="index.html" class="py-3 px-1 border-b border-zinc-800">Home</a>
+                    <a href="device-manager.html" class="py-3 px-1 border-b border-zinc-800">Device Manager</a>
+                    <a href="flasher.html" class="py-3 px-1 border-b border-zinc-800">Web Flasher</a>
+                    <a href="#" class="py-3 px-1 text-emerald-400 font-medium">Coverage Map</a>
+                    <a href="buy.html" class="py-3 px-1 border-b border-zinc-800">Buy PLSC</a>
+                </div>
+                
+                <div class="mt-auto pt-8 text-xs text-zinc-500">
+                    Privacy-first decentralized mesh.<br>
+                    Your location never leaves your device.
+                </div>
+            `;
+            document.body.appendChild(nav);
+        }
+
+        // Keyboard shortcuts
+        function initKeyboard() {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === '/' && document.activeElement.tagName === 'BODY') {
+                    e.preventDefault();
+                    const mapEl = document.getElementById('map');
+                    if (mapEl) mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                
+                if (e.metaKey && e.key === 'k') {
+                    e.preventDefault();
+                    showPrivacyModal();
+                }
+            });
+            
+            // Easter egg: press "g" to simulate growth
+            let gCount = 0;
+            document.addEventListener('keypress', function(e) {
+                if (e.key.toLowerCase() === 'g') {
+                    gCount++;
+                    if (gCount >= 3) {
+                        gCount = 0;
+                        simulateGrowth();
+                    }
+                }
+            });
+        }
+
+        // Boot everything
+        function boot() {
+            initTailwind();
+            initMap();
+            updateStatsPeriodically();
+            initKeyboard();
+            
+            // Demo tip in console
+            console.log('%c[PLSChat] Coverage Map prototype loaded. All data is simulated. Privacy model is real.', 'color:#166534; font-size:9px');
+            
+            // Optional: Auto-highlight one needed area after load for discovery
+            setTimeout(() => {
+                const needed = document.querySelectorAll('#needed-section .group');
+                if (needed.length > 0) {
+                    // subtle pulse on first card
+                    needed[0].style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.15)';
+                    setTimeout(() => {
+                        if (needed[0]) needed[0].style.boxShadow = '';
+                    }, 2400);
+                }
+            }, 4200);
+            
+            // Make sure map resizes correctly if window changes (important for static sites)
+            window.addEventListener('resize', () => {
+                if (map) map.invalidateSize();
+            });
+        }
+
+        // Start
+        window.onload = boot;
+    </script>
+</body>
+</html>
