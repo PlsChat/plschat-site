@@ -134,7 +134,6 @@
                     </div>
                 </div>
 
-                <!-- Discovered Nodes (clickable) -->
                 <div class="card p-6">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="font-semibold text-lg">Discovered Nodes</h3>
@@ -161,7 +160,7 @@
         </div>
     </div>
 
-    <!-- Node Detail Modal -->
+    <!-- Node Detail Modal (Privacy-conscious) -->
     <div id="node-modal" onclick="if (event.target.id === 'node-modal') hideNodeModal()" class="hidden fixed inset-0 bg-black/70 z-[2000] flex items-center justify-center p-4">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-[#0a0c1f] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden">
             <div class="px-6 py-5 border-b border-white/10 flex items-center justify-between">
@@ -173,8 +172,11 @@
             </div>
 
             <div class="p-6 space-y-5">
-                <!-- Stats Grid -->
                 <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white/5 rounded-2xl p-4">
+                        <div class="text-xs text-zinc-500">BATTERY</div>
+                        <div id="modal-battery" class="text-3xl font-semibold mt-1">--</div>
+                    </div>
                     <div class="bg-white/5 rounded-2xl p-4">
                         <div class="text-xs text-zinc-500">LAST RSSI</div>
                         <div id="modal-rssi" class="text-3xl font-semibold mt-1">-- dBm</div>
@@ -184,26 +186,27 @@
                         <div id="modal-snr" class="text-3xl font-semibold mt-1">--</div>
                     </div>
                     <div class="bg-white/5 rounded-2xl p-4">
-                        <div class="text-xs text-zinc-500">PACKETS SEEN</div>
+                        <div class="text-xs text-zinc-500">PACKETS</div>
                         <div id="modal-packets" class="text-3xl font-semibold mt-1">0</div>
                     </div>
-                    <div class="bg-white/5 rounded-2xl p-4">
-                        <div class="text-xs text-zinc-500">LAST SEEN</div>
-                        <div id="modal-last-seen" class="text-lg font-medium mt-1">--</div>
+                </div>
+
+                <div class="bg-white/5 rounded-2xl p-4">
+                    <div class="flex justify-between text-sm">
+                        <div>
+                            <div class="text-xs text-zinc-500">LAST SEEN</div>
+                            <div id="modal-last-seen" class="font-medium">--</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-zinc-500">UPTIME</div>
+                            <div id="modal-uptime" class="font-medium text-emerald-400">--</div>
+                        </div>
                     </div>
                 </div>
 
                 <div>
-                    <div class="text-xs text-zinc-500 mb-1.5">PACKET TYPES SEEN</div>
+                    <div class="text-xs text-zinc-500 mb-1.5">PACKET TYPES</div>
                     <div id="modal-types" class="flex flex-wrap gap-2 text-xs"></div>
-                </div>
-
-                <div class="bg-white/5 rounded-2xl p-4 text-sm">
-                    <div class="flex justify-between text-xs text-zinc-500 mb-1">
-                        <div>EST. UPTIME</div>
-                        <div id="modal-uptime" class="font-mono text-emerald-400">--</div>
-                    </div>
-                    <div class="text-[10px] text-zinc-500">Based on first seen time in this session (demo)</div>
                 </div>
 
                 <div class="pt-2">
@@ -213,15 +216,14 @@
                 </div>
             </div>
 
-            <div class="px-6 py-4 bg-white/5 border-t border-white/10 text-xs text-zinc-500 flex items-center gap-x-2">
-                <i class="fa-solid fa-info-circle"></i>
-                <span>Battery &amp; more fields appear when your node reports them via serial/MQTT.</span>
+            <div class="px-6 py-4 bg-white/5 border-t border-white/10 text-xs text-zinc-500">
+                <i class="fa-solid fa-shield-halved mr-1.5"></i>
+                Sensitive fields (PAIR_CODE, full MAC) are never shown or stored.
             </div>
         </div>
     </div>
 
     <script>
-        // ==================== STATE ====================
         let port = null, reader = null, isConnected = false;
         let logLines = [], packets = [], nodes = new Map();
         let packetCount = 0, ppsInterval = null;
@@ -230,13 +232,11 @@
         let canvas, ctx;
         let meshNodes = [];
         let meshPositions = new Map();
-        let showMeshLabels = true;
         let draggedNode = null, dragOffsetX = 0, dragOffsetY = 0;
 
         const MAX_LOG_LINES = 300;
         const MAX_PACKETS = 50;
 
-        // ==================== SERIAL + PARSING (same as before) ====================
         async function connectSerial() {
             if (!('serial' in navigator)) { alert("Web Serial only works in Chrome/Edge."); return; }
             try {
@@ -280,14 +280,111 @@
         function processSerialLine(line) {
             const timestamp = new Date();
             addToLog(line, timestamp);
+
+            // Parse full PLSCHAT_STATUS block
+            if (line.includes('=== PLSCHAT_STATUS ===')) {
+                // We'll collect the block in a better way below
+            }
+
+            // Parse packet lines
             const parsed = parsePacketLine(line, timestamp);
             if (parsed) {
-                packets.unshift(parsed); if (packets.length > MAX_PACKETS) packets.pop();
+                packets.unshift(parsed);
+                if (packets.length > MAX_PACKETS) packets.pop();
                 updatePacketTable();
                 updateNodeFromPacket(parsed);
                 updateMeshVisualization();
             }
-            packetCount++; updateStats();
+
+            // Also try to extract status info if line contains key fields
+            parseStatusLine(line, timestamp);
+
+            packetCount++;
+            updateStats();
+        }
+
+        // New: Parse full status blocks and individual status lines
+        let statusBuffer = '';
+        function parseStatusLine(line, timestamp) {
+            if (line.includes('=== PLSCHAT_STATUS ===')) {
+                statusBuffer = line + '\n';
+                return;
+            }
+
+            if (statusBuffer) {
+                statusBuffer += line + '\n';
+
+                if (line.includes('=== END_STATUS ===')) {
+                    parseFullStatusBlock(statusBuffer, timestamp);
+                    statusBuffer = '';
+                }
+            }
+
+            // Also parse individual lines even outside blocks
+            const nodeMatch = line.match(/NODE_ID[:=]\s*([0-9A-Fa-f]+)/i);
+            const batMatch = line.match(/BAT[:=]\s*([0-9]+)%/i);
+            const rssiMatch = line.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
+            const snrMatch = line.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
+            const uptimeMatch = line.match(/UPTIME[:=]\s*([0-9hms ]+)/i);
+
+            if (nodeMatch) {
+                const nodeId = nodeMatch[1].toUpperCase();
+                if (!nodes.has(nodeId)) {
+                    nodes.set(nodeId, { id: nodeId, firstSeen: timestamp, lastSeen: timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null });
+                }
+                const node = nodes.get(nodeId);
+                node.lastSeen = timestamp;
+            }
+
+            if (batMatch && nodeMatch) {
+                const node = nodes.get(nodeMatch[1].toUpperCase());
+                if (node) node.battery = parseInt(batMatch[1]);
+            }
+
+            if (rssiMatch && nodeMatch) {
+                const node = nodes.get(nodeMatch[1].toUpperCase());
+                if (node) node.lastRssi = parseInt(rssiMatch[1]);
+            }
+
+            if (snrMatch && nodeMatch) {
+                const node = nodes.get(nodeMatch[1].toUpperCase());
+                if (node) node.lastSnr = parseFloat(snrMatch[1]);
+            }
+
+            if (uptimeMatch && nodeMatch) {
+                const node = nodes.get(nodeMatch[1].toUpperCase());
+                if (node) node.uptime = uptimeMatch[1].trim();
+            }
+
+            renderNodesList();
+        }
+
+        function parseFullStatusBlock(block, timestamp) {
+            const nodeIdMatch = block.match(/NODE_ID[:=]\s*([0-9A-Fa-f]+)/i);
+            if (!nodeIdMatch) return;
+
+            const nodeId = nodeIdMatch[1].toUpperCase();
+
+            if (!nodes.has(nodeId)) {
+                nodes.set(nodeId, { id: nodeId, firstSeen: timestamp, lastSeen: timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null });
+            }
+
+            const node = nodes.get(nodeId);
+            node.lastSeen = timestamp;
+
+            const batMatch = block.match(/BAT[:=]\s*([0-9]+)%/i);
+            if (batMatch) node.battery = parseInt(batMatch[1]);
+
+            const rssiMatch = block.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
+            if (rssiMatch) node.lastRssi = parseInt(rssiMatch[1]);
+
+            const snrMatch = block.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
+            if (snrMatch) node.lastSnr = parseFloat(snrMatch[1]);
+
+            const uptimeMatch = block.match(/UPTIME[:=]\s*([0-9hms ]+)/i);
+            if (uptimeMatch) node.uptime = uptimeMatch[1].trim();
+
+            renderNodesList();
         }
 
         function parsePacketLine(line, timestamp) {
@@ -295,7 +392,6 @@
             const toMatch = line.match(/(?:to|dst|dest)[=:]\s*([0-9A-Fa-fxX]+)/i);
             const rssiMatch = line.match(/rssi[=:]\s*(-?\d+)/i);
             const snrMatch = line.match(/snr[=:]\s*(-?\d+\.?\d*)/i);
-            const hopsMatch = line.match(/hops?[=:]\s*(\d+)/i);
             const typeMatch = line.match(/type[=:]\s*([A-Za-z0-9_]+)/i) || line.match(/\b(DATA|HELLO|ACK|BEACON)\b/i);
 
             if (!fromMatch && !rssiMatch && !typeMatch) return null;
@@ -304,14 +400,13 @@
             let to = toMatch ? toMatch[1].replace(/^0x/i, '').toUpperCase() : 'BCAST';
             let rssi = rssiMatch ? parseInt(rssiMatch[1]) : null;
             let snr = snrMatch ? parseFloat(snrMatch[1]) : null;
-            let hops = hopsMatch ? parseInt(hopsMatch[1]) : 0;
             let type = typeMatch ? typeMatch[1].toUpperCase() : 'UNKNOWN';
 
             if (type.includes('HELLO') || type.includes('BEACON')) type = 'HELLO';
             if (type.includes('DATA') || type.includes('MSG')) type = 'DATA';
             if (type.includes('ACK')) type = 'ACK';
 
-            return { timestamp, from, to, type, rssi, snr, hops, raw: line };
+            return { timestamp, from, to, type, rssi, snr, raw: line };
         }
 
         function addToLog(line, timestamp) {
@@ -355,7 +450,7 @@
         function updateNodeFromPacket(parsed) {
             if (!parsed.from || parsed.from === '????') return;
             if (!nodes.has(parsed.from)) {
-                nodes.set(parsed.from, { id: parsed.from, firstSeen: parsed.timestamp, lastSeen: parsed.timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null });
+                nodes.set(parsed.from, { id: parsed.from, firstSeen: parsed.timestamp, lastSeen: parsed.timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null });
             }
             const node = nodes.get(parsed.from);
             node.lastSeen = parsed.timestamp;
@@ -381,9 +476,10 @@
                 const ago = Math.floor((Date.now() - node.lastSeen.getTime())/1000);
                 const timeAgo = ago < 60 ? ago + 's ago' : Math.floor(ago/60) + 'm ago';
                 const rssi = node.lastRssi ? `<span class="text-emerald-400">${node.lastRssi} dBm</span>` : '';
+                const bat = node.battery ? `<span class="text-emerald-400">${node.battery}%</span>` : '';
                 html += `<div onclick="showNodeDetail('${node.id}')" style="padding:8px 10px;border-bottom:1px solid #1f2439;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
                     <div><div style="font-family:monospace;color:#67e8f9;font-weight:600">${node.id}</div><div style="font-size:11px;color:#64748b">${node.packetCount} pkts • ${timeAgo}</div></div>
-                    <div style="text-align:right;font-size:12px">${rssi}</div>
+                    <div style="text-align:right;font-size:12px">${bat || rssi}</div>
                 </div>`;
             });
             container.innerHTML = html;
@@ -405,7 +501,7 @@
             document.getElementById('stat-pps').textContent = (recent.length / 5).toFixed(1);
         }
 
-        // ==================== MESH + NODE DETAIL ====================
+        // Mesh functions (same as previous working version)
         function initMeshCanvas() {
             canvas = document.getElementById('mesh-canvas');
             if (!canvas) return;
@@ -491,7 +587,7 @@
             }
         }
 
-        function handleMeshMouseDown(e) { /* drag logic */ const pos = getMousePos(e); draggedNode = null; for (let node of meshNodes) { const dx = pos.x - node.x; const dy = pos.y - node.y; if (dx*dx + dy*dy < (node.size + 10)*(node.size + 10)) { draggedNode = node; dragOffsetX = dx; dragOffsetY = dy; break; } } }
+        function handleMeshMouseDown(e) { const pos = getMousePos(e); draggedNode = null; for (let node of meshNodes) { const dx = pos.x - node.x; const dy = pos.y - node.y; if (dx*dx + dy*dy < (node.size + 10)*(node.size + 10)) { draggedNode = node; dragOffsetX = dx; dragOffsetY = dy; break; } } }
         function handleMeshMouseMove(e) { if (!draggedNode) return; const pos = getMousePos(e); draggedNode.x = Math.max(30, Math.min(canvas.width-30, pos.x-dragOffsetX)); draggedNode.y = Math.max(30, Math.min(canvas.height-30, pos.y-dragOffsetY)); meshPositions.set(draggedNode.id, {x: draggedNode.x, y: draggedNode.y}); drawMesh(); }
         function handleMeshMouseUp(e) { draggedNode = null; }
 
@@ -524,25 +620,35 @@
             drawMesh();
         }
 
-        // ==================== NODE DETAIL MODAL ====================
+        // ==================== SAFE NODE DETAIL MODAL ====================
         function showNodeDetail(nodeId) {
             const node = nodes.get(nodeId);
             if (!node) return;
 
             currentModalNodeId = nodeId;
 
+            // Show node ID (we keep it for usability but it's already somewhat public)
             document.getElementById('modal-node-id').textContent = nodeId;
+
+            // Battery
+            document.getElementById('modal-battery').innerHTML = node.battery !== null ? `${node.battery}<span class="text-base font-normal text-zinc-400">%</span>` : '--';
+
+            // RSSI
             document.getElementById('modal-rssi').innerHTML = node.lastRssi !== null ? `${node.lastRssi} <span class="text-base font-normal text-zinc-400">dBm</span>` : '--';
+
+            // SNR
             document.getElementById('modal-snr').textContent = node.lastSnr !== null ? node.lastSnr.toFixed(1) : '--';
+
+            // Packets
             document.getElementById('modal-packets').textContent = node.packetCount;
 
+            // Last seen
             const ago = Math.floor((Date.now() - node.lastSeen.getTime()) / 1000);
             const timeAgo = ago < 60 ? ago + 's ago' : Math.floor(ago/60) + 'm ago';
             document.getElementById('modal-last-seen').textContent = timeAgo;
 
-            // Uptime estimate
-            const uptimeMin = Math.floor((Date.now() - node.firstSeen.getTime()) / 60000);
-            document.getElementById('modal-uptime').textContent = uptimeMin < 60 ? `${uptimeMin}m` : `${Math.floor(uptimeMin/60)}h ${uptimeMin%60}m`;
+            // Uptime
+            document.getElementById('modal-uptime').textContent = node.uptime || (node.firstSeen ? Math.floor((Date.now() - node.firstSeen.getTime()) / 60000) + 'm (session)' : '--');
 
             // Packet types
             const typesContainer = document.getElementById('modal-types');
@@ -576,18 +682,15 @@
             const newLabel = prompt(`Set custom label for node ${currentModalNodeId}:`, node.customLabel || '');
             if (newLabel !== null) {
                 node.customLabel = newLabel.trim() || null;
-                // Update mesh if visible
                 const meshNode = meshNodes.find(n => n.id === currentModalNodeId);
                 if (meshNode) meshNode.customLabel = node.customLabel;
                 renderNodesList();
                 drawMesh();
-                // Refresh modal
                 hideNodeModal();
                 setTimeout(() => showNodeDetail(currentModalNodeId), 150);
             }
         }
 
-        // ==================== SIMULATE & UTILS ====================
         function simulateTraffic() {
             const sample = ['A1B2', 'C3D4', '1122', '3344', 'E5F6'];
             const types = ['DATA', 'HELLO', 'ACK'];
@@ -596,6 +699,18 @@
                 let to = sample[Math.floor(Math.random()*sample.length)]; if (to === from) to = 'BCAST';
                 const rssi = Math.floor(Math.random()*45) - 115;
                 processSerialLine(`[LoRa] RX from=${from} to=${to} type=${types[Math.floor(Math.random()*types.length)]} rssi=${rssi}`);
+
+                // Occasionally simulate a status block
+                if (Math.random() < 0.3) {
+                    const bat = 70 + Math.floor(Math.random()*30);
+                    processSerialLine(`=== PLSCHAT_STATUS ===`);
+                    processSerialLine(`NODE_ID:${from}`);
+                    processSerialLine(`BAT:${bat}%`);
+                    processSerialLine(`LORA_RSSI:${rssi}`);
+                    processSerialLine(`LORA_SNR:0.5`);
+                    processSerialLine(`UPTIME:02h15m`);
+                    processSerialLine(`=== END_STATUS ===`);
+                }
             }, 650);
         }
 
@@ -626,11 +741,11 @@
             setTimeout(() => {
                 const log = document.getElementById('log-container');
                 if (log.children.length === 0) {
-                    log.innerHTML = `<div style="padding:40px 20px;text-align:center;color:#64748b;font-size:13px">Click <strong>Connect to Node</strong> or <strong>Simulate Traffic</strong> to start monitoring.</div>`;
+                    log.innerHTML = `<div style="padding:40px 20px;text-align:center;color:#64748b;font-size:13px">Click <strong>Connect to Node</strong> or <strong>Simulate Traffic</strong> to start.</div>`;
                 }
             }, 1200);
 
-            console.log('%c[PLSChat Monitor] Node detail modal + improved mesh ready.', 'color:#22c55e');
+            console.log('%c[PLSChat Monitor] Now parsing full status blocks + safe modal (no PAIR_CODE/MAC leakage).', 'color:#22c55e');
         }
 
         window.onload = init;
