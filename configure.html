@@ -25,8 +25,6 @@
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    .pls-card:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); }
-    
     input[type="text"], input[type="password"] {
       background: #0f172a;
       border: 1px solid rgba(255,255,255,0.1);
@@ -36,7 +34,7 @@
       width: 100%;
       font-size: 0.95rem;
     }
-    input[type="text"]:focus, input[type="password"]:focus {
+    input:focus {
       outline: none;
       border-color: #a855f7;
       box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
@@ -71,7 +69,7 @@
       border-radius: 1rem;
       font-family: ui-monospace, monospace;
       white-space: pre-wrap;
-      min-height: 140px;
+      min-height: 160px;
     }
     
     .warning-box {
@@ -83,7 +81,6 @@
   </style>
 </head>
 <body class="bg-[#0a0c1f] text-zinc-200">
-  <!-- Simple top bar matching site style -->
   <div class="border-b border-white/10 bg-[#0a0c1f]/95 backdrop-blur-lg sticky top-0 z-50">
     <div class="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
       <div class="flex items-center gap-x-3">
@@ -93,8 +90,7 @@
         <span class="text-zinc-500">/</span>
         <span class="text-zinc-400">Configure Device</span>
       </div>
-      <a href="device-manager.html" 
-         class="inline-flex items-center gap-x-2 px-4 py-2 text-sm font-semibold border border-white/20 hover:bg-white/5 rounded-2xl transition-colors">
+      <a href="device-manager.html" class="inline-flex items-center gap-x-2 px-4 py-2 text-sm font-semibold border border-white/20 hover:bg-white/5 rounded-2xl transition-colors">
         <i class="fa-solid fa-plug mr-1.5"></i>
         <span>Device Manager</span>
       </a>
@@ -102,7 +98,6 @@
   </div>
 
   <div class="max-w-4xl mx-auto px-6 pt-10 pb-16">
-    <!-- Header -->
     <div class="text-center mb-8">
       <div class="inline-flex items-center gap-x-2 px-4 py-1.5 rounded-3xl bg-white/5 border border-white/10 text-xs font-medium tracking-[1.5px] mb-4">
         <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
@@ -113,12 +108,10 @@
         Configure <span class="gradient-text">Device</span>
       </h1>
       <p class="text-xl text-zinc-400 max-w-md mx-auto">
-        Your device creates a unique WiFi SSID from its MAC address.<br>
-        Connect below to read the real current settings.
+        Connect to read the real WiFi SSID (generated from MAC) and current settings.
       </p>
     </div>
 
-    <!-- Connect Button -->
     <div class="flex justify-center mb-8">
       <button onclick="connectDevice()" 
               class="group inline-flex items-center justify-center gap-x-3 px-8 py-4 text-lg font-semibold bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 text-white rounded-3xl hover:brightness-105 transition-all active:scale-[0.985] shadow-lg shadow-violet-500/25">
@@ -127,72 +120,60 @@
       </button>
     </div>
 
-    <!-- Status -->
     <div id="statusBox" class="status-box max-w-3xl mx-auto p-6 mb-8 text-sm text-zinc-300 border border-white/10">
       Click <strong>Connect to Device</strong> above.<br>
       Hold the <strong>BOOT button</strong> on your Heltec V4 while connecting.
     </div>
 
-    <!-- Security Recommendation -->
+    <!-- Security Warning -->
     <div class="max-w-3xl mx-auto mb-6">
       <div class="warning-box">
         <div class="flex items-start gap-x-3">
           <i class="fa-solid fa-shield-halved text-red-400 text-xl mt-0.5"></i>
           <div class="text-sm">
-            <div class="font-semibold text-red-300 mb-1">Security Recommendation</div>
+            <div class="font-semibold text-red-300 mb-1">Important Security Recommendation</div>
             <div class="text-red-200/90">
-              The default password <span class="font-mono font-bold">pls12345</span> is used on both WiFi and Bluetooth.
-              <strong>We strongly recommend changing it</strong> to something unique before deploying your device.
+              Default password is <span class="font-mono font-bold">pls12345</span> on both WiFi and Bluetooth.
+              <strong>Please change it</strong> to a strong unique password before using the device in the field.
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Connectivity Toggles -->
+    <!-- Connectivity -->
     <div class="max-w-3xl mx-auto mb-6">
       <div class="pls-card p-6">
         <div class="flex items-center justify-between mb-4">
-          <div>
-            <div class="font-semibold text-lg">Connectivity</div>
-            <div class="text-xs text-zinc-500">At least one radio must stay enabled</div>
-          </div>
+          <div class="font-semibold text-lg">Connectivity <span class="text-xs text-zinc-500">(at least one must stay on)</span></div>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- WiFi Toggle -->
           <div class="flex items-center justify-between bg-[#0f172a] rounded-2xl px-5 py-4 border border-white/10">
             <div class="flex items-center gap-x-3">
               <i class="fa-solid fa-wifi text-amber-400 text-xl w-6"></i>
-              <div>
-                <div class="font-medium">WiFi Hotspot</div>
-                <div class="text-xs text-zinc-500">Access Point mode</div>
-              </div>
+              <div class="font-medium">WiFi Hotspot</div>
             </div>
             <div onclick="toggleWifi()" id="wifiToggle" class="toggle checked cursor-pointer"></div>
           </div>
           
-          <!-- BT Toggle -->
           <div class="flex items-center justify-between bg-[#0f172a] rounded-2xl px-5 py-4 border border-white/10">
             <div class="flex items-center gap-x-3">
               <i class="fa-solid fa-bluetooth-b text-sky-400 text-xl w-6"></i>
-              <div>
-                <div class="font-medium">Bluetooth (BLE)</div>
-                <div class="text-xs text-zinc-500">Advertising + pairing</div>
-              </div>
+              <div class="font-medium">Bluetooth (BLE)</div>
             </div>
             <div onclick="toggleBT()" id="btToggle" class="toggle checked cursor-pointer"></div>
           </div>
         </div>
         <div id="connectivityWarning" class="hidden mt-3 text-xs text-red-400 bg-red-950/50 border border-red-900 rounded-xl px-4 py-2">
-          ⚠️ WiFi and Bluetooth cannot both be disabled.
+          WiFi and Bluetooth cannot both be disabled.
         </div>
       </div>
     </div>
 
-    <!-- WiFi Settings Card -->
+    <!-- WiFi -->
     <div class="max-w-3xl mx-auto mb-6">
-      <div class="pls-card p-6" id="wifiCard">
+      <div class="pls-card p-6">
         <div class="flex items-center gap-x-3 mb-5">
           <i class="fa-solid fa-wifi text-amber-400 text-2xl"></i>
           <div class="font-semibold text-xl">WiFi Access Point</div>
@@ -200,20 +181,20 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">SSID / NETWORK NAME <span class="text-emerald-400">(read from device)</span></label>
-            <input type="text" id="wifiSsid" value="PLSChat-Device" placeholder="MyWiFi">
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">SSID (from device)</label>
+            <input type="text" id="wifiSsid" value="PLSChat-Device">
           </div>
           <div>
-            <label class="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">PASSWORD <span class="text-emerald-400">(default: pls12345)</span></label>
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">Password (default: pls12345)</label>
             <input type="password" id="wifiPass" value="pls12345">
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Bluetooth Settings Card -->
+    <!-- Bluetooth -->
     <div class="max-w-3xl mx-auto mb-8">
-      <div class="pls-card p-6" id="btCard">
+      <div class="pls-card p-6">
         <div class="flex items-center gap-x-3 mb-5">
           <i class="fa-solid fa-bluetooth-b text-sky-400 text-2xl"></i>
           <div class="font-semibold text-xl">Bluetooth</div>
@@ -221,24 +202,24 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">DEVICE NAME</label>
-            <input type="text" id="btName" value="PLSChat-Device" placeholder="MyDevice-BT">
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">Device Name</label>
+            <input type="text" id="btName" value="PLSChat-Device">
           </div>
           <div>
-            <label class="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">PIN / PASSWORD <span class="text-emerald-400">(default: pls12345)</span></label>
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">PIN / Password</label>
             <input type="text" id="btPin" value="pls12345" maxlength="16">
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Apply Button + Read Current -->
+    <!-- Buttons -->
     <div class="max-w-3xl mx-auto text-center space-y-3">
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
         <button onclick="readCurrentSettings()" 
                 class="inline-flex items-center justify-center gap-x-2 px-6 py-3 text-base font-semibold border border-white/30 hover:bg-white/5 rounded-3xl transition-all">
           <i class="fa-solid fa-sync fa-fw"></i>
-          <span>Read Current Settings from Device</span>
+          <span>Read Current Settings</span>
         </button>
         
         <button onclick="applyChanges()" 
@@ -247,8 +228,7 @@
           <span>Apply Changes & Send to Device</span>
         </button>
       </div>
-      
-      <p class="text-xs text-zinc-500">After applying, restart your device for changes to take effect.</p>
+      <p class="text-xs text-zinc-500 mt-2">Tip: Update your firmware with GET CONFIG support first (see previous instructions).</p>
     </div>
   </div>
 
@@ -256,21 +236,16 @@
     let serialPort = null;
     let wifiEnabled = true;
     let btEnabled = true;
-    let reader = null;
+    let serialReader = null;
 
     function updateToggleVisuals() {
-      const wifiEl = document.getElementById('wifiToggle');
-      const btEl = document.getElementById('btToggle');
+      const w = document.getElementById('wifiToggle');
+      const b = document.getElementById('btToggle');
       const warn = document.getElementById('connectivityWarning');
       
-      if (wifiEnabled) wifiEl.classList.add('checked'); else wifiEl.classList.remove('checked');
-      if (btEnabled) btEl.classList.add('checked'); else btEl.classList.remove('checked');
-      
-      if (!wifiEnabled && !btEnabled) {
-        warn.classList.remove('hidden');
-      } else {
-        warn.classList.add('hidden');
-      }
+      w.classList.toggle('checked', wifiEnabled);
+      b.classList.toggle('checked', btEnabled);
+      warn.classList.toggle('hidden', wifiEnabled || btEnabled);
     }
 
     function toggleWifi() {
@@ -287,174 +262,159 @@
 
     async function connectDevice() {
       const box = document.getElementById("statusBox");
-      box.innerHTML = "🔄 Connecting...\nHold the <strong>BOOT button</strong> on the Heltec V4 now!";
       
       try {
+        if (serialPort) {
+          try { await serialPort.close(); } catch(e){}
+        }
+        
         serialPort = await navigator.serial.requestPort();
         await serialPort.open({ baudRate: 115200 });
         
-        box.innerHTML = "✅ <strong>Device Connected!</strong><br>Reading current settings from device...";
-        box.style.borderColor = 'rgba(52, 211, 153, 0.3)';
+        box.innerHTML = "✅ <strong>Connected!</strong><br>Now click <strong>'Read Current Settings'</strong> to load real SSID from device.";
+        box.style.borderColor = '#22c55e33';
         
-        // Start listening for incoming data
-        startReading();
-        
-        // Ask device for current config
-        setTimeout(() => {
-          sendCommand("GET CONFIG\n");
-        }, 600);
+        // Start listening
+        startSerialReader();
         
       } catch (err) {
-        box.innerHTML = `❌ Connection failed.<br>Hold BOOT and <button onclick="connectDevice()" class="underline text-emerald-400">Retry</button>`;
-        box.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+        console.error(err);
+        box.innerHTML = `❌ Connection failed.<br>${err.message || 'Hold BOOT button and try again.'}<br><button onclick="connectDevice()" class="underline text-emerald-400 mt-2">Retry</button>`;
+        box.style.borderColor = '#ef444433';
       }
     }
 
-    function startReading() {
+    function startSerialReader() {
       if (!serialPort || !serialPort.readable) return;
       
-      const textDecoder = new TextDecoderStream();
-      const readableStreamClosed = serialPort.readable.pipeTo(textDecoder.writable);
-      reader = textDecoder.readable.getReader();
+      const decoder = new TextDecoder();
+      serialReader = serialPort.readable.getReader();
       
-      readLoop();
+      readSerialLoop(decoder);
     }
 
-    async function readLoop() {
+    async function readSerialLoop(decoder) {
+      let buffer = '';
+      
       try {
         while (true) {
-          const { value, done } = await reader.read();
+          const { value, done } = await serialReader.read();
           if (done) break;
-          if (value) {
-            processIncomingData(value);
+          
+          buffer += decoder.decode(value, { stream: true });
+          
+          let lines = buffer.split(/\r?\n/);
+          buffer = lines.pop(); // keep incomplete line
+          
+          for (let line of lines) {
+            line = line.trim();
+            if (line.length === 0) continue;
+            processLine(line);
           }
         }
       } catch (e) {
-        console.log("Serial read error:", e);
+        console.log('Serial reader stopped:', e);
       }
     }
 
-    function processIncomingData(text) {
-      const lines = text.split(/\r?\n/);
+    function processLine(line) {
       const box = document.getElementById("statusBox");
       
-      for (let line of lines) {
-        line = line.trim();
-        if (!line) continue;
-        
-        if (line.startsWith("WIFI_SSID:")) {
-          const ssid = line.substring(10).trim();
-          if (ssid) document.getElementById('wifiSsid').value = ssid;
-        }
-        else if (line.startsWith("WIFI_PASS:")) {
-          const pass = line.substring(10).trim();
-          if (pass) document.getElementById('wifiPass').value = pass;
-        }
-        else if (line.startsWith("BT_NAME:")) {
-          const name = line.substring(8).trim();
-          if (name) document.getElementById('btName').value = name;
-        }
-        else if (line.startsWith("BLE_PIN:")) {
-          const pin = line.substring(8).trim();
-          if (pin) document.getElementById('btPin').value = pin;
-        }
-        else if (line.startsWith("WIFI:")) {
-          const on = line.substring(5).trim().toUpperCase() === "ON";
-          wifiEnabled = on;
-          updateToggleVisuals();
-        }
-        else if (line.startsWith("BLE:")) {
-          const on = line.substring(4).trim().toUpperCase() === "ON";
-          btEnabled = on;
-          updateToggleVisuals();
-        }
-        else if (line.includes("_OK")) {
-          box.innerHTML += "\n" + line;
-        }
+      if (line.startsWith("WIFI_SSID:")) {
+        const val = line.substring(10).trim();
+        if (val) document.getElementById('wifiSsid').value = val;
+      } 
+      else if (line.startsWith("WIFI_PASS:")) {
+        const val = line.substring(10).trim();
+        if (val) document.getElementById('wifiPass').value = val;
+      } 
+      else if (line.startsWith("BT_NAME:")) {
+        const val = line.substring(8).trim();
+        if (val) document.getElementById('btName').value = val;
+      } 
+      else if (line.startsWith("BLE_PIN:")) {
+        const val = line.substring(8).trim();
+        if (val) document.getElementById('btPin').value = val;
+      } 
+      else if (line.startsWith("WIFI:")) {
+        wifiEnabled = line.substring(5).trim().toUpperCase() === "ON";
+        updateToggleVisuals();
+      } 
+      else if (line.startsWith("BLE:")) {
+        btEnabled = line.substring(4).trim().toUpperCase() === "ON";
+        updateToggleVisuals();
+      } 
+      else if (line.includes("_OK")) {
+        box.innerHTML += "\n" + line;
       }
     }
 
     async function sendCommand(cmd) {
-      if (!serialPort || !serialPort.writable) return;
+      if (!serialPort || !serialPort.writable) {
+        alert("Not connected");
+        return;
+      }
       const writer = serialPort.writable.getWriter();
-      const encoder = new TextEncoder();
-      await writer.write(encoder.encode(cmd));
+      await writer.write(new TextEncoder().encode(cmd));
       writer.releaseLock();
     }
 
     async function readCurrentSettings() {
       const box = document.getElementById("statusBox");
       if (!serialPort) {
-        box.innerHTML += "\n❌ Connect to device first.";
+        box.innerHTML += "\n❌ Please connect first.";
         return;
       }
-      box.innerHTML += "\n→ Reading current settings...";
+      box.innerHTML += "\n→ Requesting current settings from device...";
       await sendCommand("GET CONFIG\n");
     }
 
     async function applyChanges() {
       const box = document.getElementById("statusBox");
-      
       if (!serialPort) {
-        box.innerHTML += "\n❌ Please connect the device first.";
+        box.innerHTML += "\n❌ Connect to device first.";
         return;
       }
-      
       if (!wifiEnabled && !btEnabled) {
-        box.innerHTML += "\n⚠️ Cannot apply — WiFi and Bluetooth cannot both be disabled.";
+        box.innerHTML += "\n⚠️ Cannot disable both WiFi and Bluetooth.";
         wifiEnabled = true;
         updateToggleVisuals();
         return;
       }
-      
-      const wifiSsid = document.getElementById('wifiSsid').value.trim() || 'PLSChat-Device';
-      const wifiPass = document.getElementById('wifiPass').value.trim() || 'pls12345';
-      const btName = document.getElementById('btName').value.trim() || 'PLSChat-Device';
-      const btPin = document.getElementById('btPin').value.trim() || 'pls12345';
-      
-      box.innerHTML += "\n\n→ Sending configuration...";
-      
+
+      const ssid = document.getElementById('wifiSsid').value.trim();
+      const pass = document.getElementById('wifiPass').value.trim();
+      const btName = document.getElementById('btName').value.trim();
+      const btPin = document.getElementById('btPin').value.trim();
+
+      box.innerHTML += "\n\n→ Sending...";
+
       try {
         const writer = serialPort.writable.getWriter();
-        const encoder = new TextEncoder();
-        
+        const enc = new TextEncoder();
+
         if (wifiEnabled) {
-          await writer.write(encoder.encode(`WIFI SSID:${wifiSsid}\n`));
-          await writer.write(encoder.encode(`WIFI PASS:${wifiPass}\n`));
+          await writer.write(enc.encode(`WIFI SSID:${ssid}\n`));
+          await writer.write(enc.encode(`WIFI PASS:${pass}\n`));
         }
-        
         if (btEnabled) {
-          await writer.write(encoder.encode(`BT NAME:${btName}\n`));
-          await writer.write(encoder.encode(`BLE PIN:${btPin}\n`));
+          await writer.write(enc.encode(`BT NAME:${btName}\n`));
+          await writer.write(enc.encode(`BLE PIN:${btPin}\n`));
         }
-        
-        if (wifiEnabled && !btEnabled) {
-          await writer.write(encoder.encode("MODE:WIFI\n"));
-        } else if (btEnabled && !wifiEnabled) {
-          await writer.write(encoder.encode("MODE:BLE\n"));
-        }
-        
+
         writer.releaseLock();
-        
-        box.innerHTML += "\n✅ Configuration sent successfully!";
-        box.innerHTML += "\n\nNew WiFi: <strong>${wifiSsid}</strong> / ${wifiPass}";
-        box.innerHTML += "\nNew BT: <strong>${btName}</strong> / PIN ${btPin}";
-        box.innerHTML += "\n\nRestart your device to apply changes.";
-      } catch (e) {
-        box.innerHTML += "\n❌ Failed to send settings. Reconnect and try again.";
+        box.innerHTML += "\n✅ Sent! Restart device to apply.";
+      } catch(e) {
+        box.innerHTML += "\n❌ Send failed.";
       }
     }
 
-    function initToggles() {
+    function init() {
       updateToggleVisuals();
-      document.getElementById('wifiToggle').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleWifi(); } });
-      document.getElementById('btToggle').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleBT(); } });
+      console.log('%c[PLSChat] configure.html loaded (improved version)', 'color:#64748b');
     }
 
-    window.onload = function() {
-      initToggles();
-      console.log('%c[PLSChat] configure.html ready — auto-reads real SSID from device after connect', 'color:#64748b');
-    };
+    window.onload = init;
   </script>
 </body>
 </html>
