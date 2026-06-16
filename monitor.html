@@ -105,6 +105,10 @@
             <p class="text-xs text-zinc-500 mt-3">Works in Chrome/Edge. Node must print verbose logs to serial.</p>
         </div>
 
+        <div class="mb-4 px-1 text-xs text-zinc-500">
+            Nodes appear when the connected device receives their packets or status over LoRa.
+        </div>
+
         <!-- Stats -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="card p-5"><div class="text-xs text-zinc-500">PACKETS</div><div id="stat-packets" class="stat-value">0</div></div>
@@ -163,7 +167,7 @@
             <div id="mesh-visual" class="mesh-visual h-[320px] relative">
                 <canvas id="mesh-canvas" class="w-full h-full rounded-2xl cursor-grab"></canvas>
             </div>
-            <p class="text-[11px] text-zinc-500 mt-2 text-center">Click a node for detailed stats • Drag to rearrange • Double-click to set custom label</p>
+            <p class="text-[11px] text-zinc-500 mt-2 text-center">Click a node for detailed stats • Drag to rearrange • Double-click to set custom label • Nodes appear when received by the connected device</p>
         </div>
     </div>
 
@@ -267,6 +271,7 @@
         const MAX_LOG_LINES = 300;
         const MAX_PACKETS = 50;
         const MAX_RSSI_HISTORY = 15;
+        const MAX_MESH_NODES = 40; // Increased to show more devices
 
         async function connectSerial() {
             if (!('serial' in navigator)) { alert("Web Serial only works in Chrome/Edge."); return; }
@@ -312,7 +317,6 @@
             const timestamp = new Date();
             addToLog(line, timestamp);
 
-            // Parse packet lines
             const parsed = parsePacketLine(line, timestamp);
             if (parsed) {
                 packets.unshift(parsed);
@@ -322,14 +326,12 @@
                 updateMeshVisualization();
             }
 
-            // Parse status blocks and individual status lines
             parseStatusBlock(line, timestamp);
 
             packetCount++;
             updateStats();
         }
 
-        // Improved robust status parsing
         let statusBuffer = '';
         function parseStatusBlock(line, timestamp) {
             if (line.includes('=== PLSCHAT_STATUS ===')) {
@@ -346,7 +348,6 @@
                 }
             }
 
-            // Also try to parse individual lines (fallback)
             parseIndividualStatusLine(line, timestamp);
         }
 
@@ -363,7 +364,6 @@
             const node = nodes.get(nodeId);
             node.lastSeen = timestamp;
 
-            // Extract fields
             const batMatch = block.match(/BAT[:=]\s*([0-9]+)%/i);
             if (batMatch) node.battery = parseInt(batMatch[1]);
 
@@ -590,7 +590,10 @@
 
         function updateMeshVisualization() {
             meshNodes = [];
-            const sorted = Array.from(nodes.values()).sort((a,b) => b.packetCount - a.packetCount).slice(0, 14);
+            // Increased limit to show more devices in the mesh
+            const sorted = Array.from(nodes.values())
+                .sort((a,b) => b.packetCount - a.packetCount)
+                .slice(0, MAX_MESH_NODES);
 
             sorted.forEach((node, i) => {
                 let pos = meshPositions.get(node.id);
@@ -601,7 +604,7 @@
                     pos = { x: cx + Math.cos(angle) * Math.min(dist, 140), y: cy + Math.sin(angle) * Math.min(dist, 100) };
                     meshPositions.set(node.id, pos);
                 }
-                meshNodes.push({ id: node.id, x: pos.x, y: pos.y, size: Math.max(12, Math.min(26, 12 + node.packetCount / 3)), lastSeen: node.lastSeen, lastRssi: node.lastRssi, customLabel: node.customLabel || null });
+                meshNodes.push({ id: node.id, x: pos.x, y: pos.y, size: Math.max(10, Math.min(24, 10 + node.packetCount / 4)), lastSeen: node.lastSeen, lastRssi: node.lastRssi, customLabel: node.customLabel || null });
             });
             drawMesh();
         }
@@ -610,32 +613,36 @@
             if (!ctx || !canvas) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            ctx.strokeStyle = 'rgba(103, 232, 249, 0.15)'; ctx.lineWidth = 1.5;
+            // Draw connections (only between closer nodes when there are many)
+            ctx.strokeStyle = 'rgba(103, 232, 249, 0.12)'; ctx.lineWidth = 1;
             for (let i = 0; i < meshNodes.length; i++) {
                 for (let j = i + 1; j < meshNodes.length; j++) {
                     const a = meshNodes[i], b = meshNodes[j];
-                    if (Math.hypot(a.x - b.x, a.y - b.y) < 220) { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+                    const dist = Math.hypot(a.x - b.x, a.y - b.y);
+                    if (dist < 200) {
+                        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+                    }
                 }
             }
 
             meshNodes.forEach(node => {
                 const age = (Date.now() - node.lastSeen.getTime()) / 1000;
-                const alpha = Math.max(0.35, 1 - Math.min(age / 180, 0.7));
+                const alpha = Math.max(0.3, 1 - Math.min(age / 180, 0.75));
 
-                ctx.shadowColor = '#67e8f9'; ctx.shadowBlur = 12;
+                ctx.shadowColor = '#67e8f9'; ctx.shadowBlur = 10;
                 ctx.fillStyle = `rgba(103, 232, 249, ${alpha})`;
                 ctx.beginPath(); ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
 
                 if (showMeshLabels) {
-                    ctx.fillStyle = '#c9d1d9'; ctx.font = '12px Inter, sans-serif'; ctx.textAlign = 'center';
-                    const label = node.customLabel || (node.id.length > 7 ? node.id.substring(0,7) : node.id);
-                    ctx.fillText(label, node.x, node.y + node.size + 16);
+                    ctx.fillStyle = '#c9d1d9'; ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'center';
+                    const label = node.customLabel || (node.id.length > 6 ? node.id.substring(0,6) : node.id);
+                    ctx.fillText(label, node.x, node.y + node.size + 15);
                 }
 
                 if (node.lastRssi !== null) {
                     const norm = Math.max(0, Math.min(1, (node.lastRssi + 110) / 45));
-                    ctx.strokeStyle = `rgba(103, 232, 249, ${0.25 + norm * 0.55})`; ctx.lineWidth = 2.5;
-                    ctx.beginPath(); ctx.arc(node.x, node.y, node.size + 5, 0, Math.PI * 2); ctx.stroke();
+                    ctx.strokeStyle = `rgba(103, 232, 249, ${0.2 + norm * 0.5})`; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.arc(node.x, node.y, node.size + 4, 0, Math.PI * 2); ctx.stroke();
                 }
             });
         }
@@ -680,10 +687,10 @@
         function autoArrangeByRSSI() {
             const cx = canvas.width / 2; const cy = canvas.height / 2;
             meshNodes.forEach((node, i) => {
-                const dist = 70 + (node.lastRssi ? (node.lastRssi + 110) * 0.9 : 70);
+                const dist = 65 + (node.lastRssi ? (node.lastRssi + 110) * 0.85 : 65);
                 const angle = (i / meshNodes.length) * Math.PI * 2;
-                node.x = Math.max(40, Math.min(canvas.width-40, cx + Math.cos(angle) * dist));
-                node.y = Math.max(40, Math.min(canvas.height-40, cy + Math.sin(angle) * dist * 0.75));
+                node.x = Math.max(35, Math.min(canvas.width-35, cx + Math.cos(angle) * dist));
+                node.y = Math.max(35, Math.min(canvas.height-35, cy + Math.sin(angle) * dist * 0.7));
                 meshPositions.set(node.id, { x: node.x, y: node.y });
             });
             drawMesh();
@@ -828,7 +835,7 @@
                 const rssi = Math.floor(Math.random()*45) - 115;
                 processSerialLine(`[LoRa] RX from=${from} to=${to} type=${types[Math.floor(Math.random()*types.length)]} rssi=${rssi}`);
 
-                if (Math.random() < 0.4) {
+                if (Math.random() < 0.35) {
                     const bat = 65 + Math.floor(Math.random()*35);
                     const snr = (Math.random() * 8 - 2).toFixed(1);
                     const relay = Math.floor(Math.random() * 20);
@@ -878,7 +885,7 @@
                 }
             }, 1200);
 
-            console.log('%c[PLSChat Monitor] Robust status parsing enabled.', 'color:#22c55e');
+            console.log('%c[PLSChat Monitor] Now shows more nodes in mesh (up to 40).', 'color:#22c55e');
         }
 
         window.onload = init;
