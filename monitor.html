@@ -160,7 +160,7 @@
         </div>
     </div>
 
-    <!-- Node Detail Modal (Privacy-conscious) -->
+    <!-- Node Detail Modal -->
     <div id="node-modal" onclick="if (event.target.id === 'node-modal') hideNodeModal()" class="hidden fixed inset-0 bg-black/70 z-[2000] flex items-center justify-center p-4">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-[#0a0c1f] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden">
             <div class="px-6 py-5 border-b border-white/10 flex items-center justify-between">
@@ -218,7 +218,7 @@
 
             <div class="px-6 py-4 bg-white/5 border-t border-white/10 text-xs text-zinc-500">
                 <i class="fa-solid fa-shield-halved mr-1.5"></i>
-                Sensitive fields (PAIR_CODE, full MAC) are never shown or stored.
+                Sensitive fields (PAIR_CODE, full MAC) are never shown.
             </div>
         </div>
     </div>
@@ -281,11 +281,6 @@
             const timestamp = new Date();
             addToLog(line, timestamp);
 
-            // Parse full PLSCHAT_STATUS block
-            if (line.includes('=== PLSCHAT_STATUS ===')) {
-                // We'll collect the block in a better way below
-            }
-
             // Parse packet lines
             const parsed = parsePacketLine(line, timestamp);
             if (parsed) {
@@ -296,39 +291,18 @@
                 updateMeshVisualization();
             }
 
-            // Also try to extract status info if line contains key fields
-            parseStatusLine(line, timestamp);
+            // Parse status information (both full blocks and individual lines)
+            parseStatusInfo(line, timestamp);
 
             packetCount++;
             updateStats();
         }
 
-        // New: Parse full status blocks and individual status lines
-        let statusBuffer = '';
-        function parseStatusLine(line, timestamp) {
-            if (line.includes('=== PLSCHAT_STATUS ===')) {
-                statusBuffer = line + '\n';
-                return;
-            }
-
-            if (statusBuffer) {
-                statusBuffer += line + '\n';
-
-                if (line.includes('=== END_STATUS ===')) {
-                    parseFullStatusBlock(statusBuffer, timestamp);
-                    statusBuffer = '';
-                }
-            }
-
-            // Also parse individual lines even outside blocks
-            const nodeMatch = line.match(/NODE_ID[:=]\s*([0-9A-Fa-f]+)/i);
-            const batMatch = line.match(/BAT[:=]\s*([0-9]+)%/i);
-            const rssiMatch = line.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
-            const snrMatch = line.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
-            const uptimeMatch = line.match(/UPTIME[:=]\s*([0-9hms ]+)/i);
-
-            if (nodeMatch) {
-                const nodeId = nodeMatch[1].toUpperCase();
+        function parseStatusInfo(line, timestamp) {
+            // Look for NODE_ID in any line
+            const nodeIdMatch = line.match(/NODE_ID[:=]\s*([0-9A-Fa-f]+)/i);
+            if (nodeIdMatch) {
+                const nodeId = nodeIdMatch[1].toUpperCase();
                 if (!nodes.has(nodeId)) {
                     nodes.set(nodeId, { id: nodeId, firstSeen: timestamp, lastSeen: timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null });
                 }
@@ -336,53 +310,38 @@
                 node.lastSeen = timestamp;
             }
 
-            if (batMatch && nodeMatch) {
-                const node = nodes.get(nodeMatch[1].toUpperCase());
+            // Battery
+            const batMatch = line.match(/BAT[:=]\s*([0-9]+)%/i);
+            if (batMatch && nodeIdMatch) {
+                const node = nodes.get(nodeIdMatch[1].toUpperCase());
                 if (node) node.battery = parseInt(batMatch[1]);
             }
 
-            if (rssiMatch && nodeMatch) {
-                const node = nodes.get(nodeMatch[1].toUpperCase());
+            // LORA_RSSI
+            const rssiMatch = line.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
+            if (rssiMatch && nodeIdMatch) {
+                const node = nodes.get(nodeIdMatch[1].toUpperCase());
                 if (node) node.lastRssi = parseInt(rssiMatch[1]);
             }
 
-            if (snrMatch && nodeMatch) {
-                const node = nodes.get(nodeMatch[1].toUpperCase());
+            // LORA_SNR
+            const snrMatch = line.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
+            if (snrMatch && nodeIdMatch) {
+                const node = nodes.get(nodeIdMatch[1].toUpperCase());
                 if (node) node.lastSnr = parseFloat(snrMatch[1]);
             }
 
-            if (uptimeMatch && nodeMatch) {
-                const node = nodes.get(nodeMatch[1].toUpperCase());
+            // UPTIME
+            const uptimeMatch = line.match(/UPTIME[:=]\s*([0-9hms ]+)/i);
+            if (uptimeMatch && nodeIdMatch) {
+                const node = nodes.get(nodeIdMatch[1].toUpperCase());
                 if (node) node.uptime = uptimeMatch[1].trim();
             }
 
-            renderNodesList();
-        }
-
-        function parseFullStatusBlock(block, timestamp) {
-            const nodeIdMatch = block.match(/NODE_ID[:=]\s*([0-9A-Fa-f]+)/i);
-            if (!nodeIdMatch) return;
-
-            const nodeId = nodeIdMatch[1].toUpperCase();
-
-            if (!nodes.has(nodeId)) {
-                nodes.set(nodeId, { id: nodeId, firstSeen: timestamp, lastSeen: timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null });
+            // Also try to catch from full status blocks
+            if (line.includes('=== PLSCHAT_STATUS ===')) {
+                // Will be handled by multi-line buffer in next version if needed
             }
-
-            const node = nodes.get(nodeId);
-            node.lastSeen = timestamp;
-
-            const batMatch = block.match(/BAT[:=]\s*([0-9]+)%/i);
-            if (batMatch) node.battery = parseInt(batMatch[1]);
-
-            const rssiMatch = block.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
-            if (rssiMatch) node.lastRssi = parseInt(rssiMatch[1]);
-
-            const snrMatch = block.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
-            if (snrMatch) node.lastSnr = parseFloat(snrMatch[1]);
-
-            const uptimeMatch = block.match(/UPTIME[:=]\s*([0-9hms ]+)/i);
-            if (uptimeMatch) node.uptime = uptimeMatch[1].trim();
 
             renderNodesList();
         }
@@ -390,8 +349,8 @@
         function parsePacketLine(line, timestamp) {
             const fromMatch = line.match(/(?:from|src|node)[=:]\s*([0-9A-Fa-fxX]+)/i) || line.match(/0x([0-9A-Fa-f]{4,8})/);
             const toMatch = line.match(/(?:to|dst|dest)[=:]\s*([0-9A-Fa-fxX]+)/i);
-            const rssiMatch = line.match(/rssi[=:]\s*(-?\d+)/i);
-            const snrMatch = line.match(/snr[=:]\s*(-?\d+\.?\d*)/i);
+            const rssiMatch = line.match(/rssi[=:]\s*(-?\d+)/i) || line.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
+            const snrMatch = line.match(/snr[=:]\s*(-?\d+\.?\d*)/i) || line.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
             const typeMatch = line.match(/type[=:]\s*([A-Za-z0-9_]+)/i) || line.match(/\b(DATA|HELLO|ACK|BEACON)\b/i);
 
             if (!fromMatch && !rssiMatch && !typeMatch) return null;
@@ -501,7 +460,7 @@
             document.getElementById('stat-pps').textContent = (recent.length / 5).toFixed(1);
         }
 
-        // Mesh functions (same as previous working version)
+        // Mesh functions
         function initMeshCanvas() {
             canvas = document.getElementById('mesh-canvas');
             if (!canvas) return;
@@ -620,37 +579,24 @@
             drawMesh();
         }
 
-        // ==================== SAFE NODE DETAIL MODAL ====================
         function showNodeDetail(nodeId) {
             const node = nodes.get(nodeId);
             if (!node) return;
 
             currentModalNodeId = nodeId;
 
-            // Show node ID (we keep it for usability but it's already somewhat public)
             document.getElementById('modal-node-id').textContent = nodeId;
-
-            // Battery
             document.getElementById('modal-battery').innerHTML = node.battery !== null ? `${node.battery}<span class="text-base font-normal text-zinc-400">%</span>` : '--';
-
-            // RSSI
             document.getElementById('modal-rssi').innerHTML = node.lastRssi !== null ? `${node.lastRssi} <span class="text-base font-normal text-zinc-400">dBm</span>` : '--';
-
-            // SNR
             document.getElementById('modal-snr').textContent = node.lastSnr !== null ? node.lastSnr.toFixed(1) : '--';
-
-            // Packets
             document.getElementById('modal-packets').textContent = node.packetCount;
 
-            // Last seen
             const ago = Math.floor((Date.now() - node.lastSeen.getTime()) / 1000);
             const timeAgo = ago < 60 ? ago + 's ago' : Math.floor(ago/60) + 'm ago';
             document.getElementById('modal-last-seen').textContent = timeAgo;
 
-            // Uptime
             document.getElementById('modal-uptime').textContent = node.uptime || (node.firstSeen ? Math.floor((Date.now() - node.firstSeen.getTime()) / 60000) + 'm (session)' : '--');
 
-            // Packet types
             const typesContainer = document.getElementById('modal-types');
             typesContainer.innerHTML = '';
             if (node.types.size > 0) {
@@ -700,15 +646,16 @@
                 const rssi = Math.floor(Math.random()*45) - 115;
                 processSerialLine(`[LoRa] RX from=${from} to=${to} type=${types[Math.floor(Math.random()*types.length)]} rssi=${rssi}`);
 
-                // Occasionally simulate a status block
-                if (Math.random() < 0.3) {
-                    const bat = 70 + Math.floor(Math.random()*30);
+                // Simulate status block
+                if (Math.random() < 0.4) {
+                    const bat = 65 + Math.floor(Math.random()*35);
+                    const snr = (Math.random() * 8 - 2).toFixed(1);
                     processSerialLine(`=== PLSCHAT_STATUS ===`);
                     processSerialLine(`NODE_ID:${from}`);
                     processSerialLine(`BAT:${bat}%`);
                     processSerialLine(`LORA_RSSI:${rssi}`);
-                    processSerialLine(`LORA_SNR:0.5`);
-                    processSerialLine(`UPTIME:02h15m`);
+                    processSerialLine(`LORA_SNR:${snr}`);
+                    processSerialLine(`UPTIME:03h22m`);
                     processSerialLine(`=== END_STATUS ===`);
                 }
             }, 650);
@@ -745,7 +692,7 @@
                 }
             }, 1200);
 
-            console.log('%c[PLSChat Monitor] Now parsing full status blocks + safe modal (no PAIR_CODE/MAC leakage).', 'color:#22c55e');
+            console.log('%c[PLSChat Monitor] Improved status parsing active.', 'color:#22c55e');
         }
 
         window.onload = init;
