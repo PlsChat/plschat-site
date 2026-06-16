@@ -160,7 +160,7 @@
         </div>
     </div>
 
-    <!-- Node Detail Modal -->
+    <!-- Node Detail Modal (Improved) -->
     <div id="node-modal" onclick="if (event.target.id === 'node-modal') hideNodeModal()" class="hidden fixed inset-0 bg-black/70 z-[2000] flex items-center justify-center p-4">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-[#0a0c1f] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden">
             <div class="px-6 py-5 border-b border-white/10 flex items-center justify-between">
@@ -172,6 +172,7 @@
             </div>
 
             <div class="p-6 space-y-5">
+                <!-- Row 1: Battery + RSSI -->
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-white/5 rounded-2xl p-4">
                         <div class="text-xs text-zinc-500">BATTERY</div>
@@ -181,13 +182,29 @@
                         <div class="text-xs text-zinc-500">LAST RSSI</div>
                         <div id="modal-rssi" class="text-3xl font-semibold mt-1">-- dBm</div>
                     </div>
+                </div>
+
+                <!-- Row 2: SNR + Packets -->
+                <div class="grid grid-cols-2 gap-4">
                     <div class="bg-white/5 rounded-2xl p-4">
                         <div class="text-xs text-zinc-500">LAST SNR</div>
                         <div id="modal-snr" class="text-3xl font-semibold mt-1">--</div>
                     </div>
                     <div class="bg-white/5 rounded-2xl p-4">
-                        <div class="text-xs text-zinc-500">PACKETS</div>
+                        <div class="text-xs text-zinc-500">PACKETS SEEN</div>
                         <div id="modal-packets" class="text-3xl font-semibold mt-1">0</div>
+                    </div>
+                </div>
+
+                <!-- Additional useful fields -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white/5 rounded-2xl p-4">
+                        <div class="text-xs text-zinc-500">PACKETS RELAYED</div>
+                        <div id="modal-relay" class="text-2xl font-semibold mt-1">--</div>
+                    </div>
+                    <div class="bg-white/5 rounded-2xl p-4">
+                        <div class="text-xs text-zinc-500">CONTACTS</div>
+                        <div id="modal-contacts" class="text-2xl font-semibold mt-1">--</div>
                     </div>
                 </div>
 
@@ -205,7 +222,7 @@
                 </div>
 
                 <div>
-                    <div class="text-xs text-zinc-500 mb-1.5">PACKET TYPES</div>
+                    <div class="text-xs text-zinc-500 mb-1.5">PACKET TYPES SEEN</div>
                     <div id="modal-types" class="flex flex-wrap gap-2 text-xs"></div>
                 </div>
 
@@ -216,9 +233,11 @@
                 </div>
             </div>
 
-            <div class="px-6 py-4 bg-white/5 border-t border-white/10 text-xs text-zinc-500">
-                <i class="fa-solid fa-shield-halved mr-1.5"></i>
-                Sensitive fields (PAIR_CODE, full MAC) are never shown.
+            <div class="px-6 py-4 bg-white/5 border-t border-white/10 text-xs text-zinc-500 flex items-start gap-x-2">
+                <i class="fa-solid fa-info-circle mt-0.5"></i>
+                <div>
+                    This shows data reported by the node. Sensitive fields like PAIR_CODE are never displayed.
+                </div>
             </div>
         </div>
     </div>
@@ -281,7 +300,6 @@
             const timestamp = new Date();
             addToLog(line, timestamp);
 
-            // Parse packet lines
             const parsed = parsePacketLine(line, timestamp);
             if (parsed) {
                 packets.unshift(parsed);
@@ -291,7 +309,6 @@
                 updateMeshVisualization();
             }
 
-            // Parse status information (both full blocks and individual lines)
             parseStatusInfo(line, timestamp);
 
             packetCount++;
@@ -299,48 +316,56 @@
         }
 
         function parseStatusInfo(line, timestamp) {
-            // Look for NODE_ID in any line
             const nodeIdMatch = line.match(/NODE_ID[:=]\s*([0-9A-Fa-f]+)/i);
             if (nodeIdMatch) {
                 const nodeId = nodeIdMatch[1].toUpperCase();
                 if (!nodes.has(nodeId)) {
-                    nodes.set(nodeId, { id: nodeId, firstSeen: timestamp, lastSeen: timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null });
+                    nodes.set(nodeId, { id: nodeId, firstSeen: timestamp, lastSeen: timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null, relay: 0, contacts: null, messages: null });
                 }
                 const node = nodes.get(nodeId);
                 node.lastSeen = timestamp;
             }
 
-            // Battery
             const batMatch = line.match(/BAT[:=]\s*([0-9]+)%/i);
             if (batMatch && nodeIdMatch) {
                 const node = nodes.get(nodeIdMatch[1].toUpperCase());
                 if (node) node.battery = parseInt(batMatch[1]);
             }
 
-            // LORA_RSSI
             const rssiMatch = line.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
             if (rssiMatch && nodeIdMatch) {
                 const node = nodes.get(nodeIdMatch[1].toUpperCase());
                 if (node) node.lastRssi = parseInt(rssiMatch[1]);
             }
 
-            // LORA_SNR
             const snrMatch = line.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
             if (snrMatch && nodeIdMatch) {
                 const node = nodes.get(nodeIdMatch[1].toUpperCase());
                 if (node) node.lastSnr = parseFloat(snrMatch[1]);
             }
 
-            // UPTIME
             const uptimeMatch = line.match(/UPTIME[:=]\s*([0-9hms ]+)/i);
             if (uptimeMatch && nodeIdMatch) {
                 const node = nodes.get(nodeIdMatch[1].toUpperCase());
                 if (node) node.uptime = uptimeMatch[1].trim();
             }
 
-            // Also try to catch from full status blocks
-            if (line.includes('=== PLSCHAT_STATUS ===')) {
-                // Will be handled by multi-line buffer in next version if needed
+            const relayMatch = line.match(/PKT_RELAY[:=]\s*(\d+)/i);
+            if (relayMatch && nodeIdMatch) {
+                const node = nodes.get(nodeIdMatch[1].toUpperCase());
+                if (node) node.relay = parseInt(relayMatch[1]);
+            }
+
+            const contactsMatch = line.match(/CONTACTS[:=]\s*(\d+)/i);
+            if (contactsMatch && nodeIdMatch) {
+                const node = nodes.get(nodeIdMatch[1].toUpperCase());
+                if (node) node.contacts = parseInt(contactsMatch[1]);
+            }
+
+            const messagesMatch = line.match(/MESSAGES[:=]\s*(\d+)/i);
+            if (messagesMatch && nodeIdMatch) {
+                const node = nodes.get(nodeIdMatch[1].toUpperCase());
+                if (node) node.messages = parseInt(messagesMatch[1]);
             }
 
             renderNodesList();
@@ -409,7 +434,7 @@
         function updateNodeFromPacket(parsed) {
             if (!parsed.from || parsed.from === '????') return;
             if (!nodes.has(parsed.from)) {
-                nodes.set(parsed.from, { id: parsed.from, firstSeen: parsed.timestamp, lastSeen: parsed.timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null });
+                nodes.set(parsed.from, { id: parsed.from, firstSeen: parsed.timestamp, lastSeen: parsed.timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null, relay: 0, contacts: null, messages: null });
             }
             const node = nodes.get(parsed.from);
             node.lastSeen = parsed.timestamp;
@@ -460,7 +485,6 @@
             document.getElementById('stat-pps').textContent = (recent.length / 5).toFixed(1);
         }
 
-        // Mesh functions
         function initMeshCanvas() {
             canvas = document.getElementById('mesh-canvas');
             if (!canvas) return;
@@ -590,6 +614,8 @@
             document.getElementById('modal-rssi').innerHTML = node.lastRssi !== null ? `${node.lastRssi} <span class="text-base font-normal text-zinc-400">dBm</span>` : '--';
             document.getElementById('modal-snr').textContent = node.lastSnr !== null ? node.lastSnr.toFixed(1) : '--';
             document.getElementById('modal-packets').textContent = node.packetCount;
+            document.getElementById('modal-relay').textContent = node.relay || '--';
+            document.getElementById('modal-contacts').textContent = node.contacts || '--';
 
             const ago = Math.floor((Date.now() - node.lastSeen.getTime()) / 1000);
             const timeAgo = ago < 60 ? ago + 's ago' : Math.floor(ago/60) + 'm ago';
@@ -646,16 +672,20 @@
                 const rssi = Math.floor(Math.random()*45) - 115;
                 processSerialLine(`[LoRa] RX from=${from} to=${to} type=${types[Math.floor(Math.random()*types.length)]} rssi=${rssi}`);
 
-                // Simulate status block
-                if (Math.random() < 0.4) {
+                if (Math.random() < 0.35) {
                     const bat = 65 + Math.floor(Math.random()*35);
                     const snr = (Math.random() * 8 - 2).toFixed(1);
+                    const relay = Math.floor(Math.random() * 20);
+                    const contacts = 2 + Math.floor(Math.random() * 5);
                     processSerialLine(`=== PLSCHAT_STATUS ===`);
                     processSerialLine(`NODE_ID:${from}`);
                     processSerialLine(`BAT:${bat}%`);
                     processSerialLine(`LORA_RSSI:${rssi}`);
                     processSerialLine(`LORA_SNR:${snr}`);
-                    processSerialLine(`UPTIME:03h22m`);
+                    processSerialLine(`UPTIME:04h12m`);
+                    processSerialLine(`PKT_RELAY:${relay}`);
+                    processSerialLine(`CONTACTS:${contacts}`);
+                    processSerialLine(`MESSAGES:18`);
                     processSerialLine(`=== END_STATUS ===`);
                 }
             }, 650);
@@ -692,7 +722,7 @@
                 }
             }, 1200);
 
-            console.log('%c[PLSChat Monitor] Improved status parsing active.', 'color:#22c55e');
+            console.log('%c[PLSChat Monitor] Improved with more fields + better status parsing.', 'color:#22c55e');
         }
 
         window.onload = init;
