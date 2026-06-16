@@ -21,6 +21,7 @@
         .node-id { font-family: monospace; background: #1f2439; padding: 2px 8px; border-radius: 6px; font-size: 12px; }
         .modal { animation: fadeInScale 0.2s ease forwards; }
         @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .mini-chart { height: 60px; background: #0f1326; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -80,9 +81,15 @@
                 <h1 class="font-display text-5xl tracking-tighter">Network Monitor</h1>
                 <p class="text-zinc-400 mt-2 text-lg">Real-time serial & mesh traffic analysis</p>
             </div>
-            <a href="admin/monitor.html" class="hidden md:inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/20 hover:bg-white/5 transition-colors">
-                <i class="fa-solid fa-shield-halved mr-2"></i> Admin Dashboard
-            </a>
+            <div class="flex items-center gap-x-3">
+                <button onclick="exportSession()" class="hidden md:inline-flex items-center gap-x-2 px-4 py-2 text-sm border border-white/20 hover:bg-white/5 rounded-2xl transition-colors">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Export Session</span>
+                </button>
+                <a href="admin/monitor.html" class="hidden md:inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/20 hover:bg-white/5 transition-colors">
+                    <i class="fa-solid fa-shield-halved mr-2"></i> Admin Dashboard
+                </a>
+            </div>
         </div>
 
         <!-- Connection Controls -->
@@ -160,7 +167,7 @@
         </div>
     </div>
 
-    <!-- Node Detail Modal (Improved) -->
+    <!-- Node Detail Modal -->
     <div id="node-modal" onclick="if (event.target.id === 'node-modal') hideNodeModal()" class="hidden fixed inset-0 bg-black/70 z-[2000] flex items-center justify-center p-4">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-[#0a0c1f] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden">
             <div class="px-6 py-5 border-b border-white/10 flex items-center justify-between">
@@ -172,7 +179,6 @@
             </div>
 
             <div class="p-6 space-y-5">
-                <!-- Row 1: Battery + RSSI -->
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-white/5 rounded-2xl p-4">
                         <div class="text-xs text-zinc-500">BATTERY</div>
@@ -184,7 +190,6 @@
                     </div>
                 </div>
 
-                <!-- Row 2: SNR + Packets -->
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-white/5 rounded-2xl p-4">
                         <div class="text-xs text-zinc-500">LAST SNR</div>
@@ -196,7 +201,6 @@
                     </div>
                 </div>
 
-                <!-- Additional useful fields -->
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-white/5 rounded-2xl p-4">
                         <div class="text-xs text-zinc-500">PACKETS RELAYED</div>
@@ -206,6 +210,12 @@
                         <div class="text-xs text-zinc-500">CONTACTS</div>
                         <div id="modal-contacts" class="text-2xl font-semibold mt-1">--</div>
                     </div>
+                </div>
+
+                <!-- RSSI History Chart -->
+                <div class="bg-white/5 rounded-2xl p-4">
+                    <div class="text-xs text-zinc-500 mb-2">RSSI HISTORY (last 15 readings)</div>
+                    <canvas id="rssi-chart" class="mini-chart w-full" height="60"></canvas>
                 </div>
 
                 <div class="bg-white/5 rounded-2xl p-4">
@@ -247,6 +257,7 @@
         let logLines = [], packets = [], nodes = new Map();
         let packetCount = 0, ppsInterval = null;
         let currentModalNodeId = null;
+        let rssiChartCtx = null;
 
         let canvas, ctx;
         let meshNodes = [];
@@ -255,6 +266,7 @@
 
         const MAX_LOG_LINES = 300;
         const MAX_PACKETS = 50;
+        const MAX_RSSI_HISTORY = 15;
 
         async function connectSerial() {
             if (!('serial' in navigator)) { alert("Web Serial only works in Chrome/Edge."); return; }
@@ -320,7 +332,7 @@
             if (nodeIdMatch) {
                 const nodeId = nodeIdMatch[1].toUpperCase();
                 if (!nodes.has(nodeId)) {
-                    nodes.set(nodeId, { id: nodeId, firstSeen: timestamp, lastSeen: timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null, relay: 0, contacts: null, messages: null });
+                    nodes.set(nodeId, { id: nodeId, firstSeen: timestamp, lastSeen: timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null, relay: 0, contacts: null, messages: null, rssiHistory: [] });
                 }
                 const node = nodes.get(nodeId);
                 node.lastSeen = timestamp;
@@ -335,7 +347,12 @@
             const rssiMatch = line.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
             if (rssiMatch && nodeIdMatch) {
                 const node = nodes.get(nodeIdMatch[1].toUpperCase());
-                if (node) node.lastRssi = parseInt(rssiMatch[1]);
+                if (node) {
+                    node.lastRssi = parseInt(rssiMatch[1]);
+                    if (!node.rssiHistory) node.rssiHistory = [];
+                    node.rssiHistory.push(node.lastRssi);
+                    if (node.rssiHistory.length > MAX_RSSI_HISTORY) node.rssiHistory.shift();
+                }
             }
 
             const snrMatch = line.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
@@ -360,12 +377,6 @@
             if (contactsMatch && nodeIdMatch) {
                 const node = nodes.get(nodeIdMatch[1].toUpperCase());
                 if (node) node.contacts = parseInt(contactsMatch[1]);
-            }
-
-            const messagesMatch = line.match(/MESSAGES[:=]\s*(\d+)/i);
-            if (messagesMatch && nodeIdMatch) {
-                const node = nodes.get(nodeIdMatch[1].toUpperCase());
-                if (node) node.messages = parseInt(messagesMatch[1]);
             }
 
             renderNodesList();
@@ -434,12 +445,17 @@
         function updateNodeFromPacket(parsed) {
             if (!parsed.from || parsed.from === '????') return;
             if (!nodes.has(parsed.from)) {
-                nodes.set(parsed.from, { id: parsed.from, firstSeen: parsed.timestamp, lastSeen: parsed.timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null, relay: 0, contacts: null, messages: null });
+                nodes.set(parsed.from, { id: parsed.from, firstSeen: parsed.timestamp, lastSeen: parsed.timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null, relay: 0, contacts: null, messages: null, rssiHistory: [] });
             }
             const node = nodes.get(parsed.from);
             node.lastSeen = parsed.timestamp;
             node.packetCount++;
-            if (parsed.rssi !== null) node.lastRssi = parsed.rssi;
+            if (parsed.rssi !== null) {
+                node.lastRssi = parsed.rssi;
+                if (!node.rssiHistory) node.rssiHistory = [];
+                node.rssiHistory.push(parsed.rssi);
+                if (node.rssiHistory.length > MAX_RSSI_HISTORY) node.rssiHistory.shift();
+            }
             if (parsed.snr !== null) node.lastSnr = parsed.snr;
             node.types.add(parsed.type);
             renderNodesList();
@@ -603,6 +619,44 @@
             drawMesh();
         }
 
+        function drawRSSIChart(history) {
+            const canvasEl = document.getElementById('rssi-chart');
+            if (!canvasEl || !history || history.length === 0) return;
+
+            const ctx = canvasEl.getContext('2d');
+            ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+            const w = canvasEl.width;
+            const h = canvasEl.height;
+            const padding = 4;
+
+            const minVal = Math.min(...history, -120);
+            const maxVal = Math.max(...history, -50);
+            const range = maxVal - minVal || 1;
+
+            ctx.strokeStyle = '#67e8f9';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+
+            history.forEach((val, i) => {
+                const x = padding + (i / (history.length - 1)) * (w - padding * 2);
+                const y = h - padding - ((val - minVal) / range) * (h - padding * 2);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Draw dots
+            ctx.fillStyle = '#67e8f9';
+            history.forEach((val, i) => {
+                const x = padding + (i / (history.length - 1)) * (w - padding * 2);
+                const y = h - padding - ((val - minVal) / range) * (h - padding * 2);
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
         function showNodeDetail(nodeId) {
             const node = nodes.get(nodeId);
             if (!node) return;
@@ -636,6 +690,11 @@
                 typesContainer.innerHTML = `<span class="text-xs text-zinc-500">No types recorded yet</span>`;
             }
 
+            // Draw RSSI chart
+            setTimeout(() => {
+                drawRSSIChart(node.rssiHistory || []);
+            }, 50);
+
             document.getElementById('node-modal').classList.remove('hidden');
             document.getElementById('node-modal').classList.add('flex');
         }
@@ -661,6 +720,29 @@
                 hideNodeModal();
                 setTimeout(() => showNodeDetail(currentModalNodeId), 150);
             }
+        }
+
+        function exportSession() {
+            const data = {
+                exportedAt: new Date().toISOString(),
+                nodes: Array.from(nodes.entries()).map(([id, n]) => ({
+                    id,
+                    ...n,
+                    types: Array.from(n.types || []),
+                    rssiHistory: n.rssiHistory || []
+                })),
+                packets: packets.slice(0, 100)
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `plschat-monitor-${new Date().toISOString().slice(0,19)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         function simulateTraffic() {
@@ -722,7 +804,7 @@
                 }
             }, 1200);
 
-            console.log('%c[PLSChat Monitor] Improved with more fields + better status parsing.', 'color:#22c55e');
+            console.log('%c[PLSChat Monitor] Improved with RSSI history chart + Export button.', 'color:#22c55e');
         }
 
         window.onload = init;
