@@ -1,162 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PLSChat • Web Flasher</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
-    body { font-family: 'Inter', system_ui, sans-serif; }
-    .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
-    .gradient-text { background: linear-gradient(90deg, #a855f7, #d946ef, #67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLSChat • Web Flasher</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+        
+        body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: #c9d1d9; }
+        .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
+        .nav-link { transition: color 0.1s ease; }
+        .nav-link:hover { color: #c026d3; }
+        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; }
+    </style>
 </head>
-<body class="bg-[#0a0c1f] text-zinc-200">
-  <!-- Navbar (matching index) -->
-  <nav class="border-b border-white/10 bg-[#0a0c1f]/95 backdrop-blur-lg sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="flex items-center justify-between h-20">
-        <div class="flex items-center gap-x-3">
-          <svg width="38" height="38" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
-            <defs>
-              <linearGradient id="plsGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#3b82f6"/>
-                <stop offset="50%" stop-color="#c026d3"/>
-                <stop offset="100%" stop-color="#ec4899"/>
-              </linearGradient>
-            </defs>
-            <path d="M50 5 L90 27.5 L90 72.5 L50 95 L10 72.5 L10 27.5 Z" fill="url(#plsGrad2)" stroke="#fff" stroke-width="3"/>
-            <polyline points="25,50 35,50 40,35 48,65 55,42 62,58 68,50 75,50" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="font-display text-3xl font-semibold tracking-tighter">PLSChat</span>
+<body>
+    <!-- Navbar -->
+    <nav class="border-b border-white/10 bg-[#0a0c1f]/95 backdrop-blur-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex items-center gap-x-3">
+                    <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+                        <defs>
+                            <linearGradient id="plsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#3b82f6"/>
+                                <stop offset="50%" stop-color="#c026d3"/>
+                                <stop offset="100%" stop-color="#ec4899"/>
+                            </defs>
+                            <path d="M50 5 L90 27.5 L90 72.5 L50 95 L10 72.5 L10 27.5 Z" fill="url(#plsGrad)" stroke="#fff" stroke-width="3"/>
+                            <polyline points="25,50 35,50 40,35 48,65 55,42 62,58 68,50 75,50" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <div><span class="font-display text-3xl font-semibold tracking-tighter">PLSChat</span></div>
+                    </div>
+
+                <div class="hidden md:flex items-center gap-x-8 text-sm font-medium">
+                    <a href="index.html" class="nav-link text-zinc-400 hover:text-white">Home</a>
+                    <a href="device-manager.html" class="nav-link text-zinc-400 hover:text-white">Device Manager</a>
+                    <a href="coverage-map.html" class="nav-link text-emerald-400 hover:text-emerald-300 font-medium">Coverage Map</a>
+                    <a href="monitor.html" class="nav-link text-zinc-400 hover:text-white">Network Monitor</a>
+                </div>
+
+                <div class="flex items-center gap-x-3">
+                    <a href="device-manager.html" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/20 hover:bg-white/5 transition-colors">
+                        <i class="fa-solid fa-plug mr-2"></i><span>Device Manager</span>
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="flex items-center gap-x-3">
-          <a href="index.html" class="text-sm px-4 py-2 rounded-2xl border border-white/20 hover:bg-white/5 transition">← Back to Home</a>
-          <a href="device-manager.html" class="inline-flex items-center px-5 py-2 text-sm font-semibold bg-white text-[#0a0c1f] rounded-2xl hover:bg-zinc-100 transition">
-            <i class="fa-solid fa-plug mr-2"></i> Device Manager
-          </a>
+    </nav>
+
+    <div class="max-w-3xl mx-auto px-6 pt-10 pb-16">
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center gap-x-2 px-4 py-1.5 rounded-3xl bg-white/5 border border-white/10 text-xs font-medium tracking-[1.5px] mb-4">
+                HELTEC V4 RECOMMENDED
+            </div>
+            <h1 class="font-display text-5xl tracking-tighter mb-3">Web Flasher</h1>
+            <p class="text-xl text-zinc-400 max-w-md mx-auto">Flash PLSChat firmware directly from your browser to your Heltec V4 or compatible ESP32 LoRa board.</p>
         </div>
-      </div>
+
+        <!-- Flash Card -->
+        <div class="card p-8 mb-8">
+            <div class="flex items-center gap-x-4 mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-fuchsia-500/10 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-microchip text-fuchsia-400 text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-semibold">Flash Firmware</h2>
+                    <p class="text-sm text-zinc-400 mt-1">Erase the device first for best results.</p>
+                </div>
+            </div>
+
+            <button onclick="showEraseInstructions()" 
+                    class="w-full mb-4 px-6 py-3.5 text-sm font-semibold rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white flex items-center justify-center gap-x-2 hover:brightness-105 transition">
+                <i class="fa-solid fa-eraser"></i>
+                <span>Erase Device First (Recommended)</span>
+            </button>
+
+            <esp-web-install-button manifest="flasher/manifest.json?v=16">
+                <button slot="activate" 
+                        class="w-full px-8 py-4 text-lg font-semibold bg-gradient-to-r from-cyan-400 to-emerald-400 text-[#0a0c1f] rounded-3xl flex items-center justify-center gap-x-3 hover:brightness-105 transition">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Flash PLSChat Firmware</span>
+                </button>
+            </esp-web-install-button>
+
+            <p class="mt-4 text-xs text-center text-zinc-500">Hold the <strong>BOOT button</strong> on your Heltec V4 while clicking Connect.</p>
+        </div>
+
+        <!-- License Card -->
+        <div class="card p-8">
+            <div class="flex items-center gap-x-4 mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-violet-500/10 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-key text-violet-400 text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-semibold">Send Licence (Optional)</h2>
+                    <p class="text-sm text-zinc-400 mt-1">Connect your device to send a PLSC licence key.</p>
+                </div>
+            </div>
+
+            <button onclick="connectDevice()" 
+                    class="w-full mb-4 px-6 py-3.5 text-sm font-semibold rounded-2xl border border-white/30 hover:bg-white/5 flex items-center justify-center gap-x-2 transition">
+                <i class="fa-solid fa-plug"></i>
+                <span>Connect Device via Serial</span>
+            </button>
+
+            <div id="statusBox" class="bg-zinc-950 border border-white/10 rounded-2xl p-5 text-center text-sm min-h-[70px] flex items-center justify-center">
+                Click "Connect Device" to begin (hold BOOT button on device).
+            </div>
+
+            <div id="licenseBox" class="hidden mt-4">
+                <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5">
+                    <div class="text-emerald-400 font-semibold mb-2 flex items-center gap-x-2">
+                        <i class="fa-solid fa-check-circle"></i> <span>Licence Found</span>
+                    </div>
+                    <div id="licenseContent" class="font-mono text-xs bg-black/40 p-3 rounded-xl text-left break-all"></div>
+                    <button onclick="sendLicense()" class="mt-4 w-full px-6 py-2.5 text-sm font-semibold bg-emerald-400 text-[#0a0c1f] rounded-2xl hover:bg-emerald-300 transition">
+                        Send Licence to Device
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center">
+            <a href="device-manager.html" class="text-sm text-fuchsia-400 hover:underline">Go to Device Manager →</a>
+        </div>
     </div>
-  </nav>
 
-  <div class="max-w-3xl mx-auto px-6 pt-12 pb-20">
-    <div class="text-center mb-10">
-      <div class="inline-flex items-center gap-x-2 px-4 py-1 rounded-3xl bg-white/5 border border-white/10 text-xs font-medium tracking-widest mb-4">
-        HELTEC V4 RECOMMENDED
-      </div>
-      <h1 class="font-display text-5xl tracking-tighter mb-3">Web Flasher</h1>
-      <p class="text-xl text-zinc-400">Flash PLSChat firmware directly from your browser to your Heltec V4 (or compatible ESP32 LoRa board).</p>
-    </div>
+    <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+    <script>
+        let serialPort = null;
 
-    <!-- Flash Section -->
-    <div class="bg-zinc-900/70 border border-white/10 rounded-3xl p-8 mb-8">
-      <div class="flex items-center gap-x-3 mb-6">
-        <div class="w-10 h-10 rounded-2xl bg-fuchsia-400/10 flex items-center justify-center">
-          <i class="fa-solid fa-microchip text-fuchsia-400 text-2xl"></i>
-        </div>
-        <div>
-          <h2 class="text-2xl font-semibold">Flash Firmware</h2>
-          <p class="text-sm text-zinc-400">Important: Erase the device first for best results.</p>
-        </div>
-      </div>
+        function showEraseInstructions() {
+            alert('How to Erase the Device (Important!)\n\n' +
+                '1. Click the Flash button below.\n' +
+                '2. In the popup, click "Connect".\n' +
+                '3. Hold BOOT button on Heltec V4, select port and Connect.\n' +
+                '4. In TOP RIGHT of popup click the gear icon (⚙️) → "Erase device".\n\n' +
+                'This fixes most flashing issues.');
+        }
 
-      <button onclick="showEraseInstructions()" 
-              class="w-full mb-4 px-6 py-3.5 text-sm font-semibold rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white flex items-center justify-center gap-x-2 hover:brightness-105 transition">
-        <i class="fa-solid fa-eraser"></i>
-        <span>Erase Device First (Recommended)</span>
-      </button>
+        async function connectDevice() {
+            const box = document.getElementById('statusBox');
+            box.innerHTML = '🔄 Connecting... <br><span class="text-fuchsia-400">Hold the BOOT button on your Heltec V4!</span>';
 
-      <esp-web-install-button manifest="flasher/manifest.json?v=16">
-        <button slot="activate" 
-                class="w-full px-6 py-4 text-lg font-semibold bg-gradient-to-r from-cyan-400 to-emerald-400 text-[#0a0c1f] rounded-3xl flex items-center justify-center gap-x-3 hover:brightness-105 transition">
-          <i class="fa-solid fa-bolt"></i>
-          <span>Flash PLSChat Firmware</span>
-        </button>
-      </esp-web-install-button>
+            try {
+                serialPort = await navigator.serial.requestPort();
+                await serialPort.open({ baudRate: 115200 });
+                box.innerHTML = `<span class="text-emerald-400 font-semibold">✅ Connected!</span><br>Looking for licence...`;
+                document.getElementById('licenseBox').classList.remove('hidden');
+            } catch (err) {
+                box.innerHTML = `❌ Connection failed.<br>Hold BOOT button and try again.`;
+            }
+        }
 
-      <p class="mt-4 text-xs text-center text-zinc-500">Hold the <strong>BOOT button</strong> on your Heltec V4 while clicking Connect in the popup.</p>
-    </div>
+        async function sendLicense() {
+            const box = document.getElementById('statusBox');
+            if (!serialPort) return;
+            box.innerHTML = '📤 Sending licence... (feature coming soon)';
+        }
 
-    <!-- License Section -->
-    <div class="bg-zinc-900/70 border border-white/10 rounded-3xl p-8">
-      <div class="flex items-center gap-x-3 mb-6">
-        <div class="w-10 h-10 rounded-2xl bg-violet-400/10 flex items-center justify-center">
-          <i class="fa-solid fa-key text-violet-400 text-2xl"></i>
-        </div>
-        <div>
-          <h2 class="text-2xl font-semibold">Send Licence (Optional)</h2>
-          <p class="text-sm text-zinc-400">Connect your device to send a PLSC licence key.</p>
-        </div>
-      </div>
-
-      <button onclick="connectDevice()" 
-              class="w-full mb-4 px-6 py-3.5 text-sm font-semibold rounded-2xl border border-white/30 hover:bg-white/5 flex items-center justify-center gap-x-2 transition">
-        <i class="fa-solid fa-plug"></i>
-        <span>Connect Device</span>
-      </button>
-
-      <div id="statusBox" class="bg-zinc-950 border border-white/10 rounded-2xl p-5 text-center text-sm min-h-[60px] flex items-center justify-center">
-        Click "Connect Device" to begin (hold BOOT button on device).
-      </div>
-
-      <div id="licenseBox" class="hidden mt-4">
-        <div class="bg-emerald-400/10 border border-emerald-400/30 rounded-2xl p-5 text-center">
-          <div class="text-emerald-400 font-semibold mb-2">✅ Licence Found</div>
-          <div id="licenseContent" class="font-mono text-xs bg-black/40 p-3 rounded-xl text-left break-all"></div>
-          <button onclick="sendLicense()" class="mt-4 px-6 py-2.5 text-sm font-semibold bg-emerald-400 text-[#0a0c1f] rounded-2xl">Send Licence to Device</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="mt-8 text-center">
-      <a href="device-manager.html" class="text-sm text-fuchsia-400 hover:underline">Go to Device Manager →</a>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <footer class="border-t border-white/10 py-8 text-xs text-zinc-500">
-    <div class="max-w-4xl mx-auto px-6 text-center">
-      PLSChat Web Flasher • Heltec V4 recommended • Powered by PLSC
-    </div>
-  </footer>
-
-  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
-  <script>
-    let serialPort = null;
-
-    function showEraseInstructions() {
-      alert('How to Erase the Device (Important!)\n\n' +
-        '1. Click the Flash button below.\n' +
-        '2. In the popup, click "Connect".\n' +
-        '3. Hold BOOT button on Heltec V4, select port and Connect.\n' +
-        '4. In TOP RIGHT of popup click the gear icon (⚙️) → "Erase device".\n\n' +
-        'This fixes most flashing issues.');
-    }
-
-    async function connectDevice() {
-      const box = document.getElementById('statusBox');
-      box.innerHTML = '🔄 Connecting... <br><span class="text-fuchsia-400">Hold the BOOT button on your Heltec V4!</span>';
-
-      try {
-        serialPort = await navigator.serial.requestPort();
-        await serialPort.open({ baudRate: 115200 });
-        box.innerHTML = `<span class="text-emerald-400 font-semibold">✅ Connected!</span><br>Looking for licence...`;
-        document.getElementById('licenseBox').classList.remove('hidden');
-      } catch (err) {
-        box.innerHTML = `❌ Connection failed.<br>Hold BOOT button and try again.`;
-      }
-    }
-
-    async function sendLicense() {
-      const box = document.getElementById('statusBox');
-      if (!serialPort) return;
-      box.innerHTML = '📤 Sending licence... (feature coming soon)';
-    }
-
-    console.log('%c[PLSChat] Flasher page updated to new style.', 'color:#64748b');
-  </script>
+        console.log('%c[PLSChat] Flasher page modernized.', 'color:#22c55e');
+    </script>
 </body>
 </html>
