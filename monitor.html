@@ -312,6 +312,7 @@
             const timestamp = new Date();
             addToLog(line, timestamp);
 
+            // Parse packet lines
             const parsed = parsePacketLine(line, timestamp);
             if (parsed) {
                 packets.unshift(parsed);
@@ -321,65 +322,132 @@
                 updateMeshVisualization();
             }
 
-            parseStatusInfo(line, timestamp);
+            // Parse status blocks and individual status lines
+            parseStatusBlock(line, timestamp);
 
             packetCount++;
             updateStats();
         }
 
-        function parseStatusInfo(line, timestamp) {
-            const nodeIdMatch = line.match(/NODE_ID[:=]\s*([0-9A-Fa-f]+)/i);
-            if (nodeIdMatch) {
-                const nodeId = nodeIdMatch[1].toUpperCase();
-                if (!nodes.has(nodeId)) {
-                    nodes.set(nodeId, { id: nodeId, firstSeen: timestamp, lastSeen: timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null, relay: 0, contacts: null, messages: null, rssiHistory: [] });
-                }
-                const node = nodes.get(nodeId);
-                node.lastSeen = timestamp;
+        // Improved robust status parsing
+        let statusBuffer = '';
+        function parseStatusBlock(line, timestamp) {
+            if (line.includes('=== PLSCHAT_STATUS ===')) {
+                statusBuffer = line + '\n';
+                return;
             }
+
+            if (statusBuffer.length > 0) {
+                statusBuffer += line + '\n';
+
+                if (line.includes('=== END_STATUS ===')) {
+                    processFullStatusBlock(statusBuffer, timestamp);
+                    statusBuffer = '';
+                }
+            }
+
+            // Also try to parse individual lines (fallback)
+            parseIndividualStatusLine(line, timestamp);
+        }
+
+        function processFullStatusBlock(block, timestamp) {
+            const nodeIdMatch = block.match(/NODE_ID[:=]\s*([0-9A-Fa-f]+)/i);
+            if (!nodeIdMatch) return;
+
+            const nodeId = nodeIdMatch[1].toUpperCase();
+
+            if (!nodes.has(nodeId)) {
+                nodes.set(nodeId, createNewNode(nodeId, timestamp));
+            }
+
+            const node = nodes.get(nodeId);
+            node.lastSeen = timestamp;
+
+            // Extract fields
+            const batMatch = block.match(/BAT[:=]\s*([0-9]+)%/i);
+            if (batMatch) node.battery = parseInt(batMatch[1]);
+
+            const rssiMatch = block.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
+            if (rssiMatch) {
+                node.lastRssi = parseInt(rssiMatch[1]);
+                addToRssiHistory(node, node.lastRssi);
+            }
+
+            const snrMatch = block.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
+            if (snrMatch) node.lastSnr = parseFloat(snrMatch[1]);
+
+            const uptimeMatch = block.match(/UPTIME[:=]\s*([0-9hms ]+)/i);
+            if (uptimeMatch) node.uptime = uptimeMatch[1].trim();
+
+            const relayMatch = block.match(/PKT_RELAY[:=]\s*(\d+)/i);
+            if (relayMatch) node.relay = parseInt(relayMatch[1]);
+
+            const contactsMatch = block.match(/CONTACTS[:=]\s*(\d+)/i);
+            if (contactsMatch) node.contacts = parseInt(contactsMatch[1]);
+
+            renderNodesList();
+        }
+
+        function parseIndividualStatusLine(line, timestamp) {
+            const nodeIdMatch = line.match(/NODE_ID[:=]\s*([0-9A-Fa-f]+)/i);
+            if (!nodeIdMatch) return;
+
+            const nodeId = nodeIdMatch[1].toUpperCase();
+
+            if (!nodes.has(nodeId)) {
+                nodes.set(nodeId, createNewNode(nodeId, timestamp));
+            }
+
+            const node = nodes.get(nodeId);
+            node.lastSeen = timestamp;
 
             const batMatch = line.match(/BAT[:=]\s*([0-9]+)%/i);
-            if (batMatch && nodeIdMatch) {
-                const node = nodes.get(nodeIdMatch[1].toUpperCase());
-                if (node) node.battery = parseInt(batMatch[1]);
-            }
+            if (batMatch) node.battery = parseInt(batMatch[1]);
 
             const rssiMatch = line.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
-            if (rssiMatch && nodeIdMatch) {
-                const node = nodes.get(nodeIdMatch[1].toUpperCase());
-                if (node) {
-                    node.lastRssi = parseInt(rssiMatch[1]);
-                    if (!node.rssiHistory) node.rssiHistory = [];
-                    node.rssiHistory.push(node.lastRssi);
-                    if (node.rssiHistory.length > MAX_RSSI_HISTORY) node.rssiHistory.shift();
-                }
+            if (rssiMatch) {
+                node.lastRssi = parseInt(rssiMatch[1]);
+                addToRssiHistory(node, node.lastRssi);
             }
 
             const snrMatch = line.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
-            if (snrMatch && nodeIdMatch) {
-                const node = nodes.get(nodeIdMatch[1].toUpperCase());
-                if (node) node.lastSnr = parseFloat(snrMatch[1]);
-            }
+            if (snrMatch) node.lastSnr = parseFloat(snrMatch[1]);
 
             const uptimeMatch = line.match(/UPTIME[:=]\s*([0-9hms ]+)/i);
-            if (uptimeMatch && nodeIdMatch) {
-                const node = nodes.get(nodeIdMatch[1].toUpperCase());
-                if (node) node.uptime = uptimeMatch[1].trim();
-            }
+            if (uptimeMatch) node.uptime = uptimeMatch[1].trim();
 
             const relayMatch = line.match(/PKT_RELAY[:=]\s*(\d+)/i);
-            if (relayMatch && nodeIdMatch) {
-                const node = nodes.get(nodeIdMatch[1].toUpperCase());
-                if (node) node.relay = parseInt(relayMatch[1]);
-            }
+            if (relayMatch) node.relay = parseInt(relayMatch[1]);
 
             const contactsMatch = line.match(/CONTACTS[:=]\s*(\d+)/i);
-            if (contactsMatch && nodeIdMatch) {
-                const node = nodes.get(nodeIdMatch[1].toUpperCase());
-                if (node) node.contacts = parseInt(contactsMatch[1]);
-            }
+            if (contactsMatch) node.contacts = parseInt(contactsMatch[1]);
 
             renderNodesList();
+        }
+
+        function createNewNode(nodeId, timestamp) {
+            return {
+                id: nodeId,
+                firstSeen: timestamp,
+                lastSeen: timestamp,
+                packetCount: 0,
+                lastRssi: null,
+                lastSnr: null,
+                types: new Set(),
+                customLabel: null,
+                battery: null,
+                uptime: null,
+                relay: 0,
+                contacts: null,
+                messages: null,
+                rssiHistory: []
+            };
+        }
+
+        function addToRssiHistory(node, rssi) {
+            if (!node.rssiHistory) node.rssiHistory = [];
+            node.rssiHistory.push(rssi);
+            if (node.rssiHistory.length > MAX_RSSI_HISTORY) node.rssiHistory.shift();
         }
 
         function parsePacketLine(line, timestamp) {
@@ -444,19 +512,21 @@
 
         function updateNodeFromPacket(parsed) {
             if (!parsed.from || parsed.from === '????') return;
+
             if (!nodes.has(parsed.from)) {
-                nodes.set(parsed.from, { id: parsed.from, firstSeen: parsed.timestamp, lastSeen: parsed.timestamp, packetCount: 0, lastRssi: null, lastSnr: null, types: new Set(), customLabel: null, battery: null, uptime: null, relay: 0, contacts: null, messages: null, rssiHistory: [] });
+                nodes.set(parsed.from, createNewNode(parsed.from, parsed.timestamp));
             }
+
             const node = nodes.get(parsed.from);
             node.lastSeen = parsed.timestamp;
             node.packetCount++;
+
             if (parsed.rssi !== null) {
                 node.lastRssi = parsed.rssi;
-                if (!node.rssiHistory) node.rssiHistory = [];
-                node.rssiHistory.push(parsed.rssi);
-                if (node.rssiHistory.length > MAX_RSSI_HISTORY) node.rssiHistory.shift();
+                addToRssiHistory(node, parsed.rssi);
             }
             if (parsed.snr !== null) node.lastSnr = parsed.snr;
+
             node.types.add(parsed.type);
             renderNodesList();
         }
@@ -621,10 +691,16 @@
 
         function drawRSSIChart(history) {
             const canvasEl = document.getElementById('rssi-chart');
-            if (!canvasEl || !history || history.length === 0) return;
+            if (!canvasEl || !history || history.length === 0) {
+                if (canvasEl) {
+                    const c = canvasEl.getContext('2d');
+                    c.clearRect(0, 0, canvasEl.width, canvasEl.height);
+                }
+                return;
+            }
 
-            const ctx = canvasEl.getContext('2d');
-            ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+            const ctxChart = canvasEl.getContext('2d');
+            ctxChart.clearRect(0, 0, canvasEl.width, canvasEl.height);
 
             const w = canvasEl.width;
             const h = canvasEl.height;
@@ -634,26 +710,25 @@
             const maxVal = Math.max(...history, -50);
             const range = maxVal - minVal || 1;
 
-            ctx.strokeStyle = '#67e8f9';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
+            ctxChart.strokeStyle = '#67e8f9';
+            ctxChart.lineWidth = 2;
+            ctxChart.beginPath();
 
             history.forEach((val, i) => {
                 const x = padding + (i / (history.length - 1)) * (w - padding * 2);
                 const y = h - padding - ((val - minVal) / range) * (h - padding * 2);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                if (i === 0) ctxChart.moveTo(x, y);
+                else ctxChart.lineTo(x, y);
             });
-            ctx.stroke();
+            ctxChart.stroke();
 
-            // Draw dots
-            ctx.fillStyle = '#67e8f9';
+            ctxChart.fillStyle = '#67e8f9';
             history.forEach((val, i) => {
                 const x = padding + (i / (history.length - 1)) * (w - padding * 2);
                 const y = h - padding - ((val - minVal) / range) * (h - padding * 2);
-                ctx.beginPath();
-                ctx.arc(x, y, 2, 0, Math.PI * 2);
-                ctx.fill();
+                ctxChart.beginPath();
+                ctxChart.arc(x, y, 2, 0, Math.PI * 2);
+                ctxChart.fill();
             });
         }
 
@@ -690,7 +765,6 @@
                 typesContainer.innerHTML = `<span class="text-xs text-zinc-500">No types recorded yet</span>`;
             }
 
-            // Draw RSSI chart
             setTimeout(() => {
                 drawRSSIChart(node.rssiHistory || []);
             }, 50);
@@ -754,7 +828,7 @@
                 const rssi = Math.floor(Math.random()*45) - 115;
                 processSerialLine(`[LoRa] RX from=${from} to=${to} type=${types[Math.floor(Math.random()*types.length)]} rssi=${rssi}`);
 
-                if (Math.random() < 0.35) {
+                if (Math.random() < 0.4) {
                     const bat = 65 + Math.floor(Math.random()*35);
                     const snr = (Math.random() * 8 - 2).toFixed(1);
                     const relay = Math.floor(Math.random() * 20);
@@ -804,7 +878,7 @@
                 }
             }, 1200);
 
-            console.log('%c[PLSChat Monitor] Improved with RSSI history chart + Export button.', 'color:#22c55e');
+            console.log('%c[PLSChat Monitor] Robust status parsing enabled.', 'color:#22c55e');
         }
 
         window.onload = init;
