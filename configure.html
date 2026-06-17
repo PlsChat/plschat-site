@@ -181,8 +181,10 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">SSID (from device)</label>
-            <input type="text" id="wifiSsid" value="PLSChat-Device">
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">
+              SSID (from device) <span id="ssidStatus" class="normal-case tracking-normal text-zinc-500"></span>
+            </label>
+            <input type="text" id="wifiSsid" value="" placeholder="Connect to read device SSID…">
           </div>
           <div>
             <label class="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">Password (default: pls12345)</label>
@@ -237,6 +239,7 @@
     let wifiEnabled = true;
     let btEnabled = true;
     let serialReader = null;
+    let ssidReceived = false;
 
     function updateToggleVisuals() {
       const w = document.getElementById('wifiToggle');
@@ -271,11 +274,29 @@
         serialPort = await navigator.serial.requestPort();
         await serialPort.open({ baudRate: 115200 });
         
-        box.innerHTML = "✅ <strong>Connected!</strong><br>Now click <strong>'Read Current Settings'</strong> to load real SSID from device.";
+        box.innerHTML = "✅ <strong>Connected!</strong><br>Reading SSID and settings from device…";
         box.style.borderColor = '#22c55e33';
-        
+        ssidReceived = false;
+        const s = document.getElementById('ssidStatus');
+        s.textContent = "reading…";
+        s.className = "normal-case tracking-normal text-amber-400";
+
         // Start listening
         startSerialReader();
+
+        // Auto-request the real config so the SSID populates on plug-in
+        // (small delay to let the reader attach first)
+        setTimeout(() => { sendCommand("GET CONFIG\n"); }, 400);
+
+        // If nothing comes back, the firmware probably lacks GET CONFIG support
+        setTimeout(() => {
+          if (!ssidReceived) {
+            const st = document.getElementById('ssidStatus');
+            st.textContent = "⚠ no response — check firmware";
+            st.className = "normal-case tracking-normal text-red-400";
+            box.innerHTML += "\n⚠️ Device did not return an SSID. Make sure the firmware supports GET CONFIG and that you did NOT hold BOOT (that enters flash mode, where the app can't reply).";
+          }
+        }, 4000);
         
       } catch (err) {
         console.error(err);
@@ -322,7 +343,13 @@
       
       if (line.startsWith("WIFI_SSID:")) {
         const val = line.substring(10).trim();
-        if (val) document.getElementById('wifiSsid').value = val;
+        if (val) {
+          document.getElementById('wifiSsid').value = val;
+          ssidReceived = true;
+          const s = document.getElementById('ssidStatus');
+          s.textContent = "✓ read from device";
+          s.className = "normal-case tracking-normal text-emerald-400";
+        }
       } 
       else if (line.startsWith("WIFI_PASS:")) {
         const val = line.substring(10).trim();
@@ -394,6 +421,11 @@
         const enc = new TextEncoder();
 
         if (wifiEnabled) {
+          if (!ssid) {
+            box.innerHTML += "\n⚠️ SSID is empty — read it from the device first (or type one) before applying.";
+            writer.releaseLock();
+            return;
+          }
           await writer.write(enc.encode(`WIFI SSID:${ssid}\n`));
           await writer.write(enc.encode(`WIFI PASS:${pass}\n`));
         }
