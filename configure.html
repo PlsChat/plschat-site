@@ -414,21 +414,25 @@
       const btName = document.getElementById('btName').value.trim();
       const btPin = document.getElementById('btPin').value.trim();
 
+      if (wifiEnabled && !ssid) {
+        box.innerHTML += "\n⚠️ SSID is empty — read it from the device first (or type one) before applying.";
+        return;
+      }
+
       box.innerHTML += "\n\n→ Sending...";
 
       try {
         const writer = serialPort.writable.getWriter();
         const enc = new TextEncoder();
 
+        // Always push the radio on/off state so the toggles actually drive the device.
+        await writer.write(enc.encode(`WIFI ${wifiEnabled ? "ON" : "OFF"}\n`));
         if (wifiEnabled) {
-          if (!ssid) {
-            box.innerHTML += "\n⚠️ SSID is empty — read it from the device first (or type one) before applying.";
-            writer.releaseLock();
-            return;
-          }
           await writer.write(enc.encode(`WIFI SSID:${ssid}\n`));
           await writer.write(enc.encode(`WIFI PASS:${pass}\n`));
         }
+
+        await writer.write(enc.encode(`BLE ${btEnabled ? "ON" : "OFF"}\n`));
         if (btEnabled) {
           await writer.write(enc.encode(`BT NAME:${btName}\n`));
           await writer.write(enc.encode(`BLE PIN:${btPin}\n`));
