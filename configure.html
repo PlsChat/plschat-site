@@ -482,6 +482,9 @@
       else if (line.includes("_OK")) {
         box.innerHTML += "\n" + line;
       }
+      else if (line.includes("_INVALID") || line.includes("_TOO_SHORT") || line.includes("_REQUIRED")) {
+        box.innerHTML += "\n⚠️ Device: " + line;
+      }
     }
 
     async function sendCommand(cmd) {
@@ -526,6 +529,14 @@
         box.innerHTML += "\n⚠️ SSID is empty — read it from the device first (or type one) before applying.";
         return;
       }
+      if (wifiEnabled && pass.length < 8) {
+        box.innerHTML += "\n⚠️ WiFi password must be at least 8 characters (ESP32 SoftAP requirement).";
+        return;
+      }
+      if (btEnabled && btPin.length < 4) {
+        box.innerHTML += "\n⚠️ Bluetooth PIN must be 4–6 digits.";
+        return;
+      }
 
       box.innerHTML += "\n\n→ Sending...";
 
@@ -546,8 +557,9 @@
           await writer.write(enc.encode(`BLE PIN:${btPin}\n`));
         }
 
+        await writer.write(enc.encode(`APPLY\n`));   // commit + restart radios on device
         writer.releaseLock();
-        box.innerHTML += "\n✅ Sent! Restart device to apply.";
+        box.innerHTML += "\n✅ Sent & applied. The device restarts its radios automatically — watch for CONFIG_OK below.";
       } catch(e) {
         box.innerHTML += "\n❌ Send failed.";
       }
