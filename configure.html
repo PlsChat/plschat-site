@@ -78,6 +78,45 @@
       border-radius: 1rem;
       padding: 14px 18px;
     }
+
+    .tip { position: relative; }
+    .tip .tip-text {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      bottom: 150%;
+      left: 0;
+      width: 270px;
+      background: #0f172a;
+      color: #cbd5e1;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 0.6rem;
+      padding: 9px 11px;
+      font-size: 11px;
+      line-height: 1.45;
+      z-index: 60;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      transition: opacity 0.15s ease;
+      pointer-events: none;
+    }
+    .tip:hover .tip-text { visibility: visible; opacity: 1; }
+
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 2.75rem; }
+    .pw-eye {
+      position: absolute;
+      top: 50%;
+      right: 0.6rem;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-size: 0.95rem;
+      padding: 6px;
+      line-height: 1;
+    }
+    .pw-eye:hover { color: #e2e8f0; }
   </style>
 </head>
 <body class="bg-[#0a0c1f] text-zinc-200">
@@ -125,14 +164,18 @@
       Do <strong>not</strong> hold BOOT — that puts the device in flash mode, where it can't reply.
     </div>
 
-    <!-- Raw serial debug log -->
+    <!-- Raw serial debug log (off by default) -->
     <div class="max-w-3xl mx-auto mb-8">
-      <details open>
-        <summary class="cursor-pointer text-xs text-zinc-400 hover:text-zinc-200 select-none">
-          <i class="fa-solid fa-terminal mr-1"></i> Raw device output (debug)
-        </summary>
-        <pre id="rawLog" class="mt-2 p-4 bg-black/40 border border-white/10 rounded-xl text-[11px] leading-relaxed text-emerald-300/90 max-h-64 overflow-auto whitespace-pre-wrap">(nothing received yet)</pre>
-      </details>
+      <div class="flex items-center justify-between">
+        <div class="tip flex items-center gap-x-2 text-xs text-zinc-400 cursor-help">
+          <i class="fa-solid fa-terminal"></i>
+          <span>Raw device output (debug)</span>
+          <i class="fa-regular fa-circle-question text-zinc-500"></i>
+          <span class="tip-text">Shows the live, unfiltered text the device sends over the serial link. Useful for troubleshooting connection or firmware issues — leave it off for normal use.</span>
+        </div>
+        <div onclick="toggleDebug()" id="debugToggle" class="toggle cursor-pointer"></div>
+      </div>
+      <pre id="rawLog" class="hidden mt-2 p-4 bg-black/40 border border-white/10 rounded-xl text-[11px] leading-relaxed text-emerald-300/90 max-h-64 overflow-auto whitespace-pre-wrap">(nothing received yet)</pre>
     </div>
 
     <!-- Security Warning -->
@@ -169,7 +212,7 @@
           
           <div class="flex items-center justify-between bg-[#0f172a] rounded-2xl px-5 py-4 border border-white/10">
             <div class="flex items-center gap-x-3">
-              <i class="fa-solid fa-bluetooth-b text-sky-400 text-xl w-6"></i>
+              <i class="fa-brands fa-bluetooth-b text-sky-400 text-xl w-6"></i>
               <div class="font-medium">Bluetooth (BLE)</div>
             </div>
             <div onclick="toggleBT()" id="btToggle" class="toggle checked cursor-pointer"></div>
@@ -198,7 +241,12 @@
           </div>
           <div>
             <label class="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">Password (default: pls12345)</label>
-            <input type="password" id="wifiPass" value="pls12345">
+            <div class="pw-wrap">
+              <input type="password" id="wifiPass" value="pls12345">
+              <button type="button" class="pw-eye" aria-label="Show password" onclick="togglePw('wifiPass', this)">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -208,7 +256,7 @@
     <div class="max-w-3xl mx-auto mb-8">
       <div class="pls-card p-6">
         <div class="flex items-center gap-x-3 mb-5">
-          <i class="fa-solid fa-bluetooth-b text-sky-400 text-2xl"></i>
+          <i class="fa-brands fa-bluetooth-b text-sky-400 text-2xl"></i>
           <div class="font-semibold text-xl">Bluetooth</div>
         </div>
         
@@ -219,7 +267,12 @@
           </div>
           <div>
             <label class="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">PIN / Password</label>
-            <input type="text" id="btPin" value="pls12345" maxlength="16">
+            <div class="pw-wrap">
+              <input type="password" id="btPin" value="pls12345" maxlength="16">
+              <button type="button" class="pw-eye" aria-label="Show PIN" onclick="togglePw('btPin', this)">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -271,6 +324,22 @@
       btEnabled = !btEnabled;
       if (!wifiEnabled && !btEnabled) wifiEnabled = true;
       updateToggleVisuals();
+    }
+
+    function toggleDebug() {
+      const t = document.getElementById('debugToggle');
+      const on = t.classList.toggle('checked');
+      document.getElementById('rawLog').classList.toggle('hidden', !on);
+    }
+
+    function togglePw(id, btn) {
+      const input = document.getElementById(id);
+      const icon = btn.querySelector('i');
+      const reveal = input.type === 'password';
+      input.type = reveal ? 'text' : 'password';
+      icon.classList.toggle('fa-eye', !reveal);
+      icon.classList.toggle('fa-eye-slash', reveal);
+      btn.setAttribute('aria-label', reveal ? 'Hide' : 'Show');
     }
 
     async function connectDevice() {
