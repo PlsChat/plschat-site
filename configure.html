@@ -122,7 +122,17 @@
 
     <div id="statusBox" class="status-box max-w-3xl mx-auto p-6 mb-8 text-sm text-zinc-300 border border-white/10">
       Click <strong>Connect to Device</strong> above.<br>
-      Hold the <strong>BOOT button</strong> on your Heltec V4 while connecting.
+      Do <strong>not</strong> hold BOOT — that puts the device in flash mode, where it can't reply.
+    </div>
+
+    <!-- Raw serial debug log -->
+    <div class="max-w-3xl mx-auto mb-8">
+      <details>
+        <summary class="cursor-pointer text-xs text-zinc-400 hover:text-zinc-200 select-none">
+          <i class="fa-solid fa-terminal mr-1"></i> Raw device output (debug)
+        </summary>
+        <pre id="rawLog" class="mt-2 p-4 bg-black/40 border border-white/10 rounded-xl text-[11px] leading-relaxed text-emerald-300/90 max-h-64 overflow-auto whitespace-pre-wrap">(nothing received yet)</pre>
+      </details>
     </div>
 
     <!-- Security Warning -->
@@ -284,19 +294,24 @@
         // Start listening
         startSerialReader();
 
-        // Auto-request the real config so the SSID populates on plug-in
-        // (small delay to let the reader attach first)
-        setTimeout(() => { sendCommand("GET CONFIG\n"); }, 400);
+        // Auto-request the real config so the SSID populates on plug-in.
+        // The ESP32-S3 often resets when the port opens, so retry a few times
+        // across the boot window instead of asking once.
+        setTimeout(() => { if (!ssidReceived) sendCommand("GET CONFIG\n"); }, 500);
+        setTimeout(() => { if (!ssidReceived) sendCommand("GET CONFIG\n"); }, 1500);
+        setTimeout(() => { if (!ssidReceived) sendCommand("GET CONFIG\n"); }, 3000);
 
-        // If nothing comes back, the firmware probably lacks GET CONFIG support
+        // If still nothing, the firmware likely doesn't implement GET CONFIG.
         setTimeout(() => {
           if (!ssidReceived) {
             const st = document.getElementById('ssidStatus');
             st.textContent = "⚠ no response — check firmware";
             st.className = "normal-case tracking-normal text-red-400";
-            box.innerHTML += "\n⚠️ Device did not return an SSID. Make sure the firmware supports GET CONFIG and that you did NOT hold BOOT (that enters flash mode, where the app can't reply).";
+            box.innerHTML += "\n⚠️ No SSID returned. Open 'Raw device output (debug)' below: " +
+              "if it's empty, the app isn't talking (held BOOT? wrong port? wrong baud?). " +
+              "If you see text but no WIFI_SSID: line, the firmware doesn't support GET CONFIG yet.";
           }
-        }, 4000);
+        }, 5000);
         
       } catch (err) {
         console.error(err);
@@ -312,6 +327,13 @@
       serialReader = serialPort.readable.getReader();
       
       readSerialLoop(decoder);
+    }
+
+    function logRaw(line) {
+      const log = document.getElementById('rawLog');
+      if (log.textContent === '(nothing received yet)') log.textContent = '';
+      log.textContent += line + '\n';
+      log.scrollTop = log.scrollHeight;
     }
 
     async function readSerialLoop(decoder) {
@@ -330,6 +352,7 @@
           for (let line of lines) {
             line = line.trim();
             if (line.length === 0) continue;
+            logRaw(line);
             processLine(line);
           }
         }
