@@ -361,18 +361,34 @@
       }
     }
 
+    function setSsid(val, label) {
+      if (!val) return;
+      document.getElementById('wifiSsid').value = val;
+      ssidReceived = true;
+      const s = document.getElementById('ssidStatus');
+      s.textContent = "✓ " + label;
+      s.className = "normal-case tracking-normal text-emerald-400";
+    }
+
     function processLine(line) {
       const box = document.getElementById("statusBox");
-      
+
+      // --- Firmware v2.42 doesn't emit WIFI_SSID:; it prints the SSID in the
+      //     boot log ("AP started: PLSChat-XXXX") and the MAC in its periodic
+      //     status block. Read the SSID from whichever we see. ---
+      const apIdx = line.indexOf("AP started:");
+      if (apIdx !== -1) {
+        setSsid(line.substring(apIdx + 11).trim(), "read from device");
+        return;
+      }
+      if (line.startsWith("MAC:") && !ssidReceived) {
+        const p = line.substring(4).trim().split(":");
+        if (p.length >= 6) setSsid("PLSChat-" + (p[4] + p[5]).toUpperCase(), "from device MAC");
+        return;
+      }
+
       if (line.startsWith("WIFI_SSID:")) {
-        const val = line.substring(10).trim();
-        if (val) {
-          document.getElementById('wifiSsid').value = val;
-          ssidReceived = true;
-          const s = document.getElementById('ssidStatus');
-          s.textContent = "✓ read from device";
-          s.className = "normal-case tracking-normal text-emerald-400";
-        }
+        setSsid(line.substring(10).trim(), "read from device");
       } 
       else if (line.startsWith("WIFI_PASS:")) {
         const val = line.substring(10).trim();
