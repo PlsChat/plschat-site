@@ -32,20 +32,25 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 .status-dot.online { background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,0.7); }
 .status-dot.offline { background: #475569; }
 
-/* --- Leaflet dark theming --- */
-#leaflet-map { background: #0f1326; }
-.leaflet-container { background: #0f1326 !important; font-family: 'Inter', sans-serif !important; }
+/* --- Leaflet theming (light basemap for readability, dark UI chrome) --- */
+#leaflet-map { background: #dce3ea; }
+.leaflet-container { background: #dce3ea !important; font-family: 'Inter', sans-serif !important; }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #0a0c1f; color: #c9d1d9; border: 1px solid rgba(255,255,255,0.1); }
-.leaflet-control-attribution { background: rgba(10,12,31,0.75) !important; color: #64748b !important; font-size: 10px !important; }
+.leaflet-control-attribution { background: rgba(10,12,31,0.75) !important; color: #94a3b8 !important; font-size: 10px !important; }
 .leaflet-control-attribution a { color: #67e8f9 !important; }
 .leaflet-control-zoom a { background: #0a0c1f !important; color: #c9d1d9 !important; border-color: rgba(255,255,255,0.1) !important; }
 .leaflet-control-zoom a:hover { background: #161b3a !important; }
-.repeater-marker { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #0a0c1f; }
-.repeater-marker.online { background: #22d3ee; box-shadow: 0 0 10px rgba(34,211,238,0.85); }
-.repeater-marker.offline { background: #475569; box-shadow: none; }
-.repeater-tooltip { background: #0a0c1f !important; color: #c9d1d9 !important; border: 1px solid rgba(255,255,255,0.15) !important; font-size: 11px !important; padding: 2px 8px !important; border-radius: 8px !important; box-shadow: none !important; }
+.repeater-marker { width: 18px; height: 18px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+.repeater-marker.online { background: #0891b2; box-shadow: 0 0 0 4px rgba(8,145,178,0.35), 0 1px 4px rgba(0,0,0,0.4); }
+.repeater-marker.offline { background: #94a3b8; }
+.repeater-tooltip { background: #0a0c1f !important; color: #e2e8f0 !important; border: 1px solid rgba(255,255,255,0.15) !important; font-size: 11px !important; font-weight: 600 !important; padding: 3px 9px !important; border-radius: 8px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important; }
 .leaflet-tooltip-top:before { border-top-color: #0a0c1f !important; }
 #map-visual.place-mode-active #leaflet-map { cursor: crosshair; }
+
+/* --- Repeater search/select --- */
+.repeater-option { padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.repeater-option:hover { background: rgba(255,255,255,0.06); }
+.repeater-option.add-new { color: #67e8f9; }
 </style>
 </head>
 <body>
@@ -192,10 +197,18 @@ Nodes appear when the connected device receives their packets or status over LoR
 <button onclick="autoArrangeByRSSI()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Auto by RSSI</button>
 </div>
 
-<div id="map-controls" class="hidden flex gap-2 items-center flex-wrap">
-<select id="place-node-select" class="bg-[#0f1326] border border-white/10 rounded-xl px-2 py-1.5 text-xs max-w-[160px]"></select>
-<button id="place-mode-btn" onclick="togglePlaceMode()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5"><i class="fa-solid fa-location-crosshairs mr-1"></i>Place Mode: Off</button>
-<button onclick="addManualRepeater()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5"><i class="fa-solid fa-plus mr-1"></i>Add Repeater</button>
+<div id="map-controls" class="hidden flex gap-2 items-center flex-wrap relative">
+<div class="relative">
+<input type="text" id="repeater-search" placeholder="Search repeaters to place..." autocomplete="off"
+  class="bg-[#0f1326] border border-white/10 rounded-xl px-3 py-1.5 text-xs w-56 focus:outline-none focus:border-cyan-400/50"
+  oninput="handleRepeaterSearchInput()" onfocus="showRepeaterSearchDropdown()" onblur="hideRepeaterSearchDropdownDeferred()">
+<div id="repeater-search-dropdown" class="hidden absolute left-0 top-[calc(100%+6px)] w-72 max-h-60 overflow-auto bg-[#0a0c1f] border border-white/10 rounded-xl shadow-2xl z-[1500] text-xs"></div>
+</div>
+<div id="place-armed-badge" class="hidden items-center gap-2 text-xs px-3 py-1.5 rounded-xl border border-cyan-400/40 bg-cyan-400/10 text-cyan-300">
+<i class="fa-solid fa-location-crosshairs"></i>
+<span id="place-armed-label"></span>
+<button onclick="cancelPlacement()" class="text-cyan-300 hover:text-white ml-1 text-base leading-none">&times;</button>
+</div>
 <button onclick="centerMap()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Center</button>
 </div>
 
@@ -210,7 +223,7 @@ Nodes appear when the connected device receives their packets or status over LoR
 </div>
 
 <p id="network-caption" class="text-[11px] text-zinc-500 mt-2 text-center">Click a node for detailed stats • Drag to rearrange • Double-click to set custom label • Nodes appear when received by the connected device</p>
-<p id="map-caption" class="text-[11px] text-zinc-500 mt-2 text-center hidden">Click a placed repeater for detailed stats • Turn on Place Mode, pick a repeater from the list, then click the map to set its pin • Grey markers are known repeaters not heard this session</p>
+<p id="map-caption" class="text-[11px] text-zinc-500 mt-2 text-center hidden">Click a placed repeater for stats • Drag a pin to nudge its position • Search above to place a new one • The dashed circle is an editable estimated range, not measured coverage</p>
 </div>
 </div>
 
@@ -281,6 +294,16 @@ Nodes appear when the connected device receives their packets or status over LoR
 <div id="modal-types" class="flex flex-wrap gap-2 text-xs"></div>
 </div>
 
+<div id="modal-range-box" class="bg-white/5 rounded-2xl p-4">
+<div class="text-xs text-zinc-500 mb-2">ESTIMATED TRANSMISSION RANGE (HALO ON MAP)</div>
+<div class="flex items-center gap-2">
+<input type="number" id="modal-range-input" min="0.1" step="0.5" class="bg-[#0f1326] border border-white/10 rounded-xl px-3 py-2 text-sm w-24 focus:outline-none focus:border-cyan-400/50">
+<span class="text-xs text-zinc-500">km</span>
+<button onclick="saveRangeFromModal()" class="ml-auto text-xs px-4 py-2 border border-white/20 rounded-xl hover:bg-white/5">Save</button>
+</div>
+<div class="text-[10px] text-zinc-500 mt-2">A rough estimate you set yourself — not a measured coverage area.</div>
+</div>
+
 <div class="pt-2 space-y-2">
 <button onclick="editLabelFromModal()" class="w-full py-2.5 text-sm border border-white/20 hover:bg-white/5 rounded-2xl flex items-center justify-center gap-x-2">
 <i class="fa-solid fa-edit"></i> <span>Edit Custom Label</span>
@@ -313,16 +336,22 @@ const MAX_LOG_LINES = 300;
 const MAX_PACKETS = 50;
 const MAX_RSSI_HISTORY = 15;
 const MAX_MESH_NODES = 40; // Increased to show more devices
+const DEFAULT_RANGE_KM = 5; // starting estimate for a repeater's transmission halo
 
 // ===== Repeater registry (persisted across sessions) =====
 const REGISTRY_KEY = 'plschat_known_repeaters';
 let registry = loadRegistry();
 let currentMeshView = 'network';
 let leafletMap = null;
+let haloLayerGroup = null;
+let markerLayerGroup = null;
 let mapMarkers = new Map();   // id -> L.marker
+let mapHalos = new Map();     // id -> L.circle
 let mapLines = [];
 let linkCounts = new Map();   // "idA|idB" sorted -> {count, lastSeen}
 let placeMode = false;
+let placeTargetId = null;
+let justDraggedMarker = false;
 
 function loadRegistry() {
   try {
@@ -337,7 +366,6 @@ function registerKnownIfNeeded(id) {
   if (!registry[id]) {
     registry[id] = { label: null, lat: null, lon: null, manuallyAdded: false, addedAt: new Date().toISOString() };
     saveRegistry();
-    refreshPlaceNodeSelect();
   }
 }
 function applyRegistryToNodes() {
@@ -796,7 +824,6 @@ function switchMeshView(view) {
     mapVis.classList.remove('hidden'); netVis.classList.add('hidden');
     mapControls.classList.remove('hidden'); netControls.classList.add('hidden');
     mapCaption.classList.remove('hidden'); netCaption.classList.add('hidden');
-    refreshPlaceNodeSelect();
     setTimeout(() => {
       initMap();
       if (leafletMap) leafletMap.invalidateSize();
@@ -808,11 +835,13 @@ function switchMeshView(view) {
 function initMap() {
   if (leafletMap) return;
   leafletMap = L.map('leaflet-map', { zoomControl: true, attributionControl: true, worldCopyJump: true }).setView([20, 0], 2);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap, &copy; CARTO',
-    maxZoom: 19,
+    maxZoom: 20,
     subdomains: 'abcd'
   }).addTo(leafletMap);
+  haloLayerGroup = L.layerGroup().addTo(leafletMap);   // added first → renders underneath
+  markerLayerGroup = L.layerGroup().addTo(leafletMap); // added second → renders on top
   leafletMap.on('click', handleLeafletClick);
 }
 
@@ -825,6 +854,24 @@ function repeaterIcon(online) {
   });
 }
 
+function getRangeKm(id) {
+  const r = registry[id];
+  return (r && r.rangeKm) ? r.rangeKm : DEFAULT_RANGE_KM;
+}
+
+function haloStyle(online) {
+  return {
+    radius: 0, // set per-call
+    color: online ? '#0891b2' : '#94a3b8',
+    weight: 1.5,
+    dashArray: '4,5',
+    fillColor: online ? '#0891b2' : '#94a3b8',
+    fillOpacity: 0.08,
+    opacity: 0.55,
+    interactive: false
+  };
+}
+
 function updateMapMarkers() {
   if (!leafletMap) return;
   const seenIds = new Set();
@@ -833,15 +880,38 @@ function updateMapMarkers() {
     const lat = (r && r.lat !== null && r.lat !== undefined) ? r.lat : node.lat;
     const lon = (r && r.lon !== null && r.lon !== undefined) ? r.lon : node.lon;
     if (lat === null || lat === undefined || lon === null || lon === undefined) {
-      if (mapMarkers.has(id)) { leafletMap.removeLayer(mapMarkers.get(id)); mapMarkers.delete(id); }
+      if (mapMarkers.has(id)) { markerLayerGroup.removeLayer(mapMarkers.get(id)); mapMarkers.delete(id); }
+      if (mapHalos.has(id)) { haloLayerGroup.removeLayer(mapHalos.get(id)); mapHalos.delete(id); }
       return;
     }
     seenIds.add(id);
     const label = node.customLabel || id;
+    const radiusM = getRangeKm(id) * 1000;
+
+    let halo = mapHalos.get(id);
+    if (!halo) {
+      halo = L.circle([lat, lon], { ...haloStyle(node.online), radius: radiusM }).addTo(haloLayerGroup);
+      mapHalos.set(id, halo);
+    } else {
+      halo.setLatLng([lat, lon]);
+      halo.setRadius(radiusM);
+      halo.setStyle(haloStyle(node.online));
+    }
+
     let marker = mapMarkers.get(id);
     if (!marker) {
-      marker = L.marker([lat, lon], { icon: repeaterIcon(node.online) }).addTo(leafletMap);
-      marker.on('click', () => { if (!placeMode) showNodeDetail(id); });
+      marker = L.marker([lat, lon], { icon: repeaterIcon(node.online), draggable: true }).addTo(markerLayerGroup);
+      marker.on('click', () => { if (justDraggedMarker) { justDraggedMarker = false; return; } if (!placeMode) showNodeDetail(id); });
+      marker.on('drag', () => { const ll = marker.getLatLng(); halo.setLatLng(ll); drawMapLinks(); });
+      marker.on('dragend', () => {
+        const ll = marker.getLatLng();
+        if (!registry[id]) registry[id] = { label: null, lat: null, lon: null, rangeKm: null, manuallyAdded: false, addedAt: new Date().toISOString() };
+        registry[id].lat = ll.lat; registry[id].lon = ll.lng;
+        saveRegistry();
+        node.lat = ll.lat; node.lon = ll.lng;
+        justDraggedMarker = true;
+        setTimeout(() => { justDraggedMarker = false; }, 250);
+      });
       mapMarkers.set(id, marker);
     } else {
       marker.setLatLng([lat, lon]);
@@ -851,7 +921,10 @@ function updateMapMarkers() {
     marker.bindTooltip(label, { permanent: true, direction: 'top', offset: [0, -8], className: 'repeater-tooltip' });
   });
   Array.from(mapMarkers.keys()).forEach(id => {
-    if (!seenIds.has(id)) { leafletMap.removeLayer(mapMarkers.get(id)); mapMarkers.delete(id); }
+    if (!seenIds.has(id)) { markerLayerGroup.removeLayer(mapMarkers.get(id)); mapMarkers.delete(id); }
+  });
+  Array.from(mapHalos.keys()).forEach(id => {
+    if (!seenIds.has(id)) { haloLayerGroup.removeLayer(mapHalos.get(id)); mapHalos.delete(id); }
   });
   drawMapLinks();
 }
@@ -872,10 +945,8 @@ function drawMapLinks() {
 }
 
 function handleLeafletClick(e) {
-  if (!placeMode) return;
-  const sel = document.getElementById('place-node-select');
-  const id = sel ? sel.value : null;
-  if (!id) { alert('No known repeaters yet — add one with "Add Repeater" first.'); return; }
+  if (!placeMode || !placeTargetId) return;
+  const id = placeTargetId;
   if (!registry[id]) registry[id] = { label: null, lat: null, lon: null, manuallyAdded: false, addedAt: new Date().toISOString() };
   registry[id].lat = e.latlng.lat;
   registry[id].lon = e.latlng.lng;
@@ -883,44 +954,95 @@ function handleLeafletClick(e) {
   const n = nodes.get(id);
   if (n) { n.lat = e.latlng.lat; n.lon = e.latlng.lng; }
   updateMapMarkers();
-  refreshPlaceNodeSelect();
+  cancelPlacement();
 }
 
-function togglePlaceMode() {
-  placeMode = !placeMode;
-  const btn = document.getElementById('place-mode-btn');
-  btn.innerHTML = placeMode
-    ? '<i class="fa-solid fa-location-crosshairs mr-1"></i>Place Mode: On'
-    : '<i class="fa-solid fa-location-crosshairs mr-1"></i>Place Mode: Off';
-  btn.classList.toggle('active', placeMode);
-  const mapVis = document.getElementById('map-visual');
-  if (mapVis) mapVis.classList.toggle('place-mode-active', placeMode);
+function repeaterDisplayName(id) {
+  const n = nodes.get(id);
+  return (n && n.customLabel) ? n.customLabel : id;
 }
 
-function refreshPlaceNodeSelect() {
-  const sel = document.getElementById('place-node-select');
-  if (!sel) return;
-  const prev = sel.value;
-  sel.innerHTML = '';
-  Array.from(nodes.keys()).sort().forEach(id => {
-    const opt = document.createElement('option');
-    const r = registry[id];
-    const placed = r && r.lat !== null && r.lat !== undefined;
-    opt.value = id;
-    opt.textContent = id + (placed ? ' ✓ placed' : ' (unplaced)');
-    sel.appendChild(opt);
-  });
-  if (prev && Array.from(sel.options).some(o => o.value === prev)) sel.value = prev;
+function isPlaced(id) {
+  const r = registry[id];
+  return !!(r && r.lat !== null && r.lat !== undefined);
 }
 
-function addManualRepeater() {
-  const raw = prompt('Repeater ID or name (e.g. REPEATER-NORTH):');
-  if (!raw) return;
-  const id = raw.trim().toUpperCase().replace(/\s+/g, '-');
-  if (!id) return;
-  if (!nodes.has(id)) {
-    nodes.set(id, createNewNode(id, null));
+function showRepeaterSearchDropdown() {
+  renderRepeaterDropdown(document.getElementById('repeater-search').value.trim());
+}
+
+function hideRepeaterSearchDropdownDeferred() {
+  // small delay so a click on a dropdown row registers before blur hides it
+  setTimeout(() => {
+    const dd = document.getElementById('repeater-search-dropdown');
+    if (dd) dd.classList.add('hidden');
+  }, 150);
+}
+
+function handleRepeaterSearchInput() {
+  renderRepeaterDropdown(document.getElementById('repeater-search').value.trim());
+}
+
+function renderRepeaterDropdown(filterText) {
+  const dd = document.getElementById('repeater-search-dropdown');
+  if (!dd) return;
+  const q = filterText.toLowerCase();
+  const matches = Array.from(nodes.keys())
+    .filter(id => !q || id.toLowerCase().includes(q) || repeaterDisplayName(id).toLowerCase().includes(q))
+    .sort((a, b) => {
+      const ap = isPlaced(a), bp = isPlaced(b);
+      if (ap !== bp) return ap ? 1 : -1; // unplaced first — those are the ones you usually want to place
+      return repeaterDisplayName(a).localeCompare(repeaterDisplayName(b));
+    });
+
+  let html = '';
+  if (matches.length === 0 && !q) {
+    html += `<div style="padding:14px 12px;color:#64748b;">No known repeaters yet — type a name below to add one.</div>`;
   }
+  matches.forEach(id => {
+    const placed = isPlaced(id);
+    const name = repeaterDisplayName(id);
+    html += `<div class="repeater-option" onmousedown="selectRepeaterForPlacement('${id}')">
+      <span><span class="status-dot ${nodes.get(id).online ? 'online' : 'offline'}"></span>${name}${name !== id ? ` <span style="color:#64748b">(${id})</span>` : ''}</span>
+      <span style="color:${placed ? '#34d399' : '#64748b'};font-size:10px;white-space:nowrap;margin-left:8px;">${placed ? '✓ placed' : 'unplaced'}</span>
+    </div>`;
+  });
+  const exactMatch = q && Array.from(nodes.keys()).some(id => id.toLowerCase() === q || repeaterDisplayName(id).toLowerCase() === q);
+  if (q && !exactMatch) {
+    html += `<div class="repeater-option add-new" onmousedown="addAndArmRepeater('${q.replace(/'/g, "\\'")}')">
+      <span><i class="fa-solid fa-plus mr-2"></i>Add "${filterText}" as new repeater</span>
+    </div>`;
+  }
+  dd.innerHTML = html;
+  dd.classList.remove('hidden');
+}
+
+function selectRepeaterForPlacement(id) {
+  placeTargetId = id;
+  placeMode = true;
+  const badge = document.getElementById('place-armed-badge');
+  badge.classList.remove('hidden'); badge.classList.add('flex');
+  document.getElementById('place-armed-label').textContent = `Click the map to place: ${repeaterDisplayName(id)}`;
+  const search = document.getElementById('repeater-search');
+  search.value = ''; search.blur();
+  document.getElementById('repeater-search-dropdown').classList.add('hidden');
+  const mapVis = document.getElementById('map-visual');
+  if (mapVis) mapVis.classList.add('place-mode-active');
+}
+
+function cancelPlacement() {
+  placeMode = false;
+  placeTargetId = null;
+  const badge = document.getElementById('place-armed-badge');
+  badge.classList.add('hidden'); badge.classList.remove('flex');
+  const mapVis = document.getElementById('map-visual');
+  if (mapVis) mapVis.classList.remove('place-mode-active');
+}
+
+function addAndArmRepeater(rawText) {
+  const id = rawText.trim().toUpperCase().replace(/\s+/g, '-');
+  if (!id) return;
+  if (!nodes.has(id)) nodes.set(id, createNewNode(id, null));
   if (!registry[id]) {
     registry[id] = { label: null, lat: null, lon: null, manuallyAdded: true, addedAt: new Date().toISOString() };
   } else {
@@ -928,10 +1050,8 @@ function addManualRepeater() {
   }
   saveRegistry();
   renderNodesList();
-  refreshPlaceNodeSelect();
   updateMapMarkers();
-  const sel = document.getElementById('place-node-select');
-  if (sel) sel.value = id;
+  selectRepeaterForPlacement(id);
 }
 
 function centerMap() {
@@ -1007,6 +1127,8 @@ function showNodeDetail(nodeId) {
     typesContainer.innerHTML = `<span class="text-xs text-zinc-500">No types recorded yet</span>`;
   }
 
+  document.getElementById('modal-range-input').value = getRangeKm(nodeId);
+
   setTimeout(() => { drawRSSIChart(node.rssiHistory || []); }, 50);
 
   document.getElementById('node-modal').classList.remove('hidden');
@@ -1046,15 +1168,18 @@ function setLocationFromModal() {
   if (!id) return;
   hideNodeModal();
   switchMeshView('map');
-  placeMode = true;
-  setTimeout(() => {
-    const btn = document.getElementById('place-mode-btn');
-    if (btn) { btn.innerHTML = '<i class="fa-solid fa-location-crosshairs mr-1"></i>Place Mode: On'; btn.classList.add('active'); }
-    const mapVis = document.getElementById('map-visual');
-    if (mapVis) mapVis.classList.add('place-mode-active');
-    const sel = document.getElementById('place-node-select');
-    if (sel) sel.value = id;
-  }, 80);
+  setTimeout(() => { selectRepeaterForPlacement(id); }, 80);
+}
+
+function saveRangeFromModal() {
+  const id = currentModalNodeId;
+  if (!id) return;
+  const val = parseFloat(document.getElementById('modal-range-input').value);
+  if (!val || val <= 0) { alert('Enter a range greater than 0 km.'); return; }
+  if (!registry[id]) registry[id] = { label: null, lat: null, lon: null, rangeKm: null, manuallyAdded: false, addedAt: new Date().toISOString() };
+  registry[id].rangeKm = val;
+  saveRegistry();
+  if (leafletMap) updateMapMarkers();
 }
 
 /* ===================== EXPORT / SIMULATE / CLEAR ===================== */
@@ -1110,7 +1235,7 @@ function clearAll() {
   linkCounts.clear();
   applyRegistryToNodes(); // known/manually-added/pinned repeaters reappear, marked offline
   renderNodesList();
-  refreshPlaceNodeSelect();
+  cancelPlacement();
   document.getElementById('node-count-badge').textContent = nodes.size;
   packetCount = 0;
   document.getElementById('stat-packets').textContent = '0';
@@ -1132,7 +1257,6 @@ function init() {
   document.getElementById('filter-input').addEventListener('keydown', e => { if (e.key === 'Escape') { document.getElementById('filter-input').value = ''; filterLog(); } });
   applyRegistryToNodes();
   renderNodesList();
-  refreshPlaceNodeSelect();
   initMeshCanvas();
   updateMeshVisualization();
   setTimeout(() => {
