@@ -215,10 +215,10 @@ Nodes appear when the connected device receives their packets or status over LoR
 </div>
 </div>
 
-<div id="mesh-visual" class="mesh-visual h-[380px] relative">
+<div id="mesh-visual" class="mesh-visual h-[600px] relative">
 <canvas id="mesh-canvas" class="w-full h-full rounded-2xl cursor-grab"></canvas>
 </div>
-<div id="map-visual" class="mesh-visual h-[380px] relative hidden">
+<div id="map-visual" class="mesh-visual h-[600px] relative hidden">
 <div id="leaflet-map" class="w-full h-full rounded-2xl"></div>
 </div>
 
@@ -295,13 +295,19 @@ Nodes appear when the connected device receives their packets or status over LoR
 </div>
 
 <div id="modal-range-box" class="bg-white/5 rounded-2xl p-4">
-<div class="text-xs text-zinc-500 mb-2">ESTIMATED TRANSMISSION RANGE (HALO ON MAP)</div>
+<div class="flex items-center justify-between mb-2">
+<div class="text-xs text-zinc-500">TRANSMISSION RANGE (HALO ON MAP)</div>
+<label class="flex items-center gap-1.5 text-xs text-zinc-400 cursor-pointer">
+<input type="checkbox" id="modal-range-auto" onchange="toggleRangeAutoFromModal()" class="accent-cyan-400">
+<span>Auto by signal</span>
+</label>
+</div>
 <div class="flex items-center gap-2">
 <input type="number" id="modal-range-input" min="0.1" step="0.5" class="bg-[#0f1326] border border-white/10 rounded-xl px-3 py-2 text-sm w-24 focus:outline-none focus:border-cyan-400/50">
 <span class="text-xs text-zinc-500">km</span>
 <button onclick="saveRangeFromModal()" class="ml-auto text-xs px-4 py-2 border border-white/20 rounded-xl hover:bg-white/5">Save</button>
 </div>
-<div class="text-[10px] text-zinc-500 mt-2">A rough estimate you set yourself — not a measured coverage area.</div>
+<div id="modal-range-hint" class="text-[10px] text-zinc-500 mt-2"></div>
 </div>
 
 <div class="pt-2 space-y-2">
@@ -854,8 +860,28 @@ function repeaterIcon(online) {
   });
 }
 
+// Heuristic only — there's no real propagation model behind this (no terrain, antenna
+// height, SF/BW data). It maps a typical LoRa RSSI window to a range window so that a
+// stronger last-heard signal draws a bigger circle than a weaker one. Not measured coverage.
+function rssiToRangeKm(rssi) {
+  const minRssi = -120, maxRssi = -30;
+  const minKm = 1, maxKm = 10;
+  const clamped = Math.max(minRssi, Math.min(maxRssi, rssi));
+  const t = (clamped - minRssi) / (maxRssi - minRssi);
+  return minKm + t * (maxKm - minKm);
+}
+
 function getRangeKm(id) {
   const r = registry[id];
+  const mode = (r && r.rangeMode) ? r.rangeMode : 'auto';
+  const node = nodes.get(id);
+  if (mode === 'manual') {
+    return (r && r.rangeKm) ? r.rangeKm : DEFAULT_RANGE_KM;
+  }
+  // auto mode: derive from the last heard RSSI if we have one
+  if (node && node.lastRssi !== null && node.lastRssi !== undefined) {
+    return rssiToRangeKm(node.lastRssi);
+  }
   return (r && r.rangeKm) ? r.rangeKm : DEFAULT_RANGE_KM;
 }
 
@@ -1127,7 +1153,9 @@ function showNodeDetail(nodeId) {
     typesContainer.innerHTML = `<span class="text-xs text-zinc-500">No types recorded yet</span>`;
   }
 
-  document.getElementById('modal-range-input').value = getRangeKm(nodeId);
+  const rangeR = registry[nodeId];
+  document.getElementById('modal-range-auto').checked = !(rangeR && rangeR.rangeMode === 'manual');
+  toggleRangeAutoFromModal();
 
   setTimeout(() => { drawRSSIChart(node.rssiHistory || []); }, 50);
 
@@ -1163,6 +1191,32 @@ function editLabelFromModal() {
   }
 }
 
+function toggleRangeAutoFromModal() {
+  const id = currentModalNodeId;
+  const auto = document.getElementById('modal-range-auto').checked;
+  const input = document.getElementById('modal-range-input');
+  const hint = document.getElementById('modal-range-hint');
+  const r = id ? registry[id] : null;
+  const node = id ? nodes.get(id) : null;
+
+  if (auto) {
+    input.disabled = true;
+    input.classList.add('opacity-50');
+    if (node && node.lastRssi !== null && node.lastRssi !== undefined) {
+      input.value = rssiToRangeKm(node.lastRssi).toFixed(1);
+      hint.textContent = `Auto-estimated from last RSSI (${node.lastRssi} dBm) — a stronger signal draws a bigger circle. Heuristic only, not measured coverage, and it updates as new readings come in.`;
+    } else {
+      input.value = DEFAULT_RANGE_KM;
+      hint.textContent = `No signal reading yet for this repeater — showing a default estimate until it's heard.`;
+    }
+  } else {
+    input.disabled = false;
+    input.classList.remove('opacity-50');
+    input.value = (r && r.rangeKm) ? r.rangeKm : DEFAULT_RANGE_KM;
+    hint.textContent = `Manual value you set — fixed regardless of signal strength.`;
+  }
+}
+
 function setLocationFromModal() {
   const id = currentModalNodeId;
   if (!id) return;
@@ -1174,10 +1228,16 @@ function setLocationFromModal() {
 function saveRangeFromModal() {
   const id = currentModalNodeId;
   if (!id) return;
-  const val = parseFloat(document.getElementById('modal-range-input').value);
-  if (!val || val <= 0) { alert('Enter a range greater than 0 km.'); return; }
-  if (!registry[id]) registry[id] = { label: null, lat: null, lon: null, rangeKm: null, manuallyAdded: false, addedAt: new Date().toISOString() };
-  registry[id].rangeKm = val;
+  if (!registry[id]) registry[id] = { label: null, lat: null, lon: null, rangeKm: null, rangeMode: 'auto', manuallyAdded: false, addedAt: new Date().toISOString() };
+  const auto = document.getElementById('modal-range-auto').checked;
+  if (auto) {
+    registry[id].rangeMode = 'auto';
+  } else {
+    const val = parseFloat(document.getElementById('modal-range-input').value);
+    if (!val || val <= 0) { alert('Enter a range greater than 0 km.'); return; }
+    registry[id].rangeMode = 'manual';
+    registry[id].rangeKm = val;
+  }
   saveRegistry();
   if (leafletMap) updateMapMarkers();
 }
