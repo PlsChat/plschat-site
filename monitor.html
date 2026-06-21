@@ -318,6 +318,15 @@ Nodes appear when the connected device receives their packets or status over LoR
 <i class="fa-solid fa-location-dot"></i> <span>Set / Move Location on Map</span>
 </button>
 </div>
+<div class="pt-1 space-y-2">
+<button id="modal-share-btn" onclick="shareToPublicMap()" class="w-full py-2.5 text-sm border border-emerald-400/40 text-emerald-300 hover:bg-emerald-400/10 rounded-2xl flex items-center justify-center gap-x-2">
+<i class="fa-solid fa-tower-broadcast"></i> <span id="modal-share-btn-label">Share to Public Coverage Map</span>
+</button>
+<button id="modal-unshare-btn" onclick="unshareFromPublicMap()" class="hidden w-full py-2.5 text-sm border border-red-400/30 text-red-300 hover:bg-red-400/10 rounded-2xl flex items-center justify-center gap-x-2">
+<i class="fa-solid fa-eye-slash"></i> <span>Remove from Public Map</span>
+</button>
+<div id="modal-share-hint" class="text-[10px] text-zinc-500 text-center"></div>
+</div>
 </div>
 <div class="px-6 py-4 bg-white/5 border-t border-white/10 text-xs text-zinc-500 flex items-start gap-x-2 flex-shrink-0">
 <i class="fa-solid fa-info-circle mt-0.5"></i>
@@ -343,6 +352,12 @@ const MAX_PACKETS = 50;
 const MAX_RSSI_HISTORY = 15;
 const MAX_MESH_NODES = 40; // Increased to show more devices
 const DEFAULT_RANGE_KM = 5; // starting estimate for a repeater's transmission halo
+
+// ===== Public Coverage Map API =====
+// Fill these in after deploying the Worker (see DEPLOY.md). Until then, "Share to
+// Public Coverage Map" will show a clear error instead of failing silently.
+const API_BASE = 'https://REPLACE-ME.workers.dev';
+const WRITE_KEY = 'REPLACE-WITH-YOUR-WRITE-KEY';
 
 // ===== Repeater registry (persisted across sessions) =====
 const REGISTRY_KEY = 'plschat_known_repeaters';
@@ -1157,6 +1172,13 @@ function showNodeDetail(nodeId) {
   document.getElementById('modal-range-auto').checked = !(rangeR && rangeR.rangeMode === 'manual');
   toggleRangeAutoFromModal();
 
+  const isShared = !!(rangeR && rangeR.shared);
+  document.getElementById('modal-share-btn-label').textContent = isShared ? 'Update Public Listing' : 'Share to Public Coverage Map';
+  document.getElementById('modal-unshare-btn').classList.toggle('hidden', !isShared);
+  document.getElementById('modal-share-hint').textContent = isShared
+    ? 'Visible on the public Coverage Map. Updating refreshes its label, location, and latest readings.'
+    : 'Publishes this repeater\'s label, the location you placed, and its latest readings to everyone.';
+
   setTimeout(() => { drawRSSIChart(node.rssiHistory || []); }, 50);
 
   document.getElementById('node-modal').classList.remove('hidden');
@@ -1240,6 +1262,77 @@ function saveRangeFromModal() {
   }
   saveRegistry();
   if (leafletMap) updateMapMarkers();
+}
+
+async function shareToPublicMap() {
+  const id = currentModalNodeId;
+  if (!id) return;
+  const node = nodes.get(id);
+  if (!node) return;
+  const r = registry[id];
+
+  if (!r || r.lat === null || r.lat === undefined) {
+    alert('Place this repeater on the map first (Set / Move Location on Map), then share it.');
+    return;
+  }
+  if (API_BASE.includes('REPLACE-ME')) {
+    alert('The Coverage API isn\'t configured yet \u2014 set API_BASE and WRITE_KEY near the top of this page\'s script (see DEPLOY.md) before sharing.');
+    return;
+  }
+
+  const already = !!r.shared;
+  const confirmed = confirm(
+    (already ? 'Update' : 'Publish') + ` "${repeaterDisplayName(id)}" on the public Coverage Map?\n\n` +
+    'This will make its label, the location you placed, and its latest battery/signal readings visible to anyone who visits coverage-map.html.'
+  );
+  if (!confirmed) return;
+
+  const payload = {
+    label: node.customLabel || id,
+    lat: r.lat,
+    lon: r.lon,
+    rangeKm: getRangeKm(id),
+    rangeMode: (r.rangeMode === 'manual') ? 'manual' : 'auto',
+    lastBattery: node.battery,
+    lastRssi: node.lastRssi,
+    lastSnr: node.lastSnr
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/api/repeaters/${encodeURIComponent(id)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Write-Key': WRITE_KEY },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Server responded ' + res.status);
+    r.shared = true;
+    saveRegistry();
+    showNodeDetail(id);
+    alert('Published. It should appear on coverage-map.html within a few seconds.');
+  } catch (e) {
+    alert('Could not publish: ' + e.message);
+  }
+}
+
+async function unshareFromPublicMap() {
+  const id = currentModalNodeId;
+  if (!id) return;
+  if (!confirm(`Remove "${repeaterDisplayName(id)}" from the public Coverage Map?`)) return;
+  if (API_BASE.includes('REPLACE-ME')) {
+    alert('The Coverage API isn\'t configured yet \u2014 see DEPLOY.md.');
+    return;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/api/repeaters/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { 'X-Write-Key': WRITE_KEY }
+    });
+    if (!res.ok) throw new Error('Server responded ' + res.status);
+    if (registry[id]) { registry[id].shared = false; saveRegistry(); }
+    showNodeDetail(id);
+  } catch (e) {
+    alert('Could not remove: ' + e.message);
+  }
 }
 
 /* ===================== EXPORT / SIMULATE / CLEAR ===================== */
