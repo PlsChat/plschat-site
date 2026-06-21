@@ -149,6 +149,12 @@
       <p class="text-xl text-zinc-400 max-w-md mx-auto">
         Connect to read the real WiFi SSID (generated from MAC) and current settings.
       </p>
+
+      <button onclick="document.getElementById('loginHelpModal').classList.remove('hidden'); document.getElementById('loginHelpModal').classList.add('flex');"
+              class="mt-5 inline-flex items-center gap-x-2 px-5 py-2.5 text-sm font-medium border border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/10 rounded-2xl transition-colors">
+        <i class="fa-solid fa-key"></i>
+        <span>How to Log In to Your Device</span>
+      </button>
     </div>
 
     <div class="flex justify-center mb-8">
@@ -294,6 +300,45 @@
         </button>
       </div>
       <p class="text-xs text-zinc-500 mt-2">Tip: Update your firmware with GET CONFIG support first (see previous instructions).</p>
+    </div>
+  </div>
+
+  <!-- Login Help Modal -->
+  <div id="loginHelpModal" onclick="if (event.target.id === 'loginHelpModal') { this.classList.remove('flex'); this.classList.add('hidden'); }" class="hidden fixed inset-0 bg-black/80 z-[2000] flex items-center justify-center p-4">
+    <div onclick="event.stopImmediatePropagation()" class="max-w-lg w-full bg-[#0a0c1f] border border-white/10 rounded-3xl p-8 max-h-[85vh] overflow-auto">
+      <div class="flex justify-between items-start mb-2">
+        <h3 class="text-2xl font-semibold flex items-center gap-x-2"><i class="fa-solid fa-key text-cyan-400"></i> Connecting to Your Device</h3>
+        <button onclick="document.getElementById('loginHelpModal').classList.add('hidden'); document.getElementById('loginHelpModal').classList.remove('flex');" class="text-zinc-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <p class="text-zinc-400 text-sm mb-6">How to reach the chat interface hosted on your device.</p>
+
+      <ol class="space-y-4 text-sm text-zinc-300">
+        <li class="flex gap-x-3">
+          <span class="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 text-white text-xs font-bold flex items-center justify-center">1</span>
+          <span>Power on your PLSChat device and wait about 10 seconds for it to start broadcasting WiFi.</span>
+        </li>
+        <li class="flex gap-x-3">
+          <span class="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 text-white text-xs font-bold flex items-center justify-center">2</span>
+          <span>On your phone or laptop, connect to the WiFi network <code class="px-1.5 py-0.5 bg-black/40 rounded text-cyan-300 font-mono">PLSChat-XXXX</code> (the last 4 characters come from your device's MAC — read it above with <strong>Connect to Device</strong>). Password is <code class="px-1.5 py-0.5 bg-black/40 rounded text-cyan-300 font-mono">pls12345</code> unless you've changed it.</span>
+        </li>
+        <li class="flex gap-x-3">
+          <span class="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 text-white text-xs font-bold flex items-center justify-center">3</span>
+          <span>Open a browser and go to <code class="px-1.5 py-0.5 bg-black/40 rounded text-cyan-300 font-mono">http://192.168.4.1</code></span>
+        </li>
+        <li class="flex gap-x-3">
+          <span class="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 text-white text-xs font-bold flex items-center justify-center">4</span>
+          <span>Enter the device's web UI password/PIN when prompted to unlock the chat interface.</span>
+        </li>
+      </ol>
+
+      <div class="mt-6 p-4 bg-amber-950/40 border border-amber-800/50 rounded-2xl text-xs text-amber-200/90">
+        <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
+        Your phone or laptop may warn "No internet connection" while joined to this network — that's expected. The device works fully offline, so stay connected to it rather than switching back to your normal WiFi.
+      </div>
+
+      <div class="mt-6 flex justify-end">
+        <button onclick="document.getElementById('loginHelpModal').classList.add('hidden'); document.getElementById('loginHelpModal').classList.remove('flex');" class="px-6 py-2.5 text-sm bg-cyan-500 hover:bg-cyan-400 text-[#0a0c1f] rounded-2xl font-medium">Got it</button>
+      </div>
     </div>
   </div>
 
