@@ -229,8 +229,8 @@ Nodes appear when the connected device receives their packets or status over LoR
 
 <!-- Node Detail Modal -->
 <div id="node-modal" onclick="if (event.target.id === 'node-modal') hideNodeModal()" class="hidden fixed inset-0 bg-black/70 z-[2000] flex items-center justify-center p-4">
-<div onclick="event.stopImmediatePropagation()" class="modal bg-[#0a0c1f] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden">
-<div class="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+<div onclick="event.stopImmediatePropagation()" class="modal bg-[#0a0c1f] border border-white/10 rounded-3xl w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col">
+<div class="px-6 py-5 border-b border-white/10 flex items-center justify-between flex-shrink-0">
 <div>
 <div class="text-xs text-zinc-500">NODE DETAILS</div>
 <div id="modal-node-id" class="font-mono text-2xl font-semibold text-fuchsia-400"></div>
@@ -238,7 +238,7 @@ Nodes appear when the connected device receives their packets or status over LoR
 </div>
 <button onclick="hideNodeModal()" class="text-zinc-400 hover:text-white text-2xl leading-none">&times;</button>
 </div>
-<div class="p-6 space-y-5">
+<div class="p-6 space-y-5 overflow-y-auto flex-1">
 <div class="grid grid-cols-2 gap-4">
 <div class="bg-white/5 rounded-2xl p-4">
 <div class="text-xs text-zinc-500">BATTERY</div>
@@ -319,7 +319,7 @@ Nodes appear when the connected device receives their packets or status over LoR
 </button>
 </div>
 </div>
-<div class="px-6 py-4 bg-white/5 border-t border-white/10 text-xs text-zinc-500 flex items-start gap-x-2">
+<div class="px-6 py-4 bg-white/5 border-t border-white/10 text-xs text-zinc-500 flex items-start gap-x-2 flex-shrink-0">
 <i class="fa-solid fa-info-circle mt-0.5"></i>
 <div>
 This shows data reported by the node. Sensitive fields like PAIR_CODE are never displayed.
