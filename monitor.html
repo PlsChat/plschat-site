@@ -43,6 +43,7 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 .repeater-marker { width: 18px; height: 18px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
 .repeater-marker.online { background: #0891b2; box-shadow: 0 0 0 4px rgba(8,145,178,0.35), 0 1px 4px rgba(0,0,0,0.4); }
 .repeater-marker.offline { background: #94a3b8; }
+.repeater-marker.locked { opacity: 0.55; }
 .repeater-tooltip { background: #0a0c1f !important; color: #e2e8f0 !important; border: 1px solid rgba(255,255,255,0.15) !important; font-size: 11px !important; font-weight: 600 !important; padding: 3px 9px !important; border-radius: 8px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important; }
 .leaflet-tooltip-top:before { border-top-color: #0a0c1f !important; }
 #map-visual.place-mode-active #leaflet-map { cursor: crosshair; }
@@ -129,7 +130,8 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 <button onclick="clearAll()" class="inline-flex items-center gap-x-2 px-5 py-3 border border-white/20 hover:bg-white/5 rounded-2xl transition-colors">Clear All</button>
 <button onclick="resetKnownRepeaters()" class="inline-flex items-center gap-x-2 px-5 py-3 border border-red-400/30 text-red-300 hover:bg-red-400/10 rounded-2xl transition-colors"><i class="fa-solid fa-trash"></i> <span>Reset Known Repeaters</span></button>
 </div>
-<p class="text-xs text-zinc-500 mt-3">Works in Chrome/Edge. Node must print verbose logs to serial. <strong class="text-red-300">Reset Known Repeaters</strong> permanently clears every saved/pinned repeater stored in this browser — including any left over from Simulate Traffic — and cannot be undone.</p>
+<div id="connected-device-badge" class="hidden mt-3 inline-flex items-center gap-x-2 px-3 py-1.5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 text-emerald-300 text-xs"></div>
+<p class="text-xs text-zinc-500 mt-3">Works in Chrome/Edge. Node must print verbose logs to serial. <strong class="text-red-300">Reset Known Repeaters</strong> permanently clears every saved/pinned repeater stored in this browser — including any left over from Simulate Traffic — and cannot be undone. <strong class="text-zinc-300">Only the device currently connected via Web Serial</strong> can be renamed, relocated, or published/removed from the public map — every other discovered repeater is view-only until you connect it directly.</p>
 </div>
 
 <div class="mb-4 px-1 text-xs text-zinc-500">
@@ -236,6 +238,7 @@ Nodes appear when the connected device receives their packets or status over LoR
 <div class="text-xs text-zinc-500">NODE DETAILS</div>
 <div id="modal-node-id" class="font-mono text-2xl font-semibold text-fuchsia-400"></div>
 <div id="modal-status" class="text-xs mt-1.5 flex items-center"></div>
+<div id="modal-lock-note" class="hidden text-[11px] text-amber-300/80 bg-amber-400/5 border border-amber-400/20 rounded-xl px-3 py-2 mt-2"><i class="fa-solid fa-lock mr-1"></i>View-only — connect this device directly via Web Serial to rename, relocate, or (un)publish it.</div>
 </div>
 <button onclick="hideNodeModal()" class="text-zinc-400 hover:text-white text-2xl leading-none">&times;</button>
 </div>
@@ -306,16 +309,16 @@ Nodes appear when the connected device receives their packets or status over LoR
 <div class="flex items-center gap-2">
 <input type="number" id="modal-range-input" min="0.1" step="0.5" class="bg-[#0f1326] border border-white/10 rounded-xl px-3 py-2 text-sm w-24 focus:outline-none focus:border-cyan-400/50">
 <span class="text-xs text-zinc-500">km</span>
-<button onclick="saveRangeFromModal()" class="ml-auto text-xs px-4 py-2 border border-white/20 rounded-xl hover:bg-white/5">Save</button>
+<button id="modal-range-save-btn" onclick="saveRangeFromModal()" class="ml-auto text-xs px-4 py-2 border border-white/20 rounded-xl hover:bg-white/5">Save</button>
 </div>
 <div id="modal-range-hint" class="text-[10px] text-zinc-500 mt-2"></div>
 </div>
 
 <div class="pt-2 space-y-2">
-<button onclick="editLabelFromModal()" class="w-full py-2.5 text-sm border border-white/20 hover:bg-white/5 rounded-2xl flex items-center justify-center gap-x-2">
+<button id="modal-edit-label-btn" onclick="editLabelFromModal()" class="w-full py-2.5 text-sm border border-white/20 hover:bg-white/5 rounded-2xl flex items-center justify-center gap-x-2">
 <i class="fa-solid fa-edit"></i> <span>Edit Custom Label</span>
 </button>
-<button onclick="setLocationFromModal()" class="w-full py-2.5 text-sm border border-white/20 hover:bg-white/5 rounded-2xl flex items-center justify-center gap-x-2">
+<button id="modal-set-location-btn" onclick="setLocationFromModal()" class="w-full py-2.5 text-sm border border-white/20 hover:bg-white/5 rounded-2xl flex items-center justify-center gap-x-2">
 <i class="fa-solid fa-location-dot"></i> <span>Set / Move Location on Map</span>
 </button>
 </div>
@@ -343,6 +346,7 @@ let port = null, reader = null, isConnected = false;
 let logLines = [], packets = [], nodes = new Map();
 let packetCount = 0, ppsInterval = null;
 let simulationActive = false, simulateIntervalId = null;
+let connectedDeviceId = null; // NODE_ID of the device with an active Web Serial connection (or, during simulation, the simulated local device) — only this node may be renamed, relocated, or (un)published
 let currentModalNodeId = null;
 let rssiChartCtx = null;
 let canvas, ctx;
@@ -409,9 +413,31 @@ function applyRegistryToNodes() {
   });
 }
 
+// Ownership gate: only the device currently connected to this browser via Web Serial
+// (or, during a Simulate Traffic demo, the simulated stand-in device) may be renamed,
+// relocated, have its range edited, or be published/removed from the public map. This
+// stops one browser session from moving/renaming/deleting repeaters that belong to
+// other people, just because their packets are visible on this mesh.
+function canEditNode(id) {
+  return !!id && id === connectedDeviceId;
+}
+function updateConnectedDeviceBadge() {
+  const badge = document.getElementById('connected-device-badge');
+  if (!badge) return;
+  if (connectedDeviceId) {
+    badge.classList.remove('hidden');
+    badge.innerHTML = `<i class="fa-solid fa-lock-open"></i> Editing unlocked for: <strong>${repeaterDisplayName(connectedDeviceId)}</strong>`;
+  } else {
+    badge.classList.add('hidden');
+    badge.innerHTML = '';
+  }
+}
+
 async function connectSerial() {
   if (!('serial' in navigator)) { alert("Web Serial only works in Chrome/Edge."); return; }
   if (simulationActive) stopSimulateTraffic(); // don't mix fake and real traffic
+  connectedDeviceId = null; // re-lock editing until the newly connected device reports its own identity
+  updateConnectedDeviceBadge();
   try {
     port = await navigator.serial.requestPort();
     await port.open({ baudRate: 115200 });
@@ -445,6 +471,9 @@ async function disconnectSerial() {
   if (port) { try { await port.close(); } catch(e){} port = null; }
   isConnected = false; updateConnectionUI(false);
   if (ppsInterval) { clearInterval(ppsInterval); ppsInterval = null; }
+  connectedDeviceId = null; // lock editing back down — no device is connected anymore
+  updateConnectedDeviceBadge();
+  if (leafletMap) updateMapMarkers();
 }
 
 function processSerialLine(line) {
@@ -492,6 +521,13 @@ function processFullStatusBlock(block, timestamp) {
   node.online = true;
   registerKnownIfNeeded(nodeId);
 
+  if (isConnected && connectedDeviceId === null) {
+    connectedDeviceId = nodeId;
+    addToLog(`[LOCAL] This browser is now linked to device ${nodeId} — only it can be renamed, relocated, or (un)published from here.`, timestamp);
+    updateConnectedDeviceBadge();
+    if (leafletMap) updateMapMarkers();
+  }
+
   const batMatch = block.match(/BAT[:=]\s*([0-9]+)%/i);
   if (batMatch) node.battery = parseInt(batMatch[1]);
   const rssiMatch = block.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
@@ -523,6 +559,13 @@ function parseIndividualStatusLine(line, timestamp) {
   node.lastSeen = timestamp;
   node.online = true;
   registerKnownIfNeeded(nodeId);
+
+  if (isConnected && connectedDeviceId === null) {
+    connectedDeviceId = nodeId;
+    addToLog(`[LOCAL] This browser is now linked to device ${nodeId} — only it can be renamed, relocated, or (un)published from here.`, timestamp);
+    updateConnectedDeviceBadge();
+    if (leafletMap) updateMapMarkers();
+  }
 
   const batMatch = line.match(/BAT[:=]\s*([0-9]+)%/i);
   if (batMatch) node.battery = parseInt(batMatch[1]);
@@ -800,6 +843,7 @@ function handleMeshDoubleClick(e) {
   for (let node of meshNodes) {
     const dx = pos.x - node.x; const dy = pos.y - node.y;
     if (dx * dx + dy * dy < (node.size + 12) * (node.size + 12)) {
+      if (!canEditNode(node.id)) { alert('You can only rename the device currently connected to this browser via Web Serial. Connect to this device directly to rename it.'); return; }
       const newLabel = prompt(`Set custom label for node ${node.id}:`, node.customLabel || '');
       if (newLabel !== null) {
         const clean = newLabel.trim() || null;
@@ -873,10 +917,10 @@ function initMap() {
   leafletMap.on('click', handleLeafletClick);
 }
 
-function repeaterIcon(online) {
+function repeaterIcon(online, editable) {
   return L.divIcon({
     className: '',
-    html: `<div class="repeater-marker ${online ? 'online' : 'offline'}"></div>`,
+    html: `<div class="repeater-marker ${online ? 'online' : 'offline'} ${editable ? '' : 'locked'}"></div>`,
     iconSize: [16, 16],
     iconAnchor: [8, 8]
   });
@@ -948,10 +992,12 @@ function updateMapMarkers() {
 
     let marker = mapMarkers.get(id);
     if (!marker) {
-      marker = L.marker([lat, lon], { icon: repeaterIcon(node.online), draggable: true }).addTo(markerLayerGroup);
+      marker = L.marker([lat, lon], { icon: repeaterIcon(node.online, canEditNode(id)), draggable: true }).addTo(markerLayerGroup);
+      if (!canEditNode(id)) marker.dragging.disable();
       marker.on('click', () => { if (justDraggedMarker) { justDraggedMarker = false; return; } if (!placeMode) showNodeDetail(id); });
       marker.on('drag', () => { const ll = marker.getLatLng(); halo.setLatLng(ll); drawMapLinks(); });
       marker.on('dragend', () => {
+        if (!canEditNode(id)) return; // defensive — dragging should already be disabled for non-owned markers
         const ll = marker.getLatLng();
         if (!registry[id]) registry[id] = { label: null, lat: null, lon: null, rangeKm: null, manuallyAdded: false, addedAt: new Date().toISOString() };
         registry[id].lat = ll.lat; registry[id].lon = ll.lng;
@@ -963,7 +1009,8 @@ function updateMapMarkers() {
       mapMarkers.set(id, marker);
     } else {
       marker.setLatLng([lat, lon]);
-      marker.setIcon(repeaterIcon(node.online));
+      marker.setIcon(repeaterIcon(node.online, canEditNode(id)));
+      if (canEditNode(id)) marker.dragging.enable(); else marker.dragging.disable();
     }
     marker.unbindTooltip();
     marker.bindTooltip(label, { permanent: true, direction: 'top', offset: [0, -8], className: 'repeater-tooltip' });
@@ -1186,6 +1233,16 @@ function showNodeDetail(nodeId) {
     ? 'Visible on the public Coverage Map. Updating refreshes its label, location, and latest readings.'
     : 'Publishes this repeater\'s label, the location you placed, and its latest readings to everyone.';
 
+  const editable = canEditNode(nodeId);
+  document.getElementById('modal-lock-note').classList.toggle('hidden', editable);
+  ['modal-edit-label-btn', 'modal-set-location-btn', 'modal-range-save-btn', 'modal-share-btn', 'modal-unshare-btn'].forEach(btnId => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.classList.toggle('opacity-40', !editable);
+    btn.classList.toggle('pointer-events-none', !editable);
+    btn.title = editable ? '' : 'Connect this device directly via Web Serial to edit it.';
+  });
+
   setTimeout(() => { drawRSSIChart(node.rssiHistory || []); }, 50);
 
   document.getElementById('node-modal').classList.remove('hidden');
@@ -1200,6 +1257,7 @@ function hideNodeModal() {
 
 function editLabelFromModal() {
   if (!currentModalNodeId) return;
+  if (!canEditNode(currentModalNodeId)) { alert('You can only rename the device currently connected to this browser via Web Serial. Connect to this device directly to rename it.'); return; }
   const node = nodes.get(currentModalNodeId);
   if (!node) return;
   const newLabel = prompt(`Set custom label for node ${currentModalNodeId}:`, node.customLabel || '');
@@ -1249,6 +1307,7 @@ function toggleRangeAutoFromModal() {
 function setLocationFromModal() {
   const id = currentModalNodeId;
   if (!id) return;
+  if (!canEditNode(id)) { alert('You can only set or move the location of the device currently connected to this browser via Web Serial.'); return; }
   hideNodeModal();
   switchMeshView('map');
   setTimeout(() => { selectRepeaterForPlacement(id); }, 80);
@@ -1257,6 +1316,7 @@ function setLocationFromModal() {
 function saveRangeFromModal() {
   const id = currentModalNodeId;
   if (!id) return;
+  if (!canEditNode(id)) { alert('You can only change the transmission range of the device currently connected to this browser via Web Serial.'); return; }
   if (!registry[id]) registry[id] = { label: null, lat: null, lon: null, rangeKm: null, rangeMode: 'auto', manuallyAdded: false, addedAt: new Date().toISOString() };
   const auto = document.getElementById('modal-range-auto').checked;
   if (auto) {
@@ -1274,6 +1334,7 @@ function saveRangeFromModal() {
 async function shareToPublicMap() {
   const id = currentModalNodeId;
   if (!id) return;
+  if (!canEditNode(id)) { alert('You can only publish the device currently connected to this browser via Web Serial to the public Coverage Map.'); return; }
   const node = nodes.get(id);
   if (!node) return;
   const r = registry[id];
@@ -1324,6 +1385,7 @@ async function shareToPublicMap() {
 async function unshareFromPublicMap() {
   const id = currentModalNodeId;
   if (!id) return;
+  if (!canEditNode(id)) { alert('You can only remove the device currently connected to this browser via Web Serial from the public Coverage Map.'); return; }
   if (!confirm(`Remove "${repeaterDisplayName(id)}" from the public Coverage Map?`)) return;
   if (API_BASE.includes('REPLACE-ME')) {
     alert('The Coverage API isn\'t configured yet \u2014 see DEPLOY.md.');
@@ -1374,6 +1436,8 @@ function startSimulateTraffic() {
   if (label) label.textContent = 'Stop Simulation';
 
   const sample = ['A1B2', 'C3D4', '1122', '3344', 'E5F6'];
+  connectedDeviceId = sample[0]; // stand in as "this browser's connected device" so the ownership lock is testable without real hardware
+  updateConnectedDeviceBadge();
   const types = ['DATA', 'HELLO', 'ACK'];
   simulateIntervalId = setInterval(() => {
     const from = sample[Math.floor(Math.random()*sample.length)];
@@ -1403,6 +1467,9 @@ function startSimulateTraffic() {
 function stopSimulateTraffic() {
   if (simulateIntervalId) { clearInterval(simulateIntervalId); simulateIntervalId = null; }
   simulationActive = false;
+  connectedDeviceId = null;
+  updateConnectedDeviceBadge();
+  if (leafletMap) updateMapMarkers();
   const icon = document.getElementById('simulate-btn-icon');
   const label = document.getElementById('simulate-btn-label');
   if (icon) icon.className = 'fa-solid fa-play';
