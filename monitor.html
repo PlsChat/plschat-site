@@ -125,10 +125,11 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 <i class="fa-solid fa-plug"></i> <span>Connect to Node (Web Serial)</span>
 </button>
 <button id="disconnect-btn" onclick="disconnectSerial()" class="hidden inline-flex items-center gap-x-2 px-5 py-3 border border-white/20 hover:bg-white/5 rounded-2xl transition-colors">Disconnect</button>
-<button onclick="simulateTraffic()" class="inline-flex items-center gap-x-2 px-5 py-3 border border-white/20 hover:bg-white/5 rounded-2xl transition-colors"><i class="fa-solid fa-play"></i> <span>Simulate Traffic</span></button>
+<button id="simulate-btn" onclick="toggleSimulateTraffic()" class="inline-flex items-center gap-x-2 px-5 py-3 border border-white/20 hover:bg-white/5 rounded-2xl transition-colors"><i id="simulate-btn-icon" class="fa-solid fa-play"></i> <span id="simulate-btn-label">Simulate Traffic</span></button>
 <button onclick="clearAll()" class="inline-flex items-center gap-x-2 px-5 py-3 border border-white/20 hover:bg-white/5 rounded-2xl transition-colors">Clear All</button>
+<button onclick="resetKnownRepeaters()" class="inline-flex items-center gap-x-2 px-5 py-3 border border-red-400/30 text-red-300 hover:bg-red-400/10 rounded-2xl transition-colors"><i class="fa-solid fa-trash"></i> <span>Reset Known Repeaters</span></button>
 </div>
-<p class="text-xs text-zinc-500 mt-3">Works in Chrome/Edge. Node must print verbose logs to serial.</p>
+<p class="text-xs text-zinc-500 mt-3">Works in Chrome/Edge. Node must print verbose logs to serial. <strong class="text-red-300">Reset Known Repeaters</strong> permanently clears every saved/pinned repeater stored in this browser — including any left over from Simulate Traffic — and cannot be undone.</p>
 </div>
 
 <div class="mb-4 px-1 text-xs text-zinc-500">
@@ -341,6 +342,7 @@ This shows data reported by the node. Sensitive fields like PAIR_CODE are never 
 let port = null, reader = null, isConnected = false;
 let logLines = [], packets = [], nodes = new Map();
 let packetCount = 0, ppsInterval = null;
+let simulationActive = false, simulateIntervalId = null;
 let currentModalNodeId = null;
 let rssiChartCtx = null;
 let canvas, ctx;
@@ -384,6 +386,10 @@ function saveRegistry() {
   try { localStorage.setItem(REGISTRY_KEY, JSON.stringify(registry)); } catch (e) {}
 }
 function registerKnownIfNeeded(id) {
+  // Simulated traffic must never get written into the persistent repeater registry —
+  // otherwise fake nodes from "Simulate Traffic" would survive page refreshes forever,
+  // exactly like a real discovered repeater would.
+  if (simulationActive) return;
   if (!registry[id]) {
     registry[id] = { label: null, lat: null, lon: null, manuallyAdded: false, addedAt: new Date().toISOString() };
     saveRegistry();
@@ -405,6 +411,7 @@ function applyRegistryToNodes() {
 
 async function connectSerial() {
   if (!('serial' in navigator)) { alert("Web Serial only works in Chrome/Edge."); return; }
+  if (simulationActive) stopSimulateTraffic(); // don't mix fake and real traffic
   try {
     port = await navigator.serial.requestPort();
     await port.open({ baudRate: 115200 });
@@ -1354,14 +1361,26 @@ function exportSession() {
   URL.revokeObjectURL(url);
 }
 
-function simulateTraffic() {
+function toggleSimulateTraffic() {
+  if (simulationActive) stopSimulateTraffic(); else startSimulateTraffic();
+}
+
+function startSimulateTraffic() {
+  if (simulationActive) return;
+  simulationActive = true;
+  const icon = document.getElementById('simulate-btn-icon');
+  const label = document.getElementById('simulate-btn-label');
+  if (icon) icon.className = 'fa-solid fa-stop';
+  if (label) label.textContent = 'Stop Simulation';
+
   const sample = ['A1B2', 'C3D4', '1122', '3344', 'E5F6'];
   const types = ['DATA', 'HELLO', 'ACK'];
-  setInterval(() => {
+  simulateIntervalId = setInterval(() => {
     const from = sample[Math.floor(Math.random()*sample.length)];
     let to = sample[Math.floor(Math.random()*sample.length)]; if (to === from) to = sample[(sample.indexOf(from)+1) % sample.length];
     const rssi = Math.floor(Math.random()*45) - 115;
-    processSerialLine(`[LoRa] RX from=${from} to=${to} type=${types[Math.floor(Math.random()*types.length)]} rssi=${rssi}`);
+    // [SIM] prefix (rather than [LoRa]) so simulated lines are visually distinguishable in the log
+    processSerialLine(`[SIM] RX from=${from} to=${to} type=${types[Math.floor(Math.random()*types.length)]} rssi=${rssi}`);
     if (Math.random() < 0.35) {
       const bat = 65 + Math.floor(Math.random()*35);
       const snr = (Math.random() * 8 - 2).toFixed(1);
@@ -1381,6 +1400,15 @@ function simulateTraffic() {
   }, 650);
 }
 
+function stopSimulateTraffic() {
+  if (simulateIntervalId) { clearInterval(simulateIntervalId); simulateIntervalId = null; }
+  simulationActive = false;
+  const icon = document.getElementById('simulate-btn-icon');
+  const label = document.getElementById('simulate-btn-label');
+  if (icon) icon.className = 'fa-solid fa-play';
+  if (label) label.textContent = 'Simulate Traffic';
+}
+
 function clearAll() {
   document.getElementById('log-container').innerHTML = '';
   logLines = []; packets = []; document.getElementById('packet-table-body').innerHTML = '';
@@ -1397,6 +1425,18 @@ function clearAll() {
   if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
   meshNodes = [];
   if (leafletMap) updateMapMarkers();
+}
+
+// Full factory reset of the persistent repeater registry — distinct from clearAll(),
+// which intentionally preserves real/pinned repeaters across a session clear. This is
+// the button to use to flush out stale or simulated entries that shouldn't have been
+// saved (e.g. from a Simulate Traffic run before this fix existed).
+function resetKnownRepeaters() {
+  if (!confirm('This permanently removes every known/pinned repeater stored in this browser — including saved labels, map locations, and any leftover entries from Simulate Traffic. This cannot be undone. Continue?')) return;
+  if (simulationActive) stopSimulateTraffic();
+  registry = {};
+  try { localStorage.removeItem(REGISTRY_KEY); } catch (e) {}
+  clearAll();
 }
 
 function clearPackets() { packets = []; document.getElementById('packet-table-body').innerHTML = ''; }
