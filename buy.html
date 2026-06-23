@@ -72,8 +72,12 @@
     const TREASURY = "0xe160d657c7d98f5c7e14fdc38b9b03911538fe70".toLowerCase();
     const PLSC_CONTRACT = "0x17B46bB02DF36E57B2b5015C4e289b984915EfE5".toLowerCase();
 
-    // Must match LICENCE_SECRET in device firmware
-    const LICENCE_SECRET = "PLSChatSecretKey2024";
+    // Server-side licence issuer (Cloudflare Worker). It holds the real
+    // Ed25519 private key and independently re-verifies the payment
+    // against two separate PulseChain RPC endpoints before signing
+    // anything. Nothing security-relevant happens in this file anymore.
+    // TODO: set this to your deployed licence-server.js Worker URL.
+    const LICENCE_API_URL = "https://plschat-licence-api.plschat.workers.dev";
 
     let walletAddress = null;
     let selectedMac = '';
@@ -84,23 +88,6 @@
       pCOCK: "pulsechain-peacock", WBTC: "wrapped-bitcoin-pulsechain"
     };
     let tokenPricesGBP = { PLSC: 0.75 };
-
-    // ─── Licence generation ───────────────────────────────────────────────
-    function simpleHash(s) {
-      let h = 0;
-      for (let i = 0; i < s.length; i++) {
-        h = (h * 31 + s.charCodeAt(i)) & 0xFFFFFFFF;
-      }
-      return (h >>> 0).toString(16).toUpperCase().padStart(8, '0');
-    }
-
-    function generateLicenceKey(mac, type) {
-      const years  = (type === 'lifetime') ? 10 : 1;
-      const expiry = Math.floor(Date.now() / 1000) + (years * 365 * 24 * 3600);
-      const payload = `${mac}:${expiry}:${LICENCE_SECRET}`;
-      const sig = simpleHash(payload);
-      return `${mac}:${expiry}:${sig}`;
-    }
 
     async function fetchLivePrices() {
       try {
@@ -202,40 +189,46 @@
       }
     }
 
+    // ─── Licence issuance ──────────────────────────────────────────────
+    // This used to verify the tx AND sign the licence right here in the
+    // browser, using a hardcoded secret. That meant anyone could read
+    // the secret in dev tools and mint a free lifetime licence for any
+    // MAC. Now this just hands the tx hash to the licence-server.js
+    // Worker, which independently re-verifies the payment against two
+    // separate PulseChain RPC endpoints and signs with the real
+    // Ed25519 key — a key that never leaves the Worker.
     async function verifyAndGenerateLicense() {
       const txHash = document.getElementById("txHashInput").value.trim();
       if (!txHash) return alert("Please paste the transaction hash first.");
       if (!selectedMac || selectedMac === 'Unknown') return alert("No valid MAC detected.");
 
-      try {
-        const receipt = await window.ethereum.request({
-          method: 'eth_getTransactionReceipt',
-          params: [txHash]
-        });
+      const payBtn = document.querySelector('#txSection button');
+      if (payBtn) { payBtn.disabled = true; payBtn.textContent = "⏳ Verifying on-chain..."; }
 
-        if (!receipt || receipt.status !== "0x1") {
-          return alert("Transaction not confirmed yet or failed. Please wait and try again.");
+      try {
+        const res = await fetch(LICENCE_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mac: selectedMac, txHash, type: selectedType })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(`❌ ${data.error || 'Verification failed.'}`);
+          if (payBtn) { payBtn.disabled = false; payBtn.textContent = "✅ Verify & Generate Licence"; }
+          return;
         }
 
-        const isCorrect = receipt.to.toLowerCase() === TREASURY ||
-                          receipt.to.toLowerCase() === PLSC_CONTRACT;
-        if (!isCorrect) return alert("Transaction went to wrong wallet.");
-
-        // Generate signed licence in correct format for device firmware
-        const licenceKey = generateLicenceKey(selectedMac, selectedType);
+        const licenceKey = data.licence;
 
         // Save to localStorage for flasher page
         let licenses = JSON.parse(localStorage.getItem('licenses') || '{}');
         licenses[selectedMac] = licenceKey;
         localStorage.setItem('licenses', JSON.stringify(licenses));
 
-        // Copy to clipboard
         try { await navigator.clipboard.writeText(licenceKey); } catch(e) {}
 
-        // Show success
-        const years = selectedType === 'lifetime' ? 10 : 1;
-        const expiry = parseInt(licenceKey.split(':')[6]);
-        const expiryDate = new Date(expiry * 1000).toLocaleDateString('en-GB', {
+        const expiryDate = new Date(data.expiry * 1000).toLocaleDateString('en-GB', {
           year: 'numeric', month: 'long', day: 'numeric'
         });
 
@@ -256,7 +249,8 @@
         `;
 
       } catch (e) {
-        alert("Could not verify transaction: " + e.message);
+        alert("Could not reach the licence server: " + e.message);
+        if (payBtn) { payBtn.disabled = false; payBtn.textContent = "✅ Verify & Generate Licence"; }
       }
     }
 
