@@ -366,7 +366,14 @@ const DEFAULT_RANGE_KM = 5; // starting estimate for a repeater's transmission h
 // Fill these in after deploying the Worker (see DEPLOY.md). Until then, "Share to
 // Public Coverage Map" will show a clear error instead of failing silently.
 const API_BASE = 'https://plschat-coverage-api.plschat.workers.dev';
-const WRITE_KEY = '03263865f3944987abf65dde4e5d029c91ae433272a5b061';
+function getWriteKey() {
+  let key = localStorage.getItem('plschat_write_key');
+  if (!key) {
+    key = prompt('Enter Coverage Map Write Key:');
+    if (key) localStorage.setItem('plschat_write_key', key.trim());
+  }
+  return key || '';
+}
 
 // ===== Repeater registry (persisted across sessions) =====
 const REGISTRY_KEY = 'plschat_known_repeaters';
