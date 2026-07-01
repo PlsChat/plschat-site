@@ -1435,7 +1435,7 @@ async function shareToPublicMap() {
   try {
     const res = await fetch(`${API_BASE}/api/repeaters/${encodeURIComponent(id)}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Write-Key': WRITE_KEY },
+      headers: { 'Content-Type': 'application/json', 'X-Write-Key': getWriteKey() },
       body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error('Server responded ' + res.status);
@@ -1461,7 +1461,7 @@ async function unshareFromPublicMap() {
   try {
     const res = await fetch(`${API_BASE}/api/repeaters/${encodeURIComponent(id)}`, {
       method: 'DELETE',
-      headers: { 'X-Write-Key': WRITE_KEY }
+      headers: { 'X-Write-Key': getWriteKey() }
     });
     if (!res.ok) throw new Error('Server responded ' + res.status);
     if (registry[id]) { registry[id].shared = false; saveRegistry(); }
