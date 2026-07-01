@@ -3,269 +3,279 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PLSChat - Buy License</title>
+  <title>PLSChat — Buy Licence</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; background: #0a0c1f; color: #c9d1d9; margin:0; padding:40px 20px; min-height:100vh; position:relative; overflow-y:auto; }
-    #mesh-bg { position:fixed; top:0; left:0; right:0; bottom:0; z-index:-1; opacity:0.95; }
-    .container { max-width:820px; margin:0 auto; text-align:center; position:relative; z-index:2; }
-    h1 { font-size:3.4em; background:linear-gradient(90deg,#a855f7,#67e8f9); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; }
-    .wallet-info { background:#1e2937; padding:12px; border-radius:8px; margin:15px 0; font-family:monospace; min-height:52px; }
-    .device-box { background:rgba(15,23,42,0.95); padding:25px; border-radius:16px; margin:30px auto; max-width:620px; text-align:center; }
-    button { padding:16px 36px; font-size:1.15em; font-weight:600; border:none; border-radius:14px; cursor:pointer; margin:8px; transition:all 0.3s; }
-    .btn-primary { background:linear-gradient(135deg,#a855f7,#3b82f6); color:white; box-shadow:0 8px 25px rgba(168,85,247,0.5); }
-    .btn-primary:hover { transform:translateY(-4px); }
-    .selected { box-shadow:0 0 0 4px #22c55e !important; }
-    .selected::after { content:" ✅"; }
-    .benefit-box, .token-selector { background:rgba(15,23,42,0.95); padding:22px; border-radius:16px; margin:20px auto; max-width:620px; text-align:center; }
-    select { padding:12px; font-size:1.1em; background:#1e2937; color:white; border-radius:8px; width:100%; max-width:400px; }
+    * { box-sizing: border-box; }
+    body { font-family:'Inter',sans-serif; background:#0a0c1f; color:#c9d1d9; margin:0; padding:40px 20px; min-height:100vh; }
+    #mesh-bg { position:fixed; top:0;left:0;right:0;bottom:0; z-index:-1; }
+    .wrap { max-width:760px; margin:0 auto; position:relative; z-index:2; }
+    h1 { font-size:2.8em; background:linear-gradient(90deg,#a855f7,#67e8f9); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:6px; }
+    .sub { color:#94a3b8; font-size:1.1em; margin-bottom:28px; }
+
+    .card { background:#1e2937; border-radius:16px; padding:24px; margin:18px 0; }
+    .card h3 { margin:0 0 14px; color:#67e8f9; font-size:1.05em; }
+
+    button { padding:14px 28px; font-size:1em; font-weight:600; border:none; border-radius:10px; cursor:pointer; transition:all .2s; }
+    .btn-main { background:linear-gradient(135deg,#a855f7,#3b82f6); color:#fff; }
+    .btn-main:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(168,85,247,.4); }
+    .btn-sm   { padding:8px 18px; font-size:.9em; background:#334155; color:#67e8f9; border-radius:8px; }
+
+    select, input[type=text] {
+      width:100%; padding:12px; margin:8px 0; background:#0f172a;
+      border:1px solid #334155; border-radius:8px; color:#fff; font-size:1em;
+    }
+    .tier-row { display:flex; gap:12px; flex-wrap:wrap; margin:10px 0; }
+    .tier-btn { flex:1; min-width:160px; padding:16px; background:#0f172a;
+      border:2px solid #334155; border-radius:12px; cursor:pointer; text-align:center; transition:.2s; }
+    .tier-btn.selected { border-color:#22d3ee; background:rgba(34,211,238,.08); }
+    .tier-btn .price { font-size:1.3em; font-weight:700; color:#67e8f9; }
+    .tier-btn .label { font-size:.85em; color:#94a3b8; }
+
+    .privacy-note { background:rgba(168,85,247,.1); border:1px solid #a855f7;
+      border-radius:12px; padding:16px; margin:18px 0; font-size:.95em; }
+    .privacy-note a { color:#c084fc; }
+
+    .status { font-family:monospace; white-space:pre-wrap; font-size:.9em; color:#94a3b8; }
+    .success { color:#22c55e; }
+    .error   { color:#f87171; }
+    .lic-box { background:#0f172a; border:1px solid #22c55e; border-radius:10px;
+      padding:14px; font-family:monospace; font-size:.8em; word-break:break-all;
+      color:#22c55e; margin:12px 0; }
+
+    .step { display:flex; align-items:center; gap:12px; margin:10px 0; color:#94a3b8; font-size:.95em; }
+    .step .num { width:28px;height:28px;border-radius:50%;background:#334155;
+      display:flex;align-items:center;justify-content:center;font-weight:700;color:#67e8f9;flex-shrink:0; }
+    a.back { position:absolute; top:0; left:0; padding:10px 20px;
+      background:rgba(30,41,59,.9); color:#c9d1d9; border-radius:8px; text-decoration:none; font-size:.95em; }
   </style>
 </head>
 <body>
-  <canvas id="mesh-bg"></canvas>
-  <div class="container">
-    <button onclick="window.location.href='device-manager.html'" style="position:absolute;top:25px;left:25px;padding:10px 20px;background:rgba(30,41,59,0.9);color:white;">← Back to Home</button>
-    <h1>Buy License</h1>
-    <p style="font-size:1.4em;color:#94a3b8;">Payment first → Licence after verification</p>
+<canvas id="mesh-bg"></canvas>
+<div class="wrap">
+  <a class="back" href="device-manager.html">← Back</a>
+  <h1 style="margin-top:50px;">Buy Licence</h1>
+  <p class="sub">Signed server-side • Bound to your device MAC</p>
 
-    <button onclick="connectWallet()" id="connectBtn" class="btn-primary">🔗 Connect MetaMask</button>
-    <div id="walletInfo" class="wallet-info">Wallet not connected</div>
-
-    <button onclick="detectDevice()" id="detectBtn" class="btn-primary">🔍 Detect Connected Heltec Device</button>
-
-    <div id="deviceBox" class="device-box" style="display:none;">
-      <strong>Detected Device</strong><br><br>
-      <div id="deviceDetails" style="font-size:1.1em;"></div>
-      <button onclick="useDetectedDevice()" class="btn-primary" style="margin-top:15px;">✅ Use This Device</button>
-    </div>
-
-    <div style="margin:40px 0;">
-      <button onclick="selectType('lifetime')" id="btnLifetime" class="btn-primary">Lifetime — 100 PLSC</button>
-      <button onclick="selectType('yearly')" id="btnYearly" class="btn-primary">Yearly — 20 PLSC</button>
-    </div>
-
-    <div class="token-selector">
-      <strong>Pay with:</strong><br><br>
-      <select id="paymentToken" onchange="updateEquivalentPrice()">
-        <option value="PLS">PLS</option>
-        <option value="PLSC">PLSC</option>
-        <option value="PLSX">PLSX</option>
-        <option value="pDAI">pDAI</option>
-        <option value="pCOCK">pCOCK</option>
-        <option value="WBTC">WBTC</option>
-      </select>
-      <div id="equivalentPrice" style="margin-top:15px; font-size:1.25em; color:#67e8f9; font-weight:600;"></div>
-    </div>
-
-    <button id="payBtn" class="btn-primary" onclick="sendPayment()" style="font-size:1.35em;padding:20px 50px;">💎 Send Exact Amount via MetaMask</button>
-
-    <div id="txSection" class="benefit-box" style="display:none; margin-top:20px;">
-      <strong>Paste Transaction Hash:</strong><br>
-      <input id="txHashInput" type="text" placeholder="0x..." style="width:90%; padding:12px; margin:10px 0; font-family:monospace;">
-      <button onclick="verifyAndGenerateLicense()" class="btn-primary">✅ Verify & Generate Licence</button>
-    </div>
-
-    <div id="successSection" style="display:none;"></div>
+  <!-- Privacy note -->
+  <div class="privacy-note">
+    🛡️ <strong>Want to pay privately?</strong>
+    Get PLSC via <a href="https://libertyswap.finance" target="_blank">LibertySwap</a> or
+    <a href="https://zkxwallet.com" target="_blank">ZKX Wallet</a> to shield your funds first,
+    then unshield to a fresh wallet and pay from there. No KYC. No link to your identity.
   </div>
 
-  <script>
-    const TREASURY = "0xe160d657c7d98f5c7e14fdc38b9b03911538fe70".toLowerCase();
-    const PLSC_CONTRACT = "0x17B46bB02DF36E57B2b5015C4e289b984915EfE5".toLowerCase();
+  <!-- Step 1: Connect wallet -->
+  <div class="card">
+    <h3>① Connect Wallet</h3>
+    <button class="btn-main" onclick="connectWallet()">🔗 Connect MetaMask</button>
+    <div id="walletInfo" style="margin-top:10px;color:#94a3b8;">Not connected</div>
+  </div>
 
-    // Server-side licence issuer (Cloudflare Worker). It holds the real
-    // Ed25519 private key and independently re-verifies the payment
-    // against two separate PulseChain RPC endpoints before signing
-    // anything. Nothing security-relevant happens in this file anymore.
-    // TODO: set this to your deployed licence-server.js Worker URL.
-    const LICENCE_API_URL = "https://plschat-licence-api.plschat.workers.dev";
+  <!-- Step 2: Detect device -->
+  <div class="card">
+    <h3>② Detect Your Device</h3>
+    <button class="btn-main" onclick="detectDevice()">🔌 Connect via USB</button>
+    <div id="deviceInfo" style="margin-top:10px;color:#94a3b8;">No device detected</div>
+  </div>
 
-    let walletAddress = null;
-    let selectedMac = '';
-    let selectedType = 'lifetime';
+  <!-- Step 3: Choose tier -->
+  <div class="card">
+    <h3>③ Choose Licence Type</h3>
+    <div class="tier-row">
+      <div class="tier-btn selected" id="btnYearly" onclick="selectTier('yearly')">
+        <div class="price">20 PLSC</div>
+        <div class="label">Yearly</div>
+        <div style="font-size:.8em;color:#64748b;margin-top:4px;">~£15 equivalent</div>
+      </div>
+      <div class="tier-btn" id="btnLifetime" onclick="selectTier('lifetime')">
+        <div class="price">100 PLSC</div>
+        <div class="label">Lifetime (10 years)</div>
+        <div style="font-size:.8em;color:#64748b;margin-top:4px;">~£75 equivalent</div>
+      </div>
+    </div>
+  </div>
 
-    const coinGeckoIds = {
-      PLS: "pulsechain", PLSX: "pulsex", pDAI: "dai-on-pulsechain",
-      pCOCK: "pulsechain-peacock", WBTC: "wrapped-bitcoin-pulsechain"
-    };
-    let tokenPricesGBP = { PLSC: 0.75 };
+  <!-- Step 4: Pay -->
+  <div class="card">
+    <h3>④ Send Payment</h3>
+    <p style="color:#94a3b8;font-size:.95em;margin:0 0 12px;">
+      Payment must be in <strong>PLSC</strong> sent directly to the PLSChat treasury.
+      Use LibertySwap/ZKX for privacy before paying.
+    </p>
+    <div style="background:#0f172a;border-radius:8px;padding:12px;font-family:monospace;font-size:.85em;margin-bottom:14px;">
+      Treasury: <span id="treasuryDisplay" style="color:#67e8f9;">Loading...</span>
+    </div>
+    <button class="btn-main" onclick="sendPayment()" id="payBtn">💎 Send via MetaMask</button>
+    <div id="payStatus" class="status" style="margin-top:12px;"></div>
+  </div>
 
-    async function fetchLivePrices() {
-      try {
-        const ids = Object.values(coinGeckoIds).join(',');
-        const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=gbp`);
-        const data = await res.json();
-        tokenPricesGBP.PLS  = data.pulsechain?.gbp || 0.0000077;
-        tokenPricesGBP.PLSX = data.pulsex?.gbp || 0.000005;
-        tokenPricesGBP.pDAI = data["dai-on-pulsechain"]?.gbp || 0.00155;
-        tokenPricesGBP.pCOCK = data["pulsechain-peacock"]?.gbp || 0.011;
-        tokenPricesGBP.WBTC = data["wrapped-bitcoin-pulsechain"]?.gbp || 65000;
-      } catch(e) {}
+  <!-- Step 5: Verify and get licence -->
+  <div class="card" id="verifyCard" style="display:none;">
+    <h3>⑤ Verify Payment &amp; Get Licence</h3>
+    <p style="color:#94a3b8;font-size:.95em;">Transaction hash (auto-filled after payment):</p>
+    <input type="text" id="txInput" placeholder="0x...">
+    <button class="btn-main" style="margin-top:10px;" onclick="verifyAndGetLicence()">
+      ✅ Verify &amp; Generate Licence
+    </button>
+    <div id="verifyStatus" class="status" style="margin-top:12px;"></div>
+  </div>
+
+  <!-- Success -->
+  <div id="successCard" style="display:none;" class="card">
+    <div class="success" style="font-size:1.2em;font-weight:700;margin-bottom:12px;">✅ Licence Issued!</div>
+    <div style="color:#94a3b8;font-size:.9em;margin-bottom:4px;">Device MAC: <span id="successMac" style="color:#67e8f9;"></span></div>
+    <div style="color:#94a3b8;font-size:.9em;margin-bottom:4px;">Tier: <span id="successTier" style="color:#67e8f9;"></span></div>
+    <div style="color:#94a3b8;font-size:.9em;margin-bottom:12px;">Expires: <span id="successExpiry" style="color:#67e8f9;"></span></div>
+    <div class="lic-box" id="licenceDisplay"></div>
+    <div style="color:#94a3b8;font-size:.85em;margin-bottom:14px;">✅ Saved locally for Flasher page</div>
+    <button class="btn-main" onclick="window.location.href='flasher.html'">📤 Go to Flasher → Send to Device</button>
+  </div>
+
+</div>
+
+<script>
+  // ─── Config ────────────────────────────────────────────────────────────────
+  const WORKER_URL    = 'https://plschat-coverage-api.plschat.workers.dev';
+  const TREASURY      = '0xe160d657c7d98f5c7e14fdc38b9b03911538fe70';
+  const PLSC_CONTRACT = '0x17B46bB02DF36E57B2b5015C4e289b984915EfE5';
+  const PLSC_AMOUNT   = { yearly: 20, lifetime: 100 };
+
+  document.getElementById('treasuryDisplay').textContent = TREASURY;
+
+  let wallet    = '';
+  let deviceMac = '';
+  let tier      = 'yearly';
+  let txHash    = '';
+
+  // ─── Wallet ─────────────────────────────────────────────────────────────────
+  async function connectWallet() {
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      wallet = accounts[0];
+      document.getElementById('walletInfo').innerHTML =
+        `✅ <span style="color:#22c55e;">${wallet.slice(0,10)}…${wallet.slice(-6)}</span>`;
+    } catch (e) {
+      document.getElementById('walletInfo').innerHTML = '<span style="color:#f87171;">Connection cancelled</span>';
     }
+  }
 
-    async function connectWallet() {
-      try {
-        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-        walletAddress = accounts[0];
-        document.getElementById("walletInfo").innerHTML = `✅ Connected: <strong>${walletAddress}</strong>`;
-      } catch (e) {
-        document.getElementById("walletInfo").innerHTML = "❌ Connection failed";
-      }
-    }
-
-    async function detectDevice() {
-      const btn = document.getElementById("detectBtn");
-      btn.innerHTML = "⏳ Detecting...";
-      btn.disabled = true;
-      try {
-        const port = await navigator.serial.requestPort();
-        await port.open({ baudRate: 115200 });
-        const reader = port.readable.getReader();
-        let buffer = '';
-        const timeout = setTimeout(() => reader.cancel(), 15000);
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buffer += new TextDecoder().decode(value);
-          if (buffer.includes('MAC:') || buffer.includes('END_STATUS')) {
-            clearTimeout(timeout);
-            reader.cancel();
-            const macMatch = buffer.match(/MAC:([0-9A-F:]+)/i);
-            selectedMac = macMatch ? macMatch[1] : 'Unknown';
-            const licensed = buffer.includes('LICENSED:YES') ? '✅ Licensed' : '❌ Not Licensed';
-            document.getElementById("deviceDetails").innerHTML = `MAC: <strong>${selectedMac}</strong><br>Status: ${licensed}`;
-            document.getElementById("deviceBox").style.display = 'block';
-            break;
-          }
+  // ─── Device detection ───────────────────────────────────────────────────────
+  async function detectDevice() {
+    const el = document.getElementById('deviceInfo');
+    el.textContent = '🔄 Connecting…';
+    try {
+      const port = await navigator.serial.requestPort();
+      await port.open({ baudRate: 115200 });
+      const reader = port.readable.getReader();
+      let buf = '';
+      const timeout = setTimeout(() => reader.cancel(), 15000);
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += new TextDecoder().decode(value);
+        const m = buf.match(/MAC:([0-9A-Fa-f:]{17})/);
+        if (m) {
+          clearTimeout(timeout);
+          reader.cancel();
+          deviceMac = m[1].toUpperCase();
+          const licensed = buf.includes('LICENSED:YES');
+          el.innerHTML = `✅ MAC: <strong style="color:#67e8f9;">${deviceMac}</strong> — ${licensed ? '✅ Licensed' : '❌ Not licensed'}`;
+          break;
         }
-      } catch(e) {
-        alert("Could not detect device.\nHold BOOT button while plugging in.");
       }
-      btn.innerHTML = "🔍 Detect Connected Heltec Device";
-      btn.disabled = false;
+    } catch (e) {
+      el.innerHTML = `<span style="color:#f87171;">❌ ${e.message}</span>`;
     }
+  }
 
-    function useDetectedDevice() {
-      alert(`✅ MAC ${selectedMac} selected for licensing.`);
+  // ─── Tier ───────────────────────────────────────────────────────────────────
+  function selectTier(t) {
+    tier = t;
+    document.getElementById('btnYearly').classList.toggle('selected',   t === 'yearly');
+    document.getElementById('btnLifetime').classList.toggle('selected', t === 'lifetime');
+  }
+
+  // ─── Payment ────────────────────────────────────────────────────────────────
+  async function sendPayment() {
+    if (!wallet)     return alert('Connect your wallet first.');
+    if (!deviceMac)  return alert('Detect your device first.');
+
+    const amount  = PLSC_AMOUNT[tier];
+    const amtWei  = (BigInt(amount) * 10n ** 18n).toString(16);
+    // ERC-20 transfer(address,uint256) calldata
+    const data = '0xa9059cbb'
+      + TREASURY.slice(2).padStart(64, '0')
+      + amtWei.padStart(64, '0');
+
+    document.getElementById('payStatus').textContent = `Sending ${amount} PLSC to treasury…`;
+
+    try {
+      txHash = await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{ from: wallet, to: PLSC_CONTRACT, data, gas: '0x15F90' }],
+      });
+      document.getElementById('payStatus').innerHTML =
+        `<span class="success">✅ TX sent: ${txHash.slice(0,18)}…\nWaiting for confirmation, then click Verify below.</span>`;
+      document.getElementById('verifyCard').style.display = 'block';
+      document.getElementById('txInput').value = txHash;
+    } catch (e) {
+      document.getElementById('payStatus').innerHTML = `<span class="error">❌ ${e.message}</span>`;
     }
+  }
 
-    function selectType(type) {
-      selectedType = type;
-      document.getElementById("btnLifetime").classList.toggle('selected', type === 'lifetime');
-      document.getElementById("btnYearly").classList.toggle('selected', type === 'yearly');
-      updateEquivalentPrice();
-    }
+  // ─── Verify & get licence from Worker ───────────────────────────────────────
+  async function verifyAndGetLicence() {
+    const tx  = document.getElementById('txInput').value.trim();
+    const el  = document.getElementById('verifyStatus');
+    if (!tx)       return el.innerHTML = '<span class="error">Paste your transaction hash first.</span>';
+    if (!deviceMac) return el.innerHTML = '<span class="error">Detect your device first.</span>';
 
-    async function updateEquivalentPrice() {
-      await fetchLivePrices();
-      const basePLSC = selectedType === 'lifetime' ? 100 : 20;
-      const token = document.getElementById("paymentToken").value;
-      const priceGBP = tokenPricesGBP[token] || 0.75;
-      const equivalent = (basePLSC * 0.75 / priceGBP).toFixed(4);
-      document.getElementById("equivalentPrice").innerHTML = `Equivalent to <strong>${basePLSC} PLSC = ${equivalent} ${token}</strong>`;
-    }
+    el.textContent = '⏳ Verifying with server…';
 
-    async function sendPayment() {
-      if (!walletAddress) return alert("Please connect your wallet first.");
-      if (!selectedMac || selectedMac === 'Unknown') return alert("Please detect your device first.");
+    try {
+      const res  = await fetch(`${WORKER_URL}/licence/purchase`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ txHash: tx, mac: deviceMac, tier }),
+      });
+      const data = await res.json();
 
-      const token = document.getElementById("paymentToken").value;
-      const basePLSC = selectedType === 'lifetime' ? 100 : 20;
-      const amount = basePLSC * 0.75 / (tokenPricesGBP[token] || 0.75);
-
-      try {
-        let txHash;
-        if (token === "PLSC") {
-          const data = "0xa9059cbb" + TREASURY.slice(2).padStart(64, '0') + (BigInt(Math.floor(amount * 1e18)).toString(16)).padStart(64, '0');
-          txHash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: PLSC_CONTRACT, data: data, gas: "0x7A120" }] });
-        } else {
-          const valueWei = (BigInt(Math.floor(amount * 1e18))).toString(16);
-          txHash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: TREASURY, value: "0x" + valueWei, gas: "0x7A120" }] });
-        }
-        document.getElementById("txSection").style.display = 'block';
-        document.getElementById("txHashInput").value = txHash;
-        alert(`✅ Transaction Sent!\n\nTX: ${txHash}\n\nWait for confirmation, then click "Verify & Generate Licence".`);
-      } catch (err) {
-        alert("Transaction cancelled.");
+      if (!res.ok || !data.licence) {
+        el.innerHTML = `<span class="error">❌ ${data.error || 'Verification failed'}</span>`;
+        return;
       }
+
+      // Save for flasher page
+      const licences = JSON.parse(localStorage.getItem('licenses') || '{}');
+      licences[deviceMac] = data.licence;
+      localStorage.setItem('licenses', JSON.stringify(licences));
+
+      try { await navigator.clipboard.writeText(data.licence); } catch {}
+
+      // Show success
+      document.getElementById('verifyCard').style.display = 'none';
+      document.getElementById('successCard').style.display = 'block';
+      document.getElementById('successMac').textContent    = deviceMac;
+      document.getElementById('successTier').textContent   =
+        tier === 'lifetime' ? 'Lifetime (10 years)' : 'Yearly';
+      document.getElementById('successExpiry').textContent =
+        new Date(data.expiry * 1000).toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
+      document.getElementById('licenceDisplay').textContent = data.licence;
+      el.textContent = '';
+
+    } catch (e) {
+      el.innerHTML = `<span class="error">❌ Network error: ${e.message}</span>`;
     }
+  }
 
-    // ─── Licence issuance ──────────────────────────────────────────────
-    // This used to verify the tx AND sign the licence right here in the
-    // browser, using a hardcoded secret. That meant anyone could read
-    // the secret in dev tools and mint a free lifetime licence for any
-    // MAC. Now this just hands the tx hash to the licence-server.js
-    // Worker, which independently re-verifies the payment against two
-    // separate PulseChain RPC endpoints and signs with the real
-    // Ed25519 key — a key that never leaves the Worker.
-    async function verifyAndGenerateLicense() {
-      const txHash = document.getElementById("txHashInput").value.trim();
-      if (!txHash) return alert("Please paste the transaction hash first.");
-      if (!selectedMac || selectedMac === 'Unknown') return alert("No valid MAC detected.");
-
-      const payBtn = document.querySelector('#txSection button');
-      if (payBtn) { payBtn.disabled = true; payBtn.textContent = "⏳ Verifying on-chain..."; }
-
-      try {
-        const res = await fetch(LICENCE_API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mac: selectedMac, txHash, type: selectedType })
-        });
-        const data = await res.json();
-
-        if (!res.ok) {
-          alert(`❌ ${data.error || 'Verification failed.'}`);
-          if (payBtn) { payBtn.disabled = false; payBtn.textContent = "✅ Verify & Generate Licence"; }
-          return;
-        }
-
-        const licenceKey = data.licence;
-
-        // Save to localStorage for flasher page
-        let licenses = JSON.parse(localStorage.getItem('licenses') || '{}');
-        licenses[selectedMac] = licenceKey;
-        localStorage.setItem('licenses', JSON.stringify(licenses));
-
-        try { await navigator.clipboard.writeText(licenceKey); } catch(e) {}
-
-        const expiryDate = new Date(data.expiry * 1000).toLocaleDateString('en-GB', {
-          year: 'numeric', month: 'long', day: 'numeric'
-        });
-
-        document.getElementById("txSection").style.display = 'none';
-        document.getElementById("successSection").style.display = 'block';
-        document.getElementById("successSection").innerHTML = `
-          <div style="background:#0f2e1a; border:1px solid #22c55e; padding:25px; border-radius:16px; margin:20px auto; max-width:620px;">
-            <div style="color:#22c55e; font-size:1.3em; font-weight:700; margin-bottom:15px;">✅ Licence Generated!</div>
-            <div style="color:#94a3b8; margin-bottom:8px;">Device MAC: <strong style="color:#67e8f9;">${selectedMac}</strong></div>
-            <div style="color:#94a3b8; margin-bottom:8px;">Type: <strong style="color:#67e8f9;">${selectedType === 'lifetime' ? 'Lifetime (10 years)' : 'Yearly'}</strong></div>
-            <div style="color:#94a3b8; margin-bottom:15px;">Expires: <strong style="color:#67e8f9;">${expiryDate}</strong></div>
-            <div style="background:#0f172a; padding:12px; border-radius:8px; font-family:monospace; font-size:0.82em; word-break:break-all; margin-bottom:15px; border:1px solid #22c55e; color:#22c55e;">${licenceKey}</div>
-            <div style="color:#94a3b8; font-size:0.9em; margin-bottom:20px;">✅ Copied to clipboard &amp; saved for Flash page</div>
-            <button onclick="window.location.href='flasher.html'" class="btn-primary" style="background:linear-gradient(135deg,#22c55e,#86efac); color:#0f172a; font-size:1.1em;">
-              📤 Go to Flasher → Send to Device
-            </button>
-          </div>
-        `;
-
-      } catch (e) {
-        alert("Could not reach the licence server: " + e.message);
-        if (payBtn) { payBtn.disabled = false; payBtn.textContent = "✅ Verify & Generate Licence"; }
-      }
-    }
-
-    // Mesh Background
-    const canvas = document.getElementById('mesh-bg');
-    const ctx = canvas.getContext('2d');
-    function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    resize(); window.addEventListener('resize', resize);
-    function animate(){
-      ctx.fillStyle = 'rgba(10,12,31,0.16)'; ctx.fillRect(0,0,canvas.width,canvas.height);
-      requestAnimationFrame(animate);
-    }
-    animate();
-
-    window.onload = () => fetchLivePrices().then(() => updateEquivalentPrice());
-  </script>
+  // ─── Mesh background ────────────────────────────────────────────────────────
+  const cv = document.getElementById('mesh-bg');
+  const cx = cv.getContext('2d');
+  function resize(){ cv.width=window.innerWidth; cv.height=window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  function drawBg(){ cx.fillStyle='rgba(10,12,31,0.18)'; cx.fillRect(0,0,cv.width,cv.height); requestAnimationFrame(drawBg); }
+  drawBg();
+</script>
 </body>
 </html>
