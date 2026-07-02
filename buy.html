@@ -110,12 +110,15 @@
     <div id="payStatus" class="status" style="margin-top:12px;"></div>
   </div>
 
-  <!-- Step 5: Verify and get licence -->
+  <!-- Step 5: Verify and get licence (auto after payment; manual fallback) -->
   <div class="card" id="verifyCard" style="display:none;">
     <h3>⑤ Verify Payment &amp; Get Licence</h3>
-    <p style="color:#94a3b8;font-size:.95em;">Transaction hash (auto-filled after payment):</p>
+    <p style="color:#94a3b8;font-size:.95em;" id="verifyHint">
+      Verifying automatically — your licence will appear here as soon as the
+      transaction confirms on-chain. No need to do anything.
+    </p>
     <input type="text" id="txInput" placeholder="0x...">
-    <button class="btn-main" style="margin-top:10px;" onclick="verifyAndGetLicence()">
+    <button class="btn-main" style="margin-top:10px;" onclick="verifyAndGetLicence(true)">
       ✅ Verify &amp; Generate Licence
     </button>
     <div id="verifyStatus" class="status" style="margin-top:12px;"></div>
@@ -141,12 +144,19 @@
   const PLSC_CONTRACT = '0x17B46bB02DF36E57B2b5015C4e289b984915EfE5';
   const PLSC_AMOUNT   = { yearly: 20, lifetime: 100 };
 
+  // Auto-verify polling: begins the moment the tx is broadcast, so the licence
+  // is claimed for YOUR MAC in the same breath as the payment confirming —
+  // closing the window in which someone else could submit your tx hash first.
+  const POLL_INTERVAL_MS = 6000;   // check every 6s
+  const POLL_MAX_TRIES   = 50;     // ~5 minutes
+
   document.getElementById('treasuryDisplay').textContent = TREASURY;
 
   let wallet    = '';
   let deviceMac = '';
   let tier      = 'yearly';
   let txHash    = '';
+  let polling   = false;
 
   // ─── Wallet ─────────────────────────────────────────────────────────────────
   async function connectWallet() {
@@ -216,57 +226,105 @@
         params: [{ from: wallet, to: PLSC_CONTRACT, data, gas: '0x15F90' }],
       });
       document.getElementById('payStatus').innerHTML =
-        `<span class="success">✅ TX sent: ${txHash.slice(0,18)}…\nWaiting for confirmation, then click Verify below.</span>`;
+        `<span class="success">✅ TX sent: ${txHash.slice(0,18)}…</span>`;
       document.getElementById('verifyCard').style.display = 'block';
       document.getElementById('txInput').value = txHash;
+      // Start auto-verification immediately — do NOT wait for the user
+      startAutoVerify();
     } catch (e) {
       document.getElementById('payStatus').innerHTML = `<span class="error">❌ ${e.message}</span>`;
     }
   }
 
-  // ─── Verify & get licence from Worker ───────────────────────────────────────
-  async function verifyAndGetLicence() {
-    const tx  = document.getElementById('txInput').value.trim();
-    const el  = document.getElementById('verifyStatus');
-    if (!tx)       return el.innerHTML = '<span class="error">Paste your transaction hash first.</span>';
+  // ─── Auto-verify loop ────────────────────────────────────────────────────────
+  // Retries while the tx is unmined or an RPC hiccups; stops immediately on
+  // success or on a permanent failure (wrong amount, tx already used, etc).
+  const RETRYABLE = new Set(['tx_not_found', 'rpc_unreachable', 'rpc_disagreement', 'internal_error']);
+
+  async function startAutoVerify() {
+    if (polling) return;
+    polling = true;
+    const el = document.getElementById('verifyStatus');
+    for (let attempt = 1; attempt <= POLL_MAX_TRIES; attempt++) {
+      el.textContent = `⏳ Waiting for on-chain confirmation… (check ${attempt})`;
+      const result = await tryVerify();
+      if (result === 'done') { polling = false; return; }
+      if (result === 'fatal') { polling = false; return; }
+      await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
+    }
+    polling = false;
+    el.innerHTML = '<span class="error">⚠️ Still not confirmed after 5 minutes. ' +
+      'Your payment is safe — click "Verify &amp; Generate Licence" above to retry.</span>';
+  }
+
+  // Manual button — same path, single attempt, user-initiated
+  async function verifyAndGetLicence(manual) {
+    const el = document.getElementById('verifyStatus');
+    const tx = document.getElementById('txInput').value.trim();
+    if (!tx)        return el.innerHTML = '<span class="error">Paste your transaction hash first.</span>';
     if (!deviceMac) return el.innerHTML = '<span class="error">Detect your device first.</span>';
-
+    txHash = tx;
     el.textContent = '⏳ Verifying with server…';
+    await tryVerify();
+  }
 
+  // Returns 'done' | 'fatal' | 'retry'
+  async function tryVerify() {
+    const el = document.getElementById('verifyStatus');
     try {
       const res  = await fetch(`${WORKER_URL}/licence/purchase`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ txHash: tx, mac: deviceMac, tier }),
+        body: JSON.stringify({ txHash, mac: deviceMac, tier }),
       });
       const data = await res.json();
 
-      if (!res.ok || !data.licence) {
-        el.innerHTML = `<span class="error">❌ ${data.error || 'Verification failed'}</span>`;
-        return;
+      if (res.ok && data.licence) {
+        showSuccess(data);
+        return 'done';
       }
+      if (RETRYABLE.has(data.error)) return 'retry';
 
-      // Save for flasher page
-      const licences = JSON.parse(localStorage.getItem('licenses') || '{}');
-      licences[deviceMac] = data.licence;
-      localStorage.setItem('licenses', JSON.stringify(licences));
-
-      try { await navigator.clipboard.writeText(data.licence); } catch {}
-
-      // Show success
-      document.getElementById('verifyCard').style.display = 'none';
-      document.getElementById('successCard').style.display = 'block';
-      document.getElementById('successMac').textContent    = deviceMac;
-      document.getElementById('successTier').textContent   =
-        tier === 'lifetime' ? 'Lifetime (10 years)' : 'Yearly';
-      document.getElementById('successExpiry').textContent =
-        new Date(data.expiry * 1000).toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
-      document.getElementById('licenceDisplay').textContent = data.licence;
-      el.textContent = '';
+      // Permanent failure — stop and tell the user why
+      el.innerHTML = `<span class="error">❌ ${friendlyError(data.error)}</span>`;
+      return 'fatal';
 
     } catch (e) {
-      el.innerHTML = `<span class="error">❌ Network error: ${e.message}</span>`;
+      // Network error reaching the Worker — treat as transient
+      el.textContent = `⏳ Network hiccup, retrying… (${e.message})`;
+      return 'retry';
     }
+  }
+
+  function friendlyError(code) {
+    const map = {
+      tx_already_used:              'This transaction has already been used for a licence.',
+      tx_failed:                    'The transaction failed on-chain. Please send payment again.',
+      no_plsc_transfer_to_treasury: 'No PLSC transfer to the treasury found in this transaction.',
+      insufficient_amount:          'The amount sent is less than the licence price.',
+      'invalid tier':               'Invalid licence tier selected.',
+      invalid_tx_hash:              'That does not look like a valid transaction hash.',
+      server_not_configured:        'Server error — please contact support.',
+    };
+    return map[code] || (code || 'Verification failed');
+  }
+
+  function showSuccess(data) {
+    // Save for flasher page
+    const licences = JSON.parse(localStorage.getItem('licenses') || '{}');
+    licences[deviceMac] = data.licence;
+    localStorage.setItem('licenses', JSON.stringify(licences));
+
+    try { navigator.clipboard.writeText(data.licence); } catch {}
+
+    document.getElementById('verifyCard').style.display  = 'none';
+    document.getElementById('successCard').style.display = 'block';
+    document.getElementById('successMac').textContent    = deviceMac;
+    document.getElementById('successTier').textContent   =
+      tier === 'lifetime' ? 'Lifetime (10 years)' : 'Yearly';
+    document.getElementById('successExpiry').textContent =
+      new Date(data.expiry * 1000).toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
+    document.getElementById('licenceDisplay').textContent = data.licence;
   }
 
   // ─── Mesh background ────────────────────────────────────────────────────────
