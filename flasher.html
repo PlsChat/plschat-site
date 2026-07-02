@@ -8,75 +8,91 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap');
-    * { box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: #0a0c1f; color: #c9d1d9; margin: 0; padding: 0; min-height: 100vh; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #0a0c1f; color: #c9d1d9; margin: 0; padding: 0; min-height: 100vh; }
 
     /* NAV */
     nav { background: rgba(10,12,31,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); position: sticky; top: 0; z-index: 50; }
-    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 72px; }
     .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .logo svg { flex-shrink: 0; }
-    .logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; background: linear-gradient(90deg, #a855f7, #67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .nav-links { display: flex; gap: 24px; align-items: center; font-size: 14px; }
-    .nav-links a { color: #8b949e; text-decoration: none; transition: color .2s; }
+    .logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; background: linear-gradient(90deg,#a855f7,#67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-links { display: flex; gap: 28px; align-items: center; font-size: 14px; font-weight: 500; }
+    .nav-links a { color: #8b949e; text-decoration: none; transition: color .15s; }
     .nav-links a:hover { color: #c9d1d9; }
-    .nav-btn { padding: 8px 18px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: #c9d1d9; text-decoration: none; font-size: 13px; font-weight: 600; }
+    .nav-links a.active { color: #22d3ee; }
+    .nav-cta { padding: 9px 20px; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #c9d1d9 !important; font-weight: 600 !important; font-size: 14px; display: flex; align-items: center; gap: 7px; }
+    .nav-cta:hover { background: rgba(255,255,255,0.06) !important; }
 
-    /* PAGE */
-    .page { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
-    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3); border-radius: 999px; font-size: 11px; font-weight: 700; color: #c084fc; letter-spacing: .5px; margin-bottom: 20px; }
-    h1 { font-family: 'Space Grotesk', sans-serif; font-size: 42px; font-weight: 600; letter-spacing: -1px; margin-bottom: 12px; }
-    .sub { color: #8b949e; font-size: 16px; line-height: 1.6; margin-bottom: 40px; }
-    .help-link { display: inline-flex; align-items: center; gap: 6px; color: #a855f7; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 32px; text-decoration: none; }
-    .help-link:hover { color: #c084fc; }
+    /* HERO */
+    .hero { max-width: 680px; margin: 0 auto; text-align: center; padding: 60px 24px 40px; }
+    .chip { display: inline-block; padding: 5px 16px; border: 1px solid rgba(255,255,255,0.15); border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 24px; }
+    .hero h1 { font-family: 'Space Grotesk', sans-serif; font-size: 52px; font-weight: 600; letter-spacing: -1.5px; color: #f0f6fc; margin: 0 0 16px; }
+    .hero p { font-size: 17px; color: #8b949e; line-height: 1.65; margin: 0 0 28px; }
+    .how-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border: 1.5px solid #22d3ee; border-radius: 999px; color: #22d3ee; font-size: 14px; font-weight: 600; cursor: pointer; background: transparent; transition: all .2s; }
+    .how-btn:hover { background: rgba(34,211,238,0.08); }
 
-    /* SECTIONS */
-    .section { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 28px; margin-bottom: 20px; }
-    .section-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
-    .section-sub { font-size: 13px; color: #8b949e; margin-bottom: 20px; }
+    /* CARDS */
+    .cards { max-width: 700px; margin: 0 auto; padding: 0 24px 80px; }
+    .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 32px; margin-bottom: 20px; }
+    .card-head { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .card-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .card-icon.purple { background: rgba(168,85,247,0.15); color: #a855f7; }
+    .card-icon.cyan   { background: rgba(34,211,238,0.12); color: #22d3ee; }
+    .card-title { font-size: 20px; font-weight: 700; color: #f0f6fc; margin: 0 0 4px; }
+    .card-sub   { font-size: 13px; color: #64748b; margin: 0; }
 
-    /* STATUS BOX */
-    .status-box { background: #0f1326; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; font-size: 13px; color: #8b949e; font-family: monospace; line-height: 1.6; min-height: 52px; }
-    .status-box.has-content { color: #c9d1d9; }
+    /* FLASH BUTTONS */
+    .flash-btn-wrap { display: block; margin-bottom: 12px; }
+    .flash-btn-wrap::part(button),
+    button.erase-btn,
+    button.flash-btn { width: 100%; padding: 16px; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: opacity .2s, transform .15s; }
+    button.erase-btn { background: linear-gradient(90deg,#a855f7,#ec4899); color: #fff; }
+    button.flash-btn { background: linear-gradient(90deg,#22d3ee,#06b6d4); color: #0f172a; }
+    button.erase-btn:hover, button.flash-btn:hover { opacity: .92; transform: translateY(-1px); }
+    .boot-note { text-align: center; font-size: 13px; color: #64748b; margin-top: 14px; }
+    .boot-note strong { color: #c9d1d9; }
 
-    /* LICENCE BOX */
-    .licence-box { display: none; margin-top: 16px; background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.25); border-radius: 12px; padding: 16px; }
-    .licence-key { font-family: monospace; font-size: 11px; word-break: break-all; background: #0f1326; padding: 10px; border-radius: 8px; color: #22c55e; margin: 10px 0; border: 1px solid rgba(34,197,94,0.2); line-height: 1.5; }
+    /* LICENCE SECTION */
+    .serial-btn { width: 100%; padding: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #c9d1d9; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 9px; transition: background .2s; margin-bottom: 12px; }
+    .serial-btn:hover { background: rgba(255,255,255,0.08); }
 
-    /* RECOVER BOX */
-    .recover-box { display: none; margin-top: 16px; background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.25); border-radius: 12px; padding: 16px; }
+    .status-box { background: #0f1326; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px 18px; font-size: 14px; color: #64748b; line-height: 1.6; }
 
-    /* BUTTONS */
-    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s; text-decoration: none; }
-    .btn-primary { background: linear-gradient(135deg, #a855f7, #3b82f6); color: #fff; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(168,85,247,0.35); }
-    .btn-secondary { background: rgba(255,255,255,0.06); color: #c9d1d9; border: 1px solid rgba(255,255,255,0.12); }
-    .btn-secondary:hover { background: rgba(255,255,255,0.1); }
-    .btn-success { background: linear-gradient(135deg, #16a34a, #22c55e); color: #fff; }
-    .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(34,197,94,0.3); }
-    .btn-recover { background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; }
-    .btn-recover:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,58,237,0.35); }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
-    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    /* Licence found box */
+    .lic-found-box { display: none; margin-top: 14px; background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.2); border-radius: 14px; padding: 18px; }
+    .lic-found-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: #22c55e; margin-bottom: 10px; }
+    .lic-key { font-family: monospace; font-size: 11px; word-break: break-all; background: #0a0c1f; border: 1px solid rgba(34,197,94,0.15); border-radius: 8px; padding: 10px; color: #22c55e; line-height: 1.5; margin-bottom: 12px; }
+    .send-lic-btn { width: 100%; padding: 13px; background: linear-gradient(90deg,#16a34a,#22c55e); border: none; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .send-lic-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .send-lic-btn:not(:disabled):hover { opacity: .9; }
 
-    /* ESP TOOL */
-    esp-web-install-button { display: block; margin-top: 8px; }
+    /* Recover box — only shown when no local licence */
+    .recover-box { display: none; margin-top: 14px; background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.2); border-radius: 14px; padding: 18px; }
+    .recover-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: #a855f7; margin-bottom: 6px; }
+    .recover-sub { font-size: 13px; color: #64748b; margin-bottom: 12px; }
+    .recover-btn { width: 100%; padding: 13px; background: linear-gradient(90deg,#7c3aed,#a855f7); border: none; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .recover-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .recover-btn:not(:disabled):hover { opacity: .9; }
+    .recover-status { font-size: 13px; margin-top: 10px; font-family: monospace; color: #64748b; }
 
-    /* DIVIDER */
-    .divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: #374151; font-size: 12px; }
-    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+    /* FOOTER LINK */
+    .footer-link { text-align: center; margin-top: 4px; }
+    .footer-link a { color: #a855f7; font-size: 15px; font-weight: 600; text-decoration: none; }
+    .footer-link a:hover { color: #c084fc; }
 
     /* MODAL */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
-    .modal-overlay.open { display: flex; }
-    .modal { background: #12152b; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 32px; max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto; }
-    .modal h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-    .modal p { color: #8b949e; font-size: 14px; margin-bottom: 0; }
-    .step { display: flex; gap: 14px; margin-top: 20px; align-items: flex-start; }
-    .step-num { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#a855f7,#3b82f6); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; color: #fff; }
-    .step-text { font-size: 14px; color: #c9d1d9; line-height: 1.5; padding-top: 3px; }
-    code { background: #0f1326; padding: 1px 6px; border-radius: 4px; font-family: monospace; font-size: 13px; color: #67e8f9; }
-    .modal-close { display: block; width: 100%; margin-top: 24px; padding: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #c9d1d9; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+    .modal-bg.open { display: flex; }
+    .modal { background: #12152b; border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 36px; max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+    .modal-sub { font-size: 14px; color: #64748b; margin-bottom: 24px; }
+    .step { display: flex; gap: 14px; margin-bottom: 18px; }
+    .step-n { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#a855f7,#3b82f6); color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .step p { font-size: 14px; color: #c9d1d9; line-height: 1.55; margin: 0; }
+    code { background: #0f1326; padding: 2px 7px; border-radius: 5px; font-family: monospace; font-size: 13px; color: #67e8f9; }
+    .modal-note { font-size: 13px; color: #64748b; margin-top: 16px; }
+    .modal-close { display: block; width: 100%; margin-top: 24px; padding: 13px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #c9d1d9; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .modal-close:hover { background: rgba(255,255,255,0.1); }
   </style>
 </head>
 <body>
@@ -84,9 +100,9 @@
 <nav>
   <div class="nav-inner">
     <a href="index.html" class="logo">
-      <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#3b82f6"/><stop offset="50%" stop-color="#c026d3"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs>
-        <path d="M50 5 L90 27.5 L90 72.5 L50 95 L10 72.5 L10 27.5 Z" fill="url(#g)" stroke="#fff" stroke-width="3"/>
+      <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#3b82f6"/><stop offset="50%" stop-color="#c026d3"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs>
+        <path d="M50 5 L90 27.5 L90 72.5 L50 95 L10 72.5 L10 27.5 Z" fill="url(#pg)" stroke="#fff" stroke-width="3"/>
         <polyline points="25,50 35,50 40,35 48,65 55,42 62,58 68,50 75,50" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       <span class="logo-text">PLSChat</span>
@@ -94,115 +110,121 @@
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="device-manager.html">Device Manager</a>
-      <a href="coverage-map.html">Coverage Map</a>
+      <a href="coverage-map.html" class="active">Coverage Map</a>
       <a href="monitor.html">Network Monitor</a>
-      <a href="device-manager.html" class="nav-btn"><i class="fa-solid fa-plug"></i> Device Manager</a>
+      <a href="device-manager.html" class="nav-cta"><i class="fa-solid fa-plug"></i> Device Manager</a>
     </div>
   </div>
 </nav>
 
-<div class="page">
-
-  <div class="chip"><i class="fa-solid fa-microchip"></i> HELTEC V4 RECOMMENDED</div>
+<div class="hero">
+  <div class="chip">HELTEC V4 RECOMMENDED</div>
   <h1>Web Flasher</h1>
-  <p class="sub">Flash PLSChat firmware directly from your browser to your Heltec V4 or compatible ESP32 LoRa board.</p>
+  <p>Flash PLSChat firmware directly from your browser to your Heltec V4 or compatible ESP32 LoRa board.</p>
+  <button class="how-btn" onclick="document.getElementById('how-modal').classList.add('open')">
+    <i class="fa-solid fa-key"></i> How to Log In to Your Device
+  </button>
+</div>
 
-  <a class="help-link" onclick="document.getElementById('help-modal').classList.add('open')">
-    <i class="fa-solid fa-circle-question"></i> How to Log In to Your Device
-  </a>
+<div class="cards">
 
-  <!-- FLASH SECTION -->
-  <div class="section">
-    <div class="section-title">Flash Firmware</div>
-    <div class="section-sub">Erase the device first for best results.</div>
-    <esp-web-install-button manifest="flasher/manifest.json">
-      <button slot="activate" class="btn btn-secondary">
-        <i class="fa-solid fa-trash"></i> Erase Device First (Recommended)
+  <!-- FLASH FIRMWARE -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon purple"><i class="fa-solid fa-microchip"></i></div>
+      <div>
+        <div class="card-title">Flash Firmware</div>
+        <div class="card-sub">Erase the device first for best results.</div>
+      </div>
+    </div>
+
+    <esp-web-install-button manifest="flasher/manifest.json" erase-first>
+      <button slot="activate" class="erase-btn" style="width:100%;padding:16px;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(90deg,#a855f7,#ec4899);color:#fff;margin-bottom:12px">
+        <i class="fa-solid fa-upload"></i> Erase Device First (Recommended)
       </button>
     </esp-web-install-button>
+
     <esp-web-install-button manifest="flasher/manifest.json">
-      <button slot="activate" class="btn btn-primary" style="margin-top:10px">
+      <button slot="activate" class="flash-btn" style="width:100%;padding:16px;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(90deg,#22d3ee,#06b6d4);color:#0f172a">
         <i class="fa-solid fa-bolt"></i> Flash PLSChat Firmware
       </button>
     </esp-web-install-button>
-    <p style="margin-top:14px;font-size:13px;color:#8b949e">Hold the <strong style="color:#c9d1d9">BOOT button</strong> on your Heltec V4 while clicking Connect.</p>
+
+    <p class="boot-note">Hold the <strong>BOOT button</strong> on your Heltec V4 while clicking Connect.</p>
   </div>
 
-  <!-- LICENCE SECTION -->
-  <div class="section">
-    <div class="section-title">Send Licence <span style="font-size:13px;font-weight:400;color:#8b949e">(Optional)</span></div>
-    <div class="section-sub">Connect your device to send or recover your PLSC licence key.</div>
+  <!-- SEND / RECOVER LICENCE -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon cyan"><i class="fa-solid fa-key"></i></div>
+      <div>
+        <div class="card-title">Send Licence <span style="font-size:14px;font-weight:500;color:#64748b">(Optional)</span></div>
+        <div class="card-sub">Connect your device to send a PLSC licence key.</div>
+      </div>
+    </div>
 
-    <div class="status-box" id="statusBox">Click "Connect Device" to begin (hold BOOT button on device).</div>
+    <button class="serial-btn" onclick="connectDevice()">
+      <i class="fa-solid fa-plug"></i> Connect Device via Serial
+    </button>
+
+    <div class="status-box" id="statusBox">
+      Click "Connect Device" to begin (hold BOOT button on device).
+    </div>
 
     <!-- Licence found in localStorage -->
-    <div class="licence-box" id="licenceBox">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <i class="fa-solid fa-circle-check" style="color:#22c55e"></i>
-        <strong style="color:#22c55e">Licence Found</strong>
-      </div>
-      <div class="licence-key" id="licenceContent"></div>
-      <button class="btn btn-success" id="sendBtn" onclick="sendLicence()" disabled>
+    <div class="lic-found-box" id="licFoundBox">
+      <div class="lic-found-title"><i class="fa-solid fa-circle-check"></i> Licence Found</div>
+      <div class="lic-key" id="licKeyDisplay"></div>
+      <button class="send-lic-btn" id="sendBtn" onclick="sendLicence()" disabled>
         <i class="fa-solid fa-paper-plane"></i> Send Licence to Device
       </button>
     </div>
 
-    <!-- Recover from server -->
+    <!-- Recover from server (shown when no localStorage licence) -->
     <div class="recover-box" id="recoverBox">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <i class="fa-solid fa-rotate" style="color:#a855f7"></i>
-        <strong style="color:#a855f7">Recover Licence from Server</strong>
-      </div>
-      <p style="font-size:13px;color:#8b949e;margin-bottom:12px">No local licence found for this device. We can look it up on the server using your MAC address.</p>
-      <button class="btn btn-recover" id="recoverBtn" onclick="recoverLicence()">
-        <i class="fa-solid fa-cloud-arrow-down"></i> Recover My Licence
+      <div class="recover-title"><i class="fa-solid fa-cloud-arrow-down"></i> Recover Your Licence</div>
+      <div class="recover-sub">No saved licence found for this device. Click below to retrieve it from the server using your MAC address — no email needed.</div>
+      <button class="recover-btn" id="recoverBtn" onclick="recoverLicence()">
+        <i class="fa-solid fa-rotate"></i> Recover My Licence from Server
       </button>
-      <div id="recoverStatus" style="font-size:13px;margin-top:10px;color:#8b949e;font-family:monospace"></div>
+      <div class="recover-status" id="recoverStatus"></div>
     </div>
 
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="connectDevice()">
-        <i class="fa-solid fa-plug"></i> Connect Device via Serial
-      </button>
-    </div>
   </div>
 
-  <a href="device-manager.html" class="btn btn-secondary" style="margin-top:8px">
-    Go to Device Manager <i class="fa-solid fa-arrow-right"></i>
-  </a>
+  <div class="footer-link">
+    <a href="device-manager.html">Go to Device Manager &rarr;</a>
+  </div>
 
 </div>
 
 <!-- HOW TO LOG IN MODAL -->
-<div class="modal-overlay" id="help-modal" onclick="if(event.target.id==='help-modal')this.classList.remove('open')">
-  <div class="modal" onclick="event.stopImmediatePropagation()">
-    <h3>Connecting to Your Device</h3>
-    <p>How to reach the chat interface hosted on your device.</p>
-    <div class="step"><div class="step-num">1</div><div class="step-text">Power on your PLSChat device and wait about 10 seconds for it to start broadcasting WiFi.</div></div>
-    <div class="step"><div class="step-num">2</div><div class="step-text">On your phone or laptop, connect to the WiFi network <code>PLSChat-XXXX</code>. Default password is <code>pls12345</code> — change it in Settings once logged in.</div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-text">Open a browser and go to <code>http://192.168.4.1</code></div></div>
-    <div class="step"><div class="step-num">4</div><div class="step-text">Enter your device PIN when prompted.</div></div>
-    <p style="margin-top:16px;font-size:13px;color:#64748b">Your phone may warn "No internet connection" — that's expected. The device works fully offline.</p>
-    <button class="modal-close" onclick="document.getElementById('help-modal').classList.remove('open')">Got it</button>
+<div class="modal-bg" id="how-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Connecting to Your Device</div>
+    <div class="modal-sub">How to reach the chat interface hosted on your device.</div>
+    <div class="step"><div class="step-n">1</div><p>Power on your PLSChat device and wait about 10 seconds for it to start broadcasting WiFi.</p></div>
+    <div class="step"><div class="step-n">2</div><p>On your phone or laptop, connect to the WiFi network <code>PLSChat-XXXX</code> (the last 4 characters come from your device's MAC — readable on the <a href="configure.html" style="color:#22d3ee">Configure Device</a> page). Default password is <code>pls12345</code> — for security, change both the WiFi and Bluetooth passwords before using the device in the field.</p></div>
+    <div class="step"><div class="step-n">3</div><p>Open a browser and go to <code>http://192.168.4.1</code></p></div>
+    <div class="step"><div class="step-n">4</div><p>Choose the device's web UI password when prompted — this is what you'll use to unlock the chat interface from now on.</p></div>
+    <p class="modal-note">Your phone or laptop may warn "No internet connection" while joined to this network — that's expected. The device works fully offline, so stay connected to it rather than switching back to your normal WiFi.</p>
+    <button class="modal-close" onclick="document.getElementById('how-modal').classList.remove('open')">Got it</button>
   </div>
 </div>
 
 <script>
   const WORKER = 'https://plschat-coverage-api.plschat.workers.dev';
   let serialPort = null;
-  let currentMAC   = '';
+  let currentMAC = '';
   let currentLicenceKey = '';
 
-  // ── Connect device, read MAC, check localStorage then server ──────────────
   async function connectDevice() {
-    const box = document.getElementById('statusBox');
-    setStatus('Connecting to device… hold the BOOT button now!', 'info');
-    hideAll();
-
+    setStatus('Connecting… hold the BOOT button now!');
+    hideExtras();
     try {
       serialPort = await navigator.serial.requestPort();
       await serialPort.open({ baudRate: 115200 });
-      setStatus('Connected! Reading device MAC…', 'info');
+      setStatus('Connected! Reading device MAC…');
 
       const reader = serialPort.readable.getReader();
       let buf = '';
@@ -217,25 +239,23 @@
           clearTimeout(timeout);
           reader.cancel();
           currentMAC = m[1].toUpperCase();
-          setStatus('Connected ✅  MAC: ' + currentMAC, 'success');
+          setStatus('✅ Connected — MAC: ' + currentMAC);
           checkLicence(currentMAC);
           break;
         }
         if (buf.includes('END_STATUS') && !buf.match(/MAC:/)) {
           clearTimeout(timeout);
           reader.cancel();
-          setStatus('Connected but could not read MAC. Try again.', 'error');
+          setStatus('Connected but could not read MAC. Try again.');
           break;
         }
       }
-    } catch(e) {
-      setStatus('Could not connect: ' + e.message, 'error');
+    } catch (e) {
+      setStatus('❌ ' + e.message);
     }
   }
 
-  // ── Check localStorage first, then offer server recovery ──────────────────
   function checkLicence(mac) {
-    // Check localStorage (saved at purchase time)
     let saved = null;
     try {
       const store = JSON.parse(localStorage.getItem('licenses') || '{}');
@@ -244,63 +264,45 @@
 
     if (saved) {
       currentLicenceKey = saved;
-      showLocalLicence(mac, saved);
+      document.getElementById('licKeyDisplay').innerHTML =
+        '<strong>MAC:</strong> ' + mac + '<br><strong>Key:</strong> ' + saved;
+      document.getElementById('licFoundBox').style.display = 'block';
+      document.getElementById('sendBtn').disabled = false;
     } else {
-      // Not in localStorage — offer server recovery
-      showRecoverBox();
+      // No local licence — offer server recovery
+      document.getElementById('recoverBox').style.display = 'block';
     }
   }
 
-  function showLocalLicence(mac, key) {
-    document.getElementById('licenceContent').innerHTML =
-      '<strong>MAC:</strong> ' + mac + '<br><strong>Key:</strong> ' + key;
-    document.getElementById('licenceBox').style.display = 'block';
-    document.getElementById('sendBtn').disabled = false;
-    currentLicenceKey = key;
-  }
-
-  function showRecoverBox() {
-    document.getElementById('recoverBox').style.display = 'block';
-  }
-
-  function hideAll() {
-    document.getElementById('licenceBox').style.display   = 'none';
-    document.getElementById('recoverBox').style.display   = 'none';
-    document.getElementById('recoverStatus').textContent  = '';
-    document.getElementById('sendBtn').disabled = true;
-    currentLicenceKey = '';
-  }
-
-  // ── Recover licence from Worker KV ───────────────────────────────────────
   async function recoverLicence() {
-    if (!currentMAC) { setStatus('Connect your device first.', 'error'); return; }
+    if (!currentMAC) { setStatus('Connect your device first.'); return; }
     const el  = document.getElementById('recoverStatus');
     const btn = document.getElementById('recoverBtn');
     btn.disabled = true;
-    el.style.color = '#8b949e';
+    el.style.color = '#64748b';
     el.textContent = 'Looking up licence on server…';
 
     try {
-      const res  = await fetch(`${WORKER}/licence/status/${encodeURIComponent(currentMAC)}`);
+      const res  = await fetch(WORKER + '/licence/status/' + encodeURIComponent(currentMAC));
       const data = await res.json();
 
       if (!data.valid) {
         el.style.color = '#f87171';
         el.textContent = data.reason === 'unlicensed'
-          ? '❌ No licence found for this device on the server.'
-          : '❌ Licence expired on server (' + data.reason + ').';
+          ? '❌ No licence found for this device.'
+          : '❌ Licence has expired.';
         btn.disabled = false;
         return;
       }
 
       if (!data.licence) {
         el.style.color = '#f87171';
-        el.textContent = '❌ Licence record found but key not stored. Contact support.';
+        el.textContent = '❌ Record found but key not stored — contact support.';
         btn.disabled = false;
         return;
       }
 
-      // Got it — save to localStorage and show send button
+      // Save to localStorage and show the send button
       currentLicenceKey = data.licence;
       try {
         const store = JSON.parse(localStorage.getItem('licenses') || '{}');
@@ -308,12 +310,15 @@
         localStorage.setItem('licenses', JSON.stringify(store));
       } catch(e) {}
 
-      const exp = new Date(data.expiry * 1000).toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
+      const exp = new Date(data.expiry * 1000).toLocaleDateString('en-GB',
+        { year:'numeric', month:'long', day:'numeric' });
       el.style.color = '#22c55e';
       el.textContent = '✅ Licence recovered! Tier: ' + data.tier + ' • Expires: ' + exp;
 
-      // Show the licence box so they can send it
-      showLocalLicence(currentMAC, data.licence);
+      document.getElementById('licKeyDisplay').innerHTML =
+        '<strong>MAC:</strong> ' + currentMAC + '<br><strong>Key:</strong> ' + data.licence;
+      document.getElementById('licFoundBox').style.display = 'block';
+      document.getElementById('sendBtn').disabled = false;
 
     } catch(e) {
       el.style.color = '#f87171';
@@ -322,20 +327,17 @@
     }
   }
 
-  // ── Send licence to device via serial ────────────────────────────────────
   async function sendLicence() {
     if (!serialPort || !currentLicenceKey) {
-      setStatus('Device not connected or no licence found.', 'error');
+      setStatus('Device not connected or no licence found.');
       return;
     }
-    setStatus('Sending licence to device…', 'info');
+    setStatus('Sending licence to device…');
     try {
       const writer = serialPort.writable.getWriter();
       await writer.write(new TextEncoder().encode('LICENSE:' + currentLicenceKey + '\n'));
       writer.releaseLock();
-      setStatus('Sent! Waiting for device response…', 'info');
-
-      // Read response
+      setStatus('Sent! Waiting for device response…');
       setTimeout(async () => {
         try {
           const reader = serialPort.readable.getReader();
@@ -347,29 +349,32 @@
             buf += new TextDecoder().decode(value);
             if (buf.includes('LICENCE_OK')) {
               clearTimeout(timeout); reader.cancel();
-              setStatus('✅ Device accepted the licence! LICENSED:YES', 'success');
+              setStatus('✅ Device accepted the licence! LICENSED:YES');
               break;
             }
             if (buf.includes('LICENCE_INVALID')) {
               clearTimeout(timeout); reader.cancel();
-              setStatus('❌ Device rejected the licence — MAC mismatch or expired.', 'error');
+              setStatus('❌ Device rejected the licence — MAC mismatch or expired.');
               break;
             }
           }
-        } catch(e) { setStatus('Could not read device response.', 'error'); }
+        } catch(e) { setStatus('Could not read device response.'); }
       }, 600);
-
     } catch(e) {
-      setStatus('Failed to send: ' + e.message, 'error');
+      setStatus('❌ Failed to send: ' + e.message);
     }
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
-  function setStatus(msg, type) {
-    const box = document.getElementById('statusBox');
-    box.textContent = msg;
-    box.className = 'status-box' + (msg ? ' has-content' : '');
-    box.style.color = type === 'success' ? '#22c55e' : type === 'error' ? '#f87171' : '#c9d1d9';
+  function setStatus(msg) {
+    document.getElementById('statusBox').textContent = msg;
+  }
+
+  function hideExtras() {
+    document.getElementById('licFoundBox').style.display   = 'none';
+    document.getElementById('recoverBox').style.display    = 'none';
+    document.getElementById('recoverStatus').textContent   = '';
+    document.getElementById('sendBtn').disabled = true;
+    currentLicenceKey = '';
   }
 </script>
 </body>
