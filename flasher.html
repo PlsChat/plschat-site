@@ -117,15 +117,44 @@
                 Click "Connect Device" to begin (hold BOOT button on device).
             </div>
 
+            <!-- Device status (shown after connect) -->
+            <div id="deviceStatusBox" class="hidden mt-4">
+                <div class="bg-zinc-950 border border-white/10 rounded-2xl p-5 text-sm">
+                    <div class="grid grid-cols-2 gap-y-2 text-left">
+                        <span class="text-zinc-500">MAC</span><span id="devMac" class="font-mono text-cyan-300 text-right"></span>
+                        <span class="text-zinc-500">Licence</span><span id="devLicensed" class="text-right"></span>
+                        <span class="text-zinc-500">Days left</span><span id="devDaysLeft" class="text-right text-zinc-300"></span>
+                        <span class="text-zinc-500">Clock sync</span><span id="devTimeSync" class="text-right text-zinc-300">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Licence found in browser storage -->
             <div id="licenseBox" class="hidden mt-4">
                 <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5">
                     <div class="text-emerald-400 font-semibold mb-2 flex items-center gap-x-2">
-                        <i class="fa-solid fa-check-circle"></i> <span>Licence Found</span>
+                        <i class="fa-solid fa-check-circle"></i> <span>Licence Found for This Device</span>
                     </div>
                     <div id="licenseContent" class="font-mono text-xs bg-black/40 p-3 rounded-xl text-left break-all"></div>
-                    <button onclick="sendLicense()" class="mt-4 w-full px-6 py-2.5 text-sm font-semibold bg-emerald-400 text-[#0a0c1f] rounded-2xl hover:bg-emerald-300 transition">
+                    <button id="sendLicBtn" onclick="sendLicense()" class="mt-4 w-full px-6 py-2.5 text-sm font-semibold bg-emerald-400 text-[#0a0c1f] rounded-2xl hover:bg-emerald-300 transition">
                         Send Licence to Device
                     </button>
+                    <div id="sendResult" class="mt-3 text-sm text-center"></div>
+                </div>
+            </div>
+
+            <!-- No stored licence: manual paste fallback -->
+            <div id="manualBox" class="hidden mt-4">
+                <div class="bg-zinc-950 border border-white/10 rounded-2xl p-5">
+                    <div class="text-zinc-300 font-semibold mb-2 flex items-center gap-x-2">
+                        <i class="fa-solid fa-keyboard text-violet-400"></i> <span>No Stored Licence — Paste One</span>
+                    </div>
+                    <p class="text-xs text-zinc-500 mb-3 text-left">No licence was found in this browser for the connected device. Paste your licence key below (format <code class="text-cyan-300">v1|MAC|expiry|tier|signature</code>), or <a href="buy.html" class="text-fuchsia-400 hover:underline">buy one here</a>.</p>
+                    <input id="manualLicence" type="text" placeholder="v1|AA:BB:CC:DD:EE:FF|…" class="w-full bg-black/40 border border-white/10 rounded-xl p-3 font-mono text-xs text-zinc-200">
+                    <button onclick="sendManualLicence()" class="mt-3 w-full px-6 py-2.5 text-sm font-semibold rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:brightness-105 transition">
+                        Send Pasted Licence to Device
+                    </button>
+                    <div id="manualResult" class="mt-3 text-sm text-center"></div>
                 </div>
             </div>
         </div>
@@ -176,7 +205,13 @@
 
     <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
     <script>
+        // ─── Serial state ──────────────────────────────────────────────────
+        // One persistent read loop feeds a shared buffer; waitFor() polls it.
+        // This avoids the reader-lock races of grab-and-release patterns.
         let serialPort = null;
+        let serialBuffer = '';
+        let readLoopRunning = false;
+        let deviceMac = '';
 
         function showEraseInstructions() {
             alert('How to Erase the Device (Important!)\n\n' +
@@ -187,27 +222,169 @@
                 'This fixes most flashing issues.');
         }
 
+        async function startReadLoop() {
+            if (readLoopRunning || !serialPort?.readable) return;
+            readLoopRunning = true;
+            const reader = serialPort.readable.getReader();
+            try {
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    serialBuffer += new TextDecoder().decode(value);
+                    if (serialBuffer.length > 20000) serialBuffer = serialBuffer.slice(-10000);
+                }
+            } catch (e) { /* port closed / unplugged */ }
+            finally { try { reader.releaseLock(); } catch {} readLoopRunning = false; }
+        }
+
+        // Wait until the buffer (from a given start offset) matches a regex
+        function waitFor(regex, timeoutMs, fromOffset = 0) {
+            return new Promise(resolve => {
+                const deadline = Date.now() + timeoutMs;
+                const tick = () => {
+                    const m = serialBuffer.slice(fromOffset).match(regex);
+                    if (m) return resolve(m);
+                    if (Date.now() > deadline) return resolve(null);
+                    setTimeout(tick, 150);
+                };
+                tick();
+            });
+        }
+
+        async function serialWrite(text) {
+            const writer = serialPort.writable.getWriter();
+            try { await writer.write(new TextEncoder().encode(text)); }
+            finally { writer.releaseLock(); }
+        }
+
+        function getStoredLicence(mac) {
+            try {
+                const store = JSON.parse(localStorage.getItem('licenses') || '{}');
+                return store[mac] || store[mac.toUpperCase()] || '';
+            } catch { return ''; }
+        }
+
+        // ─── Connect: open port → sync clock → request status → show licence ─
         async function connectDevice() {
             const box = document.getElementById('statusBox');
-            box.innerHTML = '🔄 Connecting... <br><span class="text-fuchsia-400">Hold the BOOT button on your Heltec V4!</span>';
+            box.innerHTML = '🔄 Connecting... <br><span class="text-fuchsia-400">Select the serial port for your Heltec V4</span>';
 
             try {
                 serialPort = await navigator.serial.requestPort();
                 await serialPort.open({ baudRate: 115200 });
-                box.innerHTML = `<span class="text-emerald-400 font-semibold">✅ Connected!</span><br>Looking for licence...`;
-                document.getElementById('licenseBox').classList.remove('hidden');
             } catch (err) {
-                box.innerHTML = `❌ Connection failed.<br>Hold BOOT button and try again.`;
+                box.innerHTML = '❌ Connection failed.<br>Unplug/replug the device and try again.';
+                return;
+            }
+
+            serialBuffer = '';
+            startReadLoop();
+            box.innerHTML = '<span class="text-emerald-400 font-semibold">✅ Connected!</span><br>Syncing clock and reading device status...';
+
+            // Sync the device clock (needed for accurate licence expiry handling)
+            let timeSynced = false;
+            try {
+                await serialWrite('TIME:' + Math.floor(Date.now() / 1000) + '\n');
+                timeSynced = !!(await waitFor(/TIME_OK/, 4000));
+            } catch {}
+
+            // Request a status dump (device also auto-prints every 10s as fallback)
+            const statusStart = serialBuffer.length;
+            try { await serialWrite('STATUS\n'); } catch {}
+            const macMatch = await waitFor(/MAC:([0-9A-Fa-f:]{17})/, 12000, statusStart);
+
+            if (!macMatch) {
+                box.innerHTML = '⚠️ Connected, but no status received.<br>Is PLSChat firmware flashed? Try the Flash card above first.';
+                return;
+            }
+
+            deviceMac = macMatch[1].toUpperCase();
+            const chunk    = serialBuffer.slice(statusStart);
+            const licensed = /LICENSED:YES/.test(chunk);
+            const daysLeft = (chunk.match(/DAYS_LEFT:([^\r\n]+)/) || [])[1] || '—';
+
+            // Populate device status card
+            document.getElementById('devMac').textContent      = deviceMac;
+            document.getElementById('devLicensed').innerHTML   = licensed
+                ? '<span class="text-emerald-400 font-semibold">✅ Licensed</span>'
+                : '<span class="text-amber-400">❌ Not licensed</span>';
+            document.getElementById('devDaysLeft').textContent = licensed ? daysLeft : '—';
+            document.getElementById('devTimeSync').innerHTML   = timeSynced
+                ? '<span class="text-emerald-400">✅ Synced</span>'
+                : '<span class="text-zinc-500">Not confirmed</span>';
+            document.getElementById('deviceStatusBox').classList.remove('hidden');
+
+            // Look for a licence saved by buy.html
+            const stored = getStoredLicence(deviceMac);
+            if (stored) {
+                document.getElementById('licenseContent').textContent = stored;
+                document.getElementById('licenseBox').classList.remove('hidden');
+                document.getElementById('manualBox').classList.add('hidden');
+                box.innerHTML = licensed
+                    ? '<span class="text-emerald-400">Device already licensed.</span><br>You can re-send the stored licence if needed.'
+                    : '<span class="text-emerald-400">Licence found in this browser.</span><br>Click "Send Licence to Device" below.';
+            } else {
+                document.getElementById('licenseBox').classList.add('hidden');
+                document.getElementById('manualBox').classList.remove('hidden');
+                box.innerHTML = licensed
+                    ? '<span class="text-emerald-400">Device is already licensed</span> — nothing more to do.'
+                    : 'Connected. No licence stored in this browser for <span class="font-mono text-cyan-300">' + deviceMac + '</span>.';
             }
         }
 
-        async function sendLicense() {
-            const box = document.getElementById('statusBox');
-            if (!serialPort) return;
-            box.innerHTML = '📤 Sending licence... (feature coming soon)';
+        // ─── Send licence (shared by stored + manual paths) ──────────────────
+        async function pushLicence(licence, resultEl) {
+            if (!serialPort) { resultEl.innerHTML = '<span class="text-red-400">Connect the device first.</span>'; return; }
+            licence = licence.trim();
+
+            // Basic sanity: v1|MAC|expiry|tier|128-hex-sig
+            const parts = licence.split('|');
+            if (parts.length !== 5 || parts[0] !== 'v1' || !/^[0-9a-fA-F]{128}$/.test(parts[4])) {
+                resultEl.innerHTML = '<span class="text-red-400">That doesn\'t look like a valid licence (expected v1|MAC|expiry|tier|signature).</span>';
+                return;
+            }
+            if (deviceMac && parts[1].toUpperCase() !== deviceMac) {
+                resultEl.innerHTML = '<span class="text-red-400">This licence is for ' + parts[1].toUpperCase() +
+                    ' but the connected device is ' + deviceMac + ' — the device will reject it.</span>';
+                return;
+            }
+
+            resultEl.innerHTML = '<span class="text-zinc-400">📤 Sending licence…</span>';
+            const offset = serialBuffer.length;
+            try {
+                await serialWrite('LICENSE:' + licence + '\n');
+            } catch (e) {
+                resultEl.innerHTML = '<span class="text-red-400">Serial write failed — reconnect and try again.</span>';
+                return;
+            }
+
+            const reply = await waitFor(/LICENCE_OK|LICENCE_INVALID/, 8000, offset);
+            if (reply && reply[0] === 'LICENCE_OK') {
+                resultEl.innerHTML = '<span class="text-emerald-400 font-semibold">🎉 Device accepted the licence!</span>';
+                // Refresh the status card
+                document.getElementById('devLicensed').innerHTML = '<span class="text-emerald-400 font-semibold">✅ Licensed</span>';
+                try {
+                    const o2 = serialBuffer.length;
+                    await serialWrite('STATUS\n');
+                    const d = await waitFor(/DAYS_LEFT:([^\r\n]+)/, 6000, o2);
+                    if (d) document.getElementById('devDaysLeft').textContent = d[1];
+                } catch {}
+            } else if (reply) {
+                resultEl.innerHTML = '<span class="text-red-400">❌ Device rejected the licence — MAC mismatch, expired, or bad signature.</span>';
+            } else {
+                resultEl.innerHTML = '<span class="text-amber-400">⚠️ No response from device — check it\'s running PLSChat firmware v2.47+ and try again.</span>';
+            }
         }
 
-        console.log('%c[PLSChat] Flasher page modernized.', 'color:#22c55e');
+        function sendLicense() {
+            pushLicence(document.getElementById('licenseContent').textContent,
+                        document.getElementById('sendResult'));
+        }
+
+        function sendManualLicence() {
+            pushLicence(document.getElementById('manualLicence').value,
+                        document.getElementById('manualResult'));
+        }
     </script>
 </body>
 </html>
