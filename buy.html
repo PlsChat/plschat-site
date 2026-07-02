@@ -132,6 +132,65 @@
     </div>
   </div>
 
+  <!-- About this licence (security explainer) -->
+  <details class="card" style="margin:18px 0;">
+    <summary style="cursor:pointer; list-style:none; display:flex; align-items:center; gap:10px; color:#67e8f9; font-weight:600; font-size:1.05em;">
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>About this licence — how it stays secure</span>
+      <i class="fa-solid fa-chevron-down" style="margin-left:auto; font-size:.85em; color:#94a3b8;"></i>
+    </summary>
+
+    <div style="margin-top:18px; color:#c9d1d9; font-size:.95em; line-height:1.65;">
+      <p style="margin:0 0 16px;">
+        Your licence is a short signed string in the form
+        <code style="background:#0f172a; padding:2px 6px; border-radius:6px; color:#67e8f9; font-size:.9em;">v1|MAC|expiry|tier|signature</code>.
+        The signature is created with an <strong>Ed25519 private key</strong> — the same
+        cryptography used to secure SSH and modern TLS — that lives only on our server and is
+        never shipped in any file, web page, or device firmware.
+      </p>
+
+      <div style="display:grid; grid-template-columns:36px 1fr; gap:12px 14px; align-items:start;">
+        <div style="color:#22c55e; font-size:1.2em; text-align:center;"><i class="fa-solid fa-lock"></i></div>
+        <div>
+          <strong>It can't be forged.</strong> Change a single character — the tier, the expiry,
+          anything — and the signature no longer matches, so your device and our server both
+          reject it. Making a valid licence requires the private key, which no one else has.
+        </div>
+
+        <div style="color:#22c55e; font-size:1.2em; text-align:center;"><i class="fa-solid fa-microchip"></i></div>
+        <div>
+          <strong>It's bound to your device.</strong> Each licence is tied to one device's MAC
+          address. Even if someone copies it, it simply won't activate on any other device —
+          the firmware checks the MAC before accepting it.
+        </div>
+
+        <div style="color:#22c55e; font-size:1.2em; text-align:center;"><i class="fa-solid fa-check-double"></i></div>
+        <div>
+          <strong>Your payment is verified on-chain.</strong> A licence is only issued after your
+          PLSC payment to the treasury is confirmed by two independent PulseChain nodes that must
+          agree, and each transaction can be used exactly once.
+        </div>
+
+        <div style="color:#67e8f9; font-size:1.2em; text-align:center;"><i class="fa-solid fa-user-shield"></i></div>
+        <div>
+          <strong>Your privacy is yours to keep.</strong> We never ask for your name or email.
+          If you'd like your payment unlinked from your identity, shield your PLSC through
+          <a href="https://libertyswap.finance" target="_blank" style="color:#c084fc;">LibertySwap</a> or
+          <a href="https://zkxwallet.com" target="_blank" style="color:#c084fc;">ZKX Wallet</a>
+          and pay from a fresh wallet.
+        </div>
+      </div>
+
+      <p style="margin:18px 0 0; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08); color:#94a3b8; font-size:.88em;">
+        <i class="fa-solid fa-circle-info" style="margin-right:6px;"></i>
+        PLSChat firmware is open source. Because you fully own your hardware, a technically
+        capable owner can always modify the code running on their own device — this is true of
+        any open device and is by design. It doesn't affect anyone else's licence or let anyone
+        create a valid licence they didn't pay for.
+      </p>
+    </div>
+  </details>
+
   <!-- Step 4: Pay -->
   <div class="card">
     <h3>④ Send Payment</h3>
