@@ -58,6 +58,10 @@
         .modal-content { background: var(--card); border-radius: 16px; padding: 28px; max-width: 520px; width: 90%; border: 1px solid #1f2439; }
         footer { margin-top: 40px; text-align: center; font-size: 12px; color: var(--text-muted); }
         .warning { background: #3f2a1f; border: 1px solid #eab308; color: #fcd34d; padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 20px; }
+        .pw-wrap { position: relative; }
+        .pw-wrap input { padding-right: 44px !important; }
+        .pw-eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 17px; color: #64748b; padding: 4px 6px; line-height: 1; }
+        .pw-eye:hover { color: #67e8f9; }
     </style>
 </head>
 <body>
@@ -65,12 +69,44 @@
     <!-- Login Gate -->
     <div id="login-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,12,31,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;">
         <div style="background:#12152b;border:1px solid #374151;border-radius:16px;padding:40px;width:100%;max-width:380px;text-align:center;">
-            <h2 style="margin-bottom:8px;color:#67e8f9;">Admin Access</h2>
-            <p style="color:#64748b;margin-bottom:24px;font-size:14px;">Enter password to access the remote monitor</p>
-            <input type="password" id="admin-password" placeholder="Password"
-                   style="width:100%;padding:14px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:10px;font-size:16px;margin-bottom:16px;">
-            <button onclick="checkAdminPassword()" class="btn" style="width:100%;padding:14px;font-size:16px;">Login</button>
-            <div id="login-error" style="color:#ef4444;margin-top:12px;font-size:13px;display:none;">Incorrect password</div>
+
+            <!-- Normal login form -->
+            <div id="login-form">
+                <h2 style="margin-bottom:8px;color:#67e8f9;">Admin Access</h2>
+                <p style="color:#64748b;margin-bottom:24px;font-size:14px;">Enter password to access the remote monitor</p>
+                <div class="pw-wrap" style="margin-bottom:16px;">
+                    <input type="password" id="admin-password" placeholder="Password"
+                           style="width:100%;padding:14px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:10px;font-size:16px;">
+                    <button type="button" class="pw-eye" onclick="togglePw('admin-password',this)" title="Show password">&#128065;</button>
+                </div>
+                <button onclick="checkAdminPassword()" id="login-btn" class="btn" style="width:100%;padding:14px;font-size:16px;">Login</button>
+                <div id="login-error" style="color:#ef4444;margin-top:12px;font-size:13px;display:none;">Incorrect password</div>
+                <div style="margin-top:18px;">
+                    <a href="#" onclick="forgotPassword();return false;" style="color:#67e8f9;font-size:13px;text-decoration:none;">Forgot password?</a>
+                </div>
+                <div id="forgot-status" style="margin-top:10px;font-size:12px;color:#64748b;display:none;"></div>
+            </div>
+
+            <!-- Password reset form (shown when arriving via emailed reset link) -->
+            <div id="reset-form" style="display:none;text-align:left;">
+                <h2 style="margin-bottom:8px;color:#67e8f9;text-align:center;">Reset Password</h2>
+                <p style="color:#64748b;margin-bottom:20px;font-size:14px;text-align:center;">Choose a new admin password</p>
+                <label style="font-size:13px;color:#8b949e;">New Password</label>
+                <div class="pw-wrap" style="margin:6px 0 14px;">
+                    <input type="password" id="reset-new"
+                           style="width:100%;padding:12px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
+                    <button type="button" class="pw-eye" onclick="togglePw('reset-new',this)" title="Show password">&#128065;</button>
+                </div>
+                <label style="font-size:13px;color:#8b949e;">Confirm New Password</label>
+                <div class="pw-wrap" style="margin:6px 0 18px;">
+                    <input type="password" id="reset-confirm"
+                           style="width:100%;padding:12px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
+                    <button type="button" class="pw-eye" onclick="togglePw('reset-confirm',this)" title="Show password">&#128065;</button>
+                </div>
+                <button onclick="submitPasswordReset()" class="btn" style="width:100%;padding:14px;font-size:16px;">Set New Password</button>
+                <div id="reset-error" style="color:#ef4444;margin-top:12px;font-size:13px;display:none;"></div>
+            </div>
+
         </div>
     </div>
 
@@ -80,15 +116,24 @@
             <h3 style="margin-bottom:20px;color:#67e8f9;">Change Admin Password</h3>
             <div class="form-group" style="margin-bottom:12px;">
                 <label>Current Password</label>
-                <input type="password" id="current-password" style="width:100%;padding:10px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
+                <div class="pw-wrap">
+                    <input type="password" id="current-password" style="width:100%;padding:10px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
+                    <button type="button" class="pw-eye" onclick="togglePw('current-password',this)" title="Show password">&#128065;</button>
+                </div>
             </div>
             <div class="form-group" style="margin-bottom:12px;">
                 <label>New Password</label>
-                <input type="password" id="new-password" style="width:100%;padding:10px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
+                <div class="pw-wrap">
+                    <input type="password" id="new-password" style="width:100%;padding:10px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
+                    <button type="button" class="pw-eye" onclick="togglePw('new-password',this)" title="Show password">&#128065;</button>
+                </div>
             </div>
             <div class="form-group" style="margin-bottom:20px;">
                 <label>Confirm New Password</label>
-                <input type="password" id="confirm-password" style="width:100%;padding:10px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
+                <div class="pw-wrap">
+                    <input type="password" id="confirm-password" style="width:100%;padding:10px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
+                    <button type="button" class="pw-eye" onclick="togglePw('confirm-password',this)" title="Show password">&#128065;</button>
+                </div>
             </div>
             <div style="display:flex;gap:12px;">
                 <button onclick="changeAdminPassword()" class="btn" style="flex:1;">Update Password</button>
@@ -190,8 +235,11 @@
             <div class="config-section" style="margin-bottom:16px;">
                 <div class="form-group">
                     <label>Worker Write Key (required to sign licences)</label>
-                    <input type="password" id="lic-write-key" placeholder="Your WRITE_KEY secret"
-                           style="width:100%;padding:10px;background:#0a0c1f;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
+                    <div class="pw-wrap">
+                        <input type="password" id="lic-write-key" placeholder="Your WRITE_KEY secret"
+                               style="width:100%;padding:10px;background:#0a0c1f;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
+                        <button type="button" class="pw-eye" onclick="togglePw('lic-write-key',this)" title="Show key">&#128065;</button>
+                    </div>
                 </div>
             </div>
 
@@ -267,6 +315,8 @@
 
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script>
+        const WORKER_URL = 'https://plschat-coverage-api.plschat.workers.dev';
+
         let client = null;
         let nodes = new Map();
         let demoInterval = null;
@@ -397,42 +447,138 @@
             document.getElementById('disconnect-btn').style.display = connected ? 'inline-flex' : 'none';
         }
 
-        // Admin password
-        function getAdminPassword() { return localStorage.getItem('adminPassword') || "plschat2026"; }
-        function checkAdminPassword() {
+        // ═══════════════════════════════════════════════════════════
+        //  ADMIN AUTH — verified server-side by the Worker.
+        //  Nothing is stored in localStorage/sessionStorage, so the
+        //  password is required on every visit, refresh, or return.
+        // ═══════════════════════════════════════════════════════════
+        let adminAuthed = false;   // in-memory only — wiped on refresh/close
+        let resetToken = null;
+
+        function togglePw(id, btn) {
+            const el = document.getElementById(id);
+            const show = el.type === 'password';
+            el.type = show ? 'text' : 'password';
+            btn.innerHTML = show ? '&#128584;' : '&#128065;';
+            btn.title = show ? 'Hide password' : 'Show password';
+        }
+
+        async function checkAdminPassword() {
             const input = document.getElementById('admin-password').value;
-            if (input === getAdminPassword()) {
-                document.getElementById('login-overlay').style.display = 'none';
-                sessionStorage.setItem('adminLoggedIn', 'true');
-            } else {
-                const e = document.getElementById('login-error');
-                e.style.display = 'block';
-                setTimeout(() => e.style.display='none', 2000);
+            const err = document.getElementById('login-error');
+            const btn = document.getElementById('login-btn');
+            err.style.display = 'none';
+            if (!input) return;
+            btn.disabled = true; btn.textContent = 'Checking...';
+            try {
+                const res = await fetch(WORKER_URL + '/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: input })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.ok) {
+                    adminAuthed = true;
+                    document.getElementById('admin-password').value = '';
+                    document.getElementById('login-overlay').style.display = 'none';
+                } else {
+                    err.textContent = data.error || 'Incorrect password';
+                    err.style.display = 'block';
+                    setTimeout(() => err.style.display = 'none', 3000);
+                }
+            } catch (e) {
+                err.textContent = 'Cannot reach server — check your connection';
+                err.style.display = 'block';
+            }
+            btn.disabled = false; btn.textContent = 'Login';
+        }
+
+        async function forgotPassword() {
+            const s = document.getElementById('forgot-status');
+            s.style.display = 'block';
+            s.style.color = '#64748b';
+            s.textContent = 'Sending reset link...';
+            try {
+                const res = await fetch(WORKER_URL + '/admin/password/reset-request', { method: 'POST' });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.ok) {
+                    s.style.color = '#22c55e';
+                    s.textContent = 'Reset link sent to plschat@proton.me — valid for 15 minutes.';
+                } else {
+                    s.style.color = '#ef4444';
+                    s.textContent = data.error || 'Could not send reset email.';
+                }
+            } catch (e) {
+                s.style.color = '#ef4444';
+                s.textContent = 'Cannot reach server.';
             }
         }
-        function checkExistingLogin() { if (sessionStorage.getItem('adminLoggedIn')==='true') document.getElementById('login-overlay').style.display='none'; }
-        function showChangePasswordModal() { document.getElementById('change-password-modal').style.display='flex'; }
-        function closeChangePasswordModal() { document.getElementById('change-password-modal').style.display='none'; }
-        function changeAdminPassword() {
+
+        async function submitPasswordReset() {
+            const np = document.getElementById('reset-new').value;
+            const cp = document.getElementById('reset-confirm').value;
+            const err = document.getElementById('reset-error');
+            err.style.display = 'none';
+            if (np.length < 6) { err.textContent = 'Password must be at least 6 characters'; err.style.display = 'block'; return; }
+            if (np !== cp) { err.textContent = 'Passwords do not match'; err.style.display = 'block'; return; }
+            try {
+                const res = await fetch(WORKER_URL + '/admin/password/reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: resetToken, password: np })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.ok) {
+                    alert('Password updated — please log in with your new password.');
+                    history.replaceState(null, '', location.pathname);
+                    resetToken = null;
+                    document.getElementById('reset-form').style.display = 'none';
+                    document.getElementById('login-form').style.display = 'block';
+                } else {
+                    err.textContent = data.error || 'Reset link invalid or expired — request a new one.';
+                    err.style.display = 'block';
+                }
+            } catch (e) {
+                err.textContent = 'Cannot reach server.';
+                err.style.display = 'block';
+            }
+        }
+
+        function showChangePasswordModal() { document.getElementById('change-password-modal').style.display = 'flex'; }
+        function closeChangePasswordModal() { document.getElementById('change-password-modal').style.display = 'none'; }
+
+        async function changeAdminPassword() {
             const current = document.getElementById('current-password').value;
             const newPass = document.getElementById('new-password').value;
             const confirm = document.getElementById('confirm-password').value;
             const err = document.getElementById('change-password-error');
-            err.style.display='none';
-            if (current !== getAdminPassword()) { err.textContent='Current password is incorrect'; err.style.display='block'; return; }
-            if (newPass.length < 6) { err.textContent='New password must be at least 6 characters'; err.style.display='block'; return; }
-            if (newPass !== confirm) { err.textContent='New passwords do not match'; err.style.display='block'; return; }
-            localStorage.setItem('adminPassword', newPass);
-            alert('Password changed successfully!');
-            closeChangePasswordModal();
-            sessionStorage.removeItem('adminLoggedIn');
-            location.reload();
+            err.style.display = 'none';
+            if (newPass.length < 6) { err.textContent = 'New password must be at least 6 characters'; err.style.display = 'block'; return; }
+            if (newPass !== confirm) { err.textContent = 'New passwords do not match'; err.style.display = 'block'; return; }
+            try {
+                const res = await fetch(WORKER_URL + '/admin/password/change', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ current: current, password: newPass })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.ok) {
+                    alert('Password changed successfully! Please log in again.');
+                    closeChangePasswordModal();
+                    location.reload();
+                } else {
+                    err.textContent = data.error || 'Could not change password.';
+                    err.style.display = 'block';
+                }
+            } catch (e) {
+                err.textContent = 'Cannot reach server.';
+                err.style.display = 'block';
+            }
         }
 
         // ═══════════════════════════════════════════════════════════
         //  LICENCE MANAGER
         // ═══════════════════════════════════════════════════════════
-        const WORKER_URL = 'https://plschat-coverage-api.plschat.workers.dev';
         let licTier = 'yearly';
         let licCurrentLicence = '';
         let licSerialPort = null;
@@ -578,7 +724,14 @@
         // ═══════════════════════════════════════════════════════════
 
         function init() {
-            checkExistingLogin();
+            // If we arrived from an emailed reset link, show the reset form instead of login
+            const params = new URLSearchParams(location.search);
+            if (params.get('reset')) {
+                resetToken = params.get('reset');
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('reset-form').style.display = 'block';
+            }
+
             document.getElementById('nodes-grid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#64748b;">Connect to MQTT or enable Demo Mode to see nodes.</div>`;
             document.getElementById('node-filter').addEventListener('keydown', function(e) { if(e.key==='Escape'){this.value='';renderNodes();} });
             document.getElementById('admin-password').addEventListener('keydown', function(e) { if(e.key==='Enter') checkAdminPassword(); });
