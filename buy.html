@@ -68,7 +68,8 @@
   <!-- Step 1: Connect wallet -->
   <div class="card">
     <h3>① Connect Wallet</h3>
-    <button class="btn-main" onclick="connectWallet()">🔗 Connect MetaMask</button>
+    <button class="btn-main" onclick="connectWallet()">🔗 Connect Wallet</button>
+    <div style="margin-top:8px;font-size:.85em;color:#64748b;">Works with ZKX Wallet, MetaMask, and any browser wallet — on PulseChain.</div>
     <div id="walletInfo" style="margin-top:10px;color:#94a3b8;">Not connected</div>
   </div>
 
@@ -158,16 +159,93 @@
   let txHash    = '';
   let polling   = false;
 
-  // ─── Wallet ─────────────────────────────────────────────────────────────────
+  // ─── Wallet (EIP-6963 multi-wallet discovery) ───────────────────────────────
+  // Supports MetaMask, ZKX Wallet, and any injected EIP-1193 wallet.
+  // When several are installed, the buyer picks — no window.ethereum fights.
+  const PULSECHAIN_ID = '0x171'; // 369
+  let provider = null;
+  const discovered = [];
+
+  window.addEventListener('eip6963:announceProvider', e => {
+    if (!discovered.some(d => d.info.uuid === e.detail.info.uuid)) discovered.push(e.detail);
+  });
+  window.dispatchEvent(new Event('eip6963:requestProvider'));
+
+  function walletError(e) {
+    if (!e) return 'Unknown wallet error';
+    if (e.code === 4001)   return 'Request rejected in the wallet popup.';
+    if (e.code === -32002) return 'A connection request is already open in your wallet — ' +
+      'look for its popup (it may be hiding behind this window) or click the extension icon, ' +
+      'approve or dismiss it, then try again.';
+    return e.message || String(e);
+  }
+
   async function connectWallet() {
-    try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      wallet = accounts[0];
-      document.getElementById('walletInfo').innerHTML =
-        `✅ <span style="color:#22c55e;">${wallet.slice(0,10)}…${wallet.slice(-6)}</span>`;
-    } catch (e) {
-      document.getElementById('walletInfo').innerHTML = '<span style="color:#f87171;">Connection cancelled</span>';
+    const info = document.getElementById('walletInfo');
+    // Re-request announcements — some wallets announce late
+    window.dispatchEvent(new Event('eip6963:requestProvider'));
+    await new Promise(r => setTimeout(r, 200));
+
+    if (discovered.length === 0 && !window.ethereum) {
+      info.innerHTML = '<span class="error">No wallet extension found in this browser. Install ' +
+        '<a href="https://zkxwallet.com" target="_blank" style="color:#c084fc;">ZKX Wallet</a> or ' +
+        '<a href="https://metamask.io" target="_blank" style="color:#c084fc;">MetaMask</a>, then reload this page.</span>';
+      return;
     }
+
+    if (discovered.length > 1) {
+      info.innerHTML = 'Multiple wallets found — choose one:<br>' + discovered.map((d, i) =>
+        `<button class="btn-sm" style="margin:8px 8px 0 0;" onclick="pickWallet(${i})">${d.info.name}</button>`
+      ).join('');
+      return;
+    }
+
+    provider = discovered[0]?.provider || window.ethereum;
+    await finishConnect(discovered[0]?.info?.name || 'Wallet');
+  }
+
+  async function pickWallet(i) {
+    provider = discovered[i].provider;
+    await finishConnect(discovered[i].info.name);
+  }
+
+  async function finishConnect(name) {
+    const info = document.getElementById('walletInfo');
+    info.textContent = '⏳ Waiting for ' + name + ' — check its popup…';
+    try {
+      const accounts = await provider.request({ method: 'eth_requestAccounts' });
+      wallet = accounts[0];
+      const onPulse = await ensurePulseChain();
+      info.innerHTML = `✅ <span style="color:#22c55e;">${name}: ${wallet.slice(0,10)}…${wallet.slice(-6)}</span>` +
+        (onPulse ? ' <span style="color:#22c55e;">• PulseChain</span>'
+                 : ' <span class="error">• could not switch to PulseChain — switch manually in the wallet</span>');
+    } catch (e) {
+      info.innerHTML = `<span class="error">${walletError(e)}</span>`;
+    }
+  }
+
+  // Make sure the wallet is on PulseChain (369); switch or add it if not.
+  async function ensurePulseChain() {
+    try {
+      const id = await provider.request({ method: 'eth_chainId' });
+      if (id === PULSECHAIN_ID) return true;
+      try {
+        await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: PULSECHAIN_ID }] });
+        return true;
+      } catch (sw) {
+        if (sw.code === 4902) { // chain not added to this wallet yet
+          await provider.request({ method: 'wallet_addEthereumChain', params: [{
+            chainId: PULSECHAIN_ID,
+            chainName: 'PulseChain',
+            nativeCurrency: { name: 'Pulse', symbol: 'PLS', decimals: 18 },
+            rpcUrls: ['https://rpc.pulsechain.com'],
+            blockExplorerUrls: ['https://scan.pulsechain.com'],
+          }]});
+          return true;
+        }
+        throw sw;
+      }
+    } catch { return false; }
   }
 
   // ─── Device detection ───────────────────────────────────────────────────────
@@ -208,8 +286,15 @@
 
   // ─── Payment ────────────────────────────────────────────────────────────────
   async function sendPayment() {
-    if (!wallet)     return alert('Connect your wallet first.');
-    if (!deviceMac)  return alert('Detect your device first.');
+    if (!wallet || !provider) return alert('Connect your wallet first.');
+    if (!deviceMac)           return alert('Detect your device first.');
+
+    // Re-check the chain at payment time — the user may have switched networks
+    if (!(await ensurePulseChain())) {
+      document.getElementById('payStatus').innerHTML =
+        '<span class="error">❌ Wallet is not on PulseChain. Switch network in the wallet and try again.</span>';
+      return;
+    }
 
     const amount  = PLSC_AMOUNT[tier];
     const amtWei  = (BigInt(amount) * 10n ** 18n).toString(16);
@@ -221,7 +306,7 @@
     document.getElementById('payStatus').textContent = `Sending ${amount} PLSC to treasury…`;
 
     try {
-      txHash = await window.ethereum.request({
+      txHash = await provider.request({
         method: 'eth_sendTransaction',
         params: [{ from: wallet, to: PLSC_CONTRACT, data, gas: '0x15F90' }],
       });
@@ -232,7 +317,7 @@
       // Start auto-verification immediately — do NOT wait for the user
       startAutoVerify();
     } catch (e) {
-      document.getElementById('payStatus').innerHTML = `<span class="error">❌ ${e.message}</span>`;
+      document.getElementById('payStatus').innerHTML = `<span class="error">❌ ${walletError(e)}</span>`;
     }
   }
 
