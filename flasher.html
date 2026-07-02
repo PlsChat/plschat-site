@@ -365,6 +365,34 @@
     }
   }
 
+  // ── Patch esp-web-tools "Next" → "Close" after installation complete ─────
+  function patchInstallButtons() {
+    document.querySelectorAll('esp-web-install-button').forEach(el => {
+      if (!el.shadowRoot || el._patched) return;
+      el._patched = true;
+      new MutationObserver(() => {
+        const shadow = el.shadowRoot;
+        if (!shadow) return;
+        if (!(shadow.textContent || '').includes('Installation complete')) return;
+        shadow.querySelectorAll('button, mwc-button').forEach(btn => {
+          if ((btn.textContent || '').trim() === 'Next' && !btn._replaced) {
+            btn._replaced = true;
+            btn.textContent = 'Close';
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const dialog = shadow.querySelector('dialog');
+              if (dialog && dialog.open) { dialog.close(); return; }
+              shadow.querySelectorAll('[role="dialog"],[class*="dialog"],[class*="overlay"]')
+                .forEach(d => { d.style.display = 'none'; });
+            });
+          }
+        });
+      }).observe(el.shadowRoot, { childList: true, subtree: true, characterData: true });
+    });
+  }
+  document.addEventListener('DOMContentLoaded', patchInstallButtons);
+  setTimeout(patchInstallButtons, 1500);
+
   function setStatus(msg) {
     document.getElementById('statusBox').textContent = msg;
   }
