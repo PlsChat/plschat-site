@@ -1,6 +1,6 @@
 {
   "name": "PLSChat Firmware",
-  "version": "2.48",
+  "version": "2.49",
   "new_install_prompt_erase": true,
   "reset-on-install": true,
   "builds": [
