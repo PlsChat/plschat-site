@@ -4,348 +4,269 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PLSChat — Buy Licence</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap');
-    .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
-    .nav-link { transition: color 0.1s ease; }
-    .nav-link:hover { color: #c026d3; }
-    * { box-sizing: border-box; }
-    body { font-family:'Inter',sans-serif; background:#0a0c1f; color:#c9d1d9; margin:0; padding:40px 20px; min-height:100vh; }
-    #mesh-bg { position:fixed; top:0;left:0;right:0;bottom:0; z-index:-1; }
-    .wrap { max-width:760px; margin:0 auto; position:relative; z-index:2; }
-    h1 { font-size:2.8em; background:linear-gradient(90deg,#a855f7,#67e8f9); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:6px; }
-    .sub { color:#94a3b8; font-size:1.1em; margin-bottom:28px; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #0a0c1f; color: #c9d1d9; margin: 0; padding: 0; min-height: 100vh; }
 
-    .card { background:#1e2937; border-radius:16px; padding:24px; margin:18px 0; }
-    .card h3 { margin:0 0 14px; color:#67e8f9; font-size:1.05em; }
+    /* NAV */
+    nav { background: rgba(10,12,31,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); position: sticky; top: 0; z-index: 50; }
+    .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 72px; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; background: linear-gradient(90deg,#a855f7,#67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-links { display: flex; gap: 28px; align-items: center; font-size: 14px; font-weight: 500; }
+    .nav-links a { color: #8b949e; text-decoration: none; transition: color .15s; }
+    .nav-links a:hover { color: #c9d1d9; }
+    .nav-cta { padding: 9px 20px; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #c9d1d9 !important; font-weight: 600 !important; display: flex; align-items: center; gap: 7px; }
 
-    button { padding:14px 28px; font-size:1em; font-weight:600; border:none; border-radius:10px; cursor:pointer; transition:all .2s; }
-    .btn-main { background:linear-gradient(135deg,#a855f7,#3b82f6); color:#fff; }
-    .btn-main:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(168,85,247,.4); }
-    .btn-sm   { padding:8px 18px; font-size:.9em; background:#334155; color:#67e8f9; border-radius:8px; }
+    /* PAGE */
+    .page { max-width: 680px; margin: 0 auto; padding: 48px 24px 80px; }
+    .chip { display: inline-block; padding: 5px 16px; border: 1px solid rgba(255,255,255,0.15); border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 20px; }
+    h1 { font-family: 'Space Grotesk', sans-serif; font-size: 44px; font-weight: 600; letter-spacing: -1px; color: #f0f6fc; margin: 0 0 10px; }
+    .sub { font-size: 15px; color: #64748b; margin: 0 0 32px; }
 
-    select, input[type=text] {
-      width:100%; padding:12px; margin:8px 0; background:#0f172a;
-      border:1px solid #334155; border-radius:8px; color:#fff; font-size:1em;
-    }
-    .tier-row { display:flex; gap:12px; flex-wrap:wrap; margin:10px 0; }
-    .tier-btn { flex:1; min-width:160px; padding:16px; background:#0f172a;
-      border:2px solid #334155; border-radius:12px; cursor:pointer; text-align:center; transition:.2s; }
-    .tier-btn.selected { border-color:#22d3ee; background:rgba(34,211,238,.08); }
-    .tier-btn .price { font-size:1.3em; font-weight:700; color:#67e8f9; }
-    .tier-btn .label { font-size:.85em; color:#94a3b8; }
+    /* PRIVACY TIP */
+    .privacy-tip { background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.25); border-radius: 14px; padding: 14px 18px; font-size: 13px; color: #c9d1d9; line-height: 1.6; margin-bottom: 28px; }
+    .privacy-tip a { color: #a855f7; text-decoration: none; font-weight: 600; }
+    .privacy-tip a:hover { color: #c084fc; }
 
-    .privacy-note { background:rgba(168,85,247,.1); border:1px solid #a855f7;
-      border-radius:12px; padding:16px; margin:18px 0; font-size:.95em; }
-    .privacy-note a { color:#c084fc; }
+    /* STEP CARDS */
+    .step-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 28px; margin-bottom: 16px; transition: border-color .2s; }
+    .step-card.active { border-color: rgba(168,85,247,0.3); }
+    .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .step-num { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg,#a855f7,#3b82f6); color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .step-title { font-size: 18px; font-weight: 700; color: #f0f6fc; }
 
-    .status { font-family:monospace; white-space:pre-wrap; font-size:.9em; color:#94a3b8; }
-    .success { color:#22c55e; }
-    .error   { color:#f87171; }
-    .lic-box { background:#0f172a; border:1px solid #22c55e; border-radius:10px;
-      padding:14px; font-family:monospace; font-size:.8em; word-break:break-all;
-      color:#22c55e; margin:12px 0; }
+    /* BUTTONS */
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s; font-family: inherit; }
+    .btn-primary { background: linear-gradient(135deg,#a855f7,#3b82f6); color: #fff; width: 100%; justify-content: center; padding: 14px; font-size: 15px; }
+    .btn-primary:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(168,85,247,0.3); }
+    .btn-outline { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); color: #c9d1d9; width: 100%; justify-content: center; padding: 13px; }
+    .btn-outline:hover:not(:disabled) { background: rgba(255,255,255,0.08); }
+    .btn-success { background: linear-gradient(135deg,#16a34a,#22c55e); color: #fff; width: 100%; justify-content: center; padding: 14px; font-size: 15px; }
+    .btn:disabled { opacity: .35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+    .btn-gap { margin-top: 10px; }
 
-    .step { display:flex; align-items:center; gap:12px; margin:10px 0; color:#94a3b8; font-size:.95em; }
-    .step .num { width:28px;height:28px;border-radius:50%;background:#334155;
-      display:flex;align-items:center;justify-content:center;font-weight:700;color:#67e8f9;flex-shrink:0; }
+    /* STATUS CHIPS */
+    .status-line { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-top: 10px; min-height: 22px; }
+    .dot-ok  { color: #22c55e; }
+    .dot-err { color: #f87171; }
+    .dot-inf { color: #94a3b8; }
+    .lic-ok  { color: #22c55e; font-weight: 600; }
+    .lic-no  { color: #f87171; }
+
+    /* TIER PICKER */
+    /* yearly-only tier — no grid needed */
+
+    /* TX HASH INPUT */
+    .tx-box { display: none; margin-top: 14px; }
+    .tx-label { font-size: 12px; color: #64748b; margin-bottom: 6px; }
+    .tx-input { width: 100%; padding: 11px 14px; background: #0f1326; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #c9d1d9; font-size: 13px; font-family: monospace; }
+
+    /* SUCCESS BOX */
+    .success-box { display: none; background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.2); border-radius: 16px; padding: 24px; margin-top: 16px; }
+    .success-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: #22c55e; margin-bottom: 16px; }
+    .success-row { display: flex; justify-content: space-between; font-size: 14px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .success-row:last-of-type { border: none; }
+    .success-row span:first-child { color: #64748b; }
+    .success-row span:last-child { font-weight: 600; color: #f0f6fc; }
+    .lic-string { font-family: monospace; font-size: 10px; word-break: break-all; background: #0a0c1f; border: 1px solid rgba(34,197,94,0.15); border-radius: 8px; padding: 10px; color: #22c55e; line-height: 1.5; margin: 12px 0; }
+    .saved-note { font-size: 12px; color: #64748b; text-align: center; margin: 8px 0 14px; }
+
+    /* ACCORDION */
+    .accordion { margin-top: 28px; }
+    .acc-btn { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 14px; font-weight: 600; color: #c9d1d9; font-family: inherit; }
+    .acc-btn:hover { background: rgba(255,255,255,0.06); }
+    .acc-body { display: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-top: none; border-radius: 0 0 14px 14px; padding: 20px; font-size: 13px; color: #94a3b8; line-height: 1.7; }
+    .acc-body p { margin: 0 0 12px; }
+    .acc-body p:last-child { margin: 0; }
+    .acc-body strong { color: #c9d1d9; }
+    .acc-body code { background: #0f1326; padding: 1px 6px; border-radius: 4px; font-family: monospace; color: #67e8f9; font-size: 12px; }
+    .acc-body a { color: #a855f7; text-decoration: none; }
+    .acc-open .acc-btn { border-radius: 14px 14px 0 0; }
+
+    /* Treasury */
+    .treasury { font-family: monospace; font-size: 12px; color: #64748b; background: #0f1326; padding: 8px 12px; border-radius: 8px; margin: 10px 0 16px; word-break: break-all; }
   </style>
 </head>
-<body style="padding:0;">
-    <!-- Navbar -->
-    <nav class="border-b border-white/10 bg-[#0a0c1f]/95 backdrop-blur-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="flex items-center justify-between h-20">
-                <div class="flex items-center gap-x-3">
-                    <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
-                        <defs>
-                            <linearGradient id="plsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#3b82f6"/>
-                                <stop offset="50%" stop-color="#c026d3"/>
-                                <stop offset="100%" stop-color="#ec4899"/>
-                            </defs>
-                            <path d="M50 5 L90 27.5 L90 72.5 L50 95 L10 72.5 L10 27.5 Z" fill="url(#plsGrad)" stroke="#fff" stroke-width="3"/>
-                            <polyline points="25,50 35,50 40,35 48,65 55,42 62,58 68,50 75,50" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <div><span class="font-display text-3xl font-semibold tracking-tighter">PLSChat</span></div>
-                    </div>
+<body>
 
-                <div class="hidden md:flex items-center gap-x-8 text-sm font-medium">
-                    <a href="index.html" class="nav-link text-zinc-400 hover:text-white">Home</a>
-                    <a href="device-manager.html" class="nav-link text-zinc-400 hover:text-white">Device Manager</a>
-                    <a href="coverage-map.html" class="nav-link text-emerald-400 hover:text-emerald-300 font-medium">Coverage Map</a>
-                    <a href="monitor.html" class="nav-link text-zinc-400 hover:text-white">Network Monitor</a>
-                </div>
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#3b82f6"/><stop offset="50%" stop-color="#c026d3"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs>
+        <path d="M50 5 L90 27.5 L90 72.5 L50 95 L10 72.5 L10 27.5 Z" fill="url(#pg)" stroke="#fff" stroke-width="3"/>
+        <polyline points="25,50 35,50 40,35 48,65 55,42 62,58 68,50 75,50" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="logo-text">PLSChat</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="device-manager.html">Device Manager</a>
+      <a href="coverage-map.html">Coverage Map</a>
+      <a href="monitor.html">Network Monitor</a>
+      <a href="device-manager.html" class="nav-cta"><i class="fa-solid fa-plug"></i> Device Manager</a>
+    </div>
+  </div>
+</nav>
 
-                <div class="flex items-center gap-x-3">
-                    <a href="device-manager.html" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/20 hover:bg-white/5 transition-colors">
-                        <i class="fa-solid fa-plug mr-2"></i><span>Device Manager</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
-<canvas id="mesh-bg"></canvas>
-<div class="wrap" style="padding:40px 20px;">
+<div class="page">
+  <div class="chip">PULSECHAIN • ED25519 SIGNED</div>
   <h1>Buy Licence</h1>
-  <p class="sub">Signed server-side • Bound to your device MAC</p>
+  <p class="sub">Signed server-side • Permanently bound to your device MAC • No account needed</p>
 
-  <!-- Privacy note -->
-  <div class="privacy-note">
-    🛡️ <strong>Want to pay privately?</strong>
-    Get PLSC via <a href="https://libertyswap.finance" target="_blank">LibertySwap</a> or
-    <a href="https://zkxwallet.com" target="_blank">ZKX Wallet</a> to shield your funds first,
-    then unshield to a fresh wallet and pay from there. No KYC. No link to your identity.
+  <div class="privacy-tip">
+    <i class="fa-solid fa-shield-halved" style="color:#a855f7;margin-right:6px"></i>
+    <strong>Want to pay privately?</strong> Get PLSC via <a href="https://libertyswap.finance" target="_blank">LibertySwap</a> or <a href="https://zkxwallet.com" target="_blank">ZKX Wallet</a> to shield your funds first, then unshield to a fresh wallet and pay from there. No KYC. No link to your identity.
   </div>
 
-  <!-- Step 1: Connect wallet -->
-  <div class="card">
-    <h3>① Connect Wallet</h3>
-    <button class="btn-main" onclick="connectWallet()">🔗 Connect Wallet</button>
-    <div style="margin-top:8px;font-size:.85em;color:#64748b;">Works with ZKX Wallet, MetaMask, and any browser wallet — on PulseChain.</div>
-    <div id="walletInfo" style="margin-top:10px;color:#94a3b8;">Not connected</div>
-  </div>
-
-  <!-- Step 2: Detect device -->
-  <div class="card">
-    <h3>② Detect Your Device</h3>
-    <button class="btn-main" onclick="detectDevice()">🔌 Connect via USB</button>
-    <div id="deviceInfo" style="margin-top:10px;color:#94a3b8;">No device detected</div>
-  </div>
-
-  <!-- Step 3: Choose tier -->
-  <div class="card">
-    <h3>③ Choose Licence Type</h3>
-    <div class="tier-row">
-      <div class="tier-btn selected" id="btnYearly" onclick="selectTier('yearly')">
-        <div class="price">20 PLSC</div>
-        <div class="label">Yearly</div>
-        <div style="font-size:.8em;color:#64748b;margin-top:4px;">~£15 equivalent</div>
-      </div>
-      <div class="tier-btn" id="btnLifetime" onclick="selectTier('lifetime')">
-        <div class="price">100 PLSC</div>
-        <div class="label">Lifetime (10 years)</div>
-        <div style="font-size:.8em;color:#64748b;margin-top:4px;">~£75 equivalent</div>
-      </div>
+  <!-- ① Connect Wallet -->
+  <div class="step-card active" id="card-wallet">
+    <div class="step-head">
+      <div class="step-num">1</div>
+      <div class="step-title">Connect Wallet</div>
     </div>
-  </div>
-
-  <!-- About this licence (security explainer) -->
-  <details class="card" style="margin:18px 0;">
-    <summary style="cursor:pointer; list-style:none; display:flex; align-items:center; gap:10px; color:#67e8f9; font-weight:600; font-size:1.05em;">
-      <i class="fa-solid fa-shield-halved"></i>
-      <span>About this licence — how it stays secure</span>
-      <i class="fa-solid fa-chevron-down" style="margin-left:auto; font-size:.85em; color:#94a3b8;"></i>
-    </summary>
-
-    <div style="margin-top:18px; color:#c9d1d9; font-size:.95em; line-height:1.65;">
-      <p style="margin:0 0 16px;">
-        Your licence is a short signed string in the form
-        <code style="background:#0f172a; padding:2px 6px; border-radius:6px; color:#67e8f9; font-size:.9em;">v1|MAC|expiry|tier|signature</code>.
-        The signature is created with an <strong>Ed25519 private key</strong> — the same
-        cryptography used to secure SSH and modern TLS — that lives only on our server and is
-        never shipped in any file, web page, or device firmware.
-      </p>
-
-      <div style="display:grid; grid-template-columns:36px 1fr; gap:12px 14px; align-items:start;">
-        <div style="color:#22c55e; font-size:1.2em; text-align:center;"><i class="fa-solid fa-lock"></i></div>
-        <div>
-          <strong>It can't be forged.</strong> Change a single character — the tier, the expiry,
-          anything — and the signature no longer matches, so your device and our server both
-          reject it. Making a valid licence requires the private key, which no one else has.
-        </div>
-
-        <div style="color:#22c55e; font-size:1.2em; text-align:center;"><i class="fa-solid fa-microchip"></i></div>
-        <div>
-          <strong>It's bound to your device.</strong> Each licence is tied to one device's MAC
-          address. Even if someone copies it, it simply won't activate on any other device —
-          the firmware checks the MAC before accepting it.
-        </div>
-
-        <div style="color:#22c55e; font-size:1.2em; text-align:center;"><i class="fa-solid fa-check-double"></i></div>
-        <div>
-          <strong>Your payment is verified on-chain.</strong> A licence is only issued after your
-          PLSC payment to the treasury is confirmed by two independent PulseChain nodes that must
-          agree, and each transaction can be used exactly once.
-        </div>
-
-        <div style="color:#67e8f9; font-size:1.2em; text-align:center;"><i class="fa-solid fa-user-shield"></i></div>
-        <div>
-          <strong>Your privacy is yours to keep.</strong> We never ask for your name or email.
-          If you'd like your payment unlinked from your identity, shield your PLSC through
-          <a href="https://libertyswap.finance" target="_blank" style="color:#c084fc;">LibertySwap</a> or
-          <a href="https://zkxwallet.com" target="_blank" style="color:#c084fc;">ZKX Wallet</a>
-          and pay from a fresh wallet.
-        </div>
-      </div>
-
-      <p style="margin:18px 0 0; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08); color:#94a3b8; font-size:.88em;">
-        <i class="fa-solid fa-circle-info" style="margin-right:6px;"></i>
-        PLSChat firmware is open source. Because you fully own your hardware, a technically
-        capable owner can always modify the code running on their own device — this is true of
-        any open device and is by design. It doesn't affect anyone else's licence or let anyone
-        create a valid licence they didn't pay for.
-      </p>
-    </div>
-  </details>
-
-  <!-- Step 4: Pay -->
-  <div class="card">
-    <h3>④ Send Payment</h3>
-    <p style="color:#94a3b8;font-size:.95em;margin:0 0 12px;">
-      Payment must be in <strong>PLSC</strong> sent directly to the PLSChat treasury.
-      Use LibertySwap/ZKX for privacy before paying.
-    </p>
-    <div style="background:#0f172a;border-radius:8px;padding:12px;font-family:monospace;font-size:.85em;margin-bottom:14px;">
-      Treasury: <span id="treasuryDisplay" style="color:#67e8f9;">Loading...</span>
-    </div>
-    <button class="btn-main" onclick="sendPayment()" id="payBtn">💎 Send via MetaMask</button>
-    <div id="payStatus" class="status" style="margin-top:12px;"></div>
-  </div>
-
-  <!-- Step 5: Verify and get licence (auto after payment; manual fallback) -->
-  <div class="card" id="verifyCard" style="display:none;">
-    <h3>⑤ Verify Payment &amp; Get Licence</h3>
-    <p style="color:#94a3b8;font-size:.95em;" id="verifyHint">
-      Verifying automatically — your licence will appear here as soon as the
-      transaction confirms on-chain. No need to do anything.
-    </p>
-    <input type="text" id="txInput" placeholder="0x...">
-    <button class="btn-main" style="margin-top:10px;" onclick="verifyAndGetLicence(true)">
-      ✅ Verify &amp; Generate Licence
+    <button class="btn btn-outline" onclick="connectWallet()">
+      <i class="fa-solid fa-link"></i> Connect Wallet
     </button>
-    <div id="verifyStatus" class="status" style="margin-top:12px;"></div>
+    <p style="font-size:12px;color:#64748b;margin:10px 0 0">Works with ZKX Wallet, MetaMask, and any browser wallet — on PulseChain.</p>
+    <div class="status-line" id="wallet-status">
+      <span class="dot-inf"><i class="fa-solid fa-circle" style="font-size:8px"></i></span>
+      <span>Not connected</span>
+    </div>
   </div>
 
-  <!-- Success -->
-  <div id="successCard" style="display:none;" class="card">
-    <div class="success" style="font-size:1.2em;font-weight:700;margin-bottom:12px;">✅ Licence Issued!</div>
-    <div style="color:#94a3b8;font-size:.9em;margin-bottom:4px;">Device MAC: <span id="successMac" style="color:#67e8f9;"></span></div>
-    <div style="color:#94a3b8;font-size:.9em;margin-bottom:4px;">Tier: <span id="successTier" style="color:#67e8f9;"></span></div>
-    <div style="color:#94a3b8;font-size:.9em;margin-bottom:12px;">Expires: <span id="successExpiry" style="color:#67e8f9;"></span></div>
-    <div class="lic-box" id="licenceDisplay"></div>
-    <div style="color:#94a3b8;font-size:.85em;margin-bottom:14px;">✅ Saved locally for Flasher page</div>
-    <button class="btn-main" onclick="window.location.href='flasher.html'">📤 Go to Flasher → Send to Device</button>
+  <!-- ② Detect Device -->
+  <div class="step-card" id="card-device">
+    <div class="step-head">
+      <div class="step-num">2</div>
+      <div class="step-title">Detect Your Device</div>
+    </div>
+    <button class="btn btn-outline" onclick="detectDevice()">
+      <i class="fa-solid fa-plug"></i> Connect via USB
+    </button>
+    <div class="status-line" id="device-status">
+      <span class="dot-inf"><i class="fa-solid fa-circle" style="font-size:8px"></i></span>
+      <span>No device detected</span>
+    </div>
+  </div>
+
+  <!-- ③ Licence Type -->
+  <div class="step-card" id="card-type">
+    <div class="step-head">
+      <div class="step-num">3</div>
+      <div class="step-title">Choose Licence Type</div>
+    </div>
+    <div style="background:rgba(34,211,238,0.06);border:2px solid #22d3ee;border-radius:16px;padding:20px 16px;text-align:center;">
+      <div style="font-size:26px;font-weight:700;color:#f0f6fc;">20 PLSC</div>
+      <div style="font-size:13px;color:#8b949e;margin-top:3px;">Yearly</div>
+      <div style="font-size:12px;color:#64748b;margin-top:6px;" id="equiv-yearly">~£15 equivalent</div>
+    </div>
+  </div>
+
+  <!-- ④ Send Payment -->
+  <div class="step-card" id="card-payment">
+    <div class="step-head">
+      <div class="step-num">4</div>
+      <div class="step-title">Send Payment</div>
+    </div>
+    <p style="font-size:13px;color:#64748b;margin:0 0 10px">Payment must be in <strong style="color:#c9d1d9">PLSC</strong> sent directly to the PLSChat treasury.</p>
+    <div class="treasury" id="treasury-addr">Treasury: Loading...</div>
+    <button class="btn btn-primary" onclick="sendPayment()" id="pay-btn">
+      <i class="fa-solid fa-gem"></i> Send via MetaMask
+    </button>
+  </div>
+
+  <!-- ⑤ Verify & Get Licence -->
+  <div class="step-card" id="card-verify">
+    <div class="step-head">
+      <div class="step-num">5</div>
+      <div class="step-title">Verify Payment &amp; Get Licence</div>
+    </div>
+    <p style="font-size:13px;color:#64748b;margin:0 0 14px">Verifying automatically — your licence will appear here once the transaction confirms on-chain.</p>
+
+    <div class="tx-box" id="tx-box">
+      <div class="tx-label">Transaction hash (paste if not auto-filled)</div>
+      <input type="text" class="tx-input" id="tx-hash" placeholder="0x...">
+    </div>
+
+    <button class="btn btn-primary btn-gap" onclick="verifyPayment()" id="verify-btn">
+      <i class="fa-solid fa-circle-check"></i> Verify &amp; Generate Licence
+    </button>
+
+    <!-- Success -->
+    <div class="success-box" id="success-box">
+      <div class="success-title"><i class="fa-solid fa-party-horn"></i> Licence Issued!</div>
+      <div class="success-row"><span>Device MAC</span><span id="s-mac"></span></div>
+      <div class="success-row"><span>Tier</span><span id="s-tier"></span></div>
+      <div class="success-row"><span>Expires</span><span id="s-expiry"></span></div>
+      <div class="lic-string" id="s-key"></div>
+      <div class="saved-note">✅ Saved locally for Flasher page</div>
+      <a href="flasher.html" class="btn btn-success">
+        <i class="fa-solid fa-paper-plane"></i> Go to Flasher → Send to Device
+      </a>
+    </div>
+  </div>
+
+  <!-- ACCORDION: security info -->
+  <div class="accordion">
+    <div class="acc-open" id="acc">
+      <button class="acc-btn" onclick="toggleAcc()">
+        <span><i class="fa-solid fa-shield-halved" style="color:#a855f7;margin-right:8px"></i>About this licence — how it stays secure</span>
+        <i class="fa-solid fa-chevron-down" id="acc-chevron" style="transition:.2s;color:#64748b"></i>
+      </button>
+      <div class="acc-body" id="acc-body">
+        <p>Your licence is a short signed string in the form <code>v1|MAC|expiry|tier|signature</code>. The signature is created with an <strong>Ed25519 private key</strong> — the same cryptography used to secure SSH and modern TLS — that lives only on our server and is never shipped in any file, web page, or device firmware.</p>
+        <p><strong>It can't be forged.</strong> Change a single character and the signature no longer matches — your device and our server both reject it. Making a valid licence requires the private key, which no one else has.</p>
+        <p><strong>It's bound to your device.</strong> Each licence is tied to one device's MAC address. Even if someone copies it, it won't activate on any other device — the firmware checks the MAC before accepting it.</p>
+        <p><strong>Your payment is verified on-chain.</strong> A licence is only issued after your PLSC payment to the treasury is confirmed by two independent PulseChain nodes, and each transaction can be used exactly once.</p>
+        <p><strong>Your privacy is yours to keep.</strong> We never ask for your name or email. For maximum privacy, shield your PLSC through <a href="https://libertyswap.finance" target="_blank">LibertySwap</a> or <a href="https://zkxwallet.com" target="_blank">ZKX Wallet</a> and pay from a fresh wallet.</p>
+        <p>PLSChat firmware is open source. Because you fully own your hardware, a technically capable owner can always modify the code running on their own device — this is true of any open device and is by design. It doesn't affect anyone else's licence or let anyone create a valid licence they didn't pay for.</p>
+      </div>
+    </div>
   </div>
 
 </div>
 
 <script>
-  // ─── Config ────────────────────────────────────────────────────────────────
-  const WORKER_URL    = 'https://plschat-coverage-api.plschat.workers.dev';
-  const TREASURY      = '0xe160d657c7d98f5c7e14fdc38b9b03911538fe70';
+  const WORKER    = 'https://plschat-coverage-api.plschat.workers.dev';
+  const TREASURY  = '0xe160d657c7d98f5c7e14fdc38b9b03911538fe70';
   const PLSC_CONTRACT = '0x17B46bB02DF36E57B2b5015C4e289b984915EfE5';
-  const PLSC_AMOUNT   = { yearly: 20, lifetime: 100 };
+  const PLSC_PRICE = { yearly: 20, lifetime: 100 };
 
-  // Auto-verify polling: begins the moment the tx is broadcast, so the licence
-  // is claimed for YOUR MAC in the same breath as the payment confirming —
-  // closing the window in which someone else could submit your tx hash first.
-  const POLL_INTERVAL_MS = 6000;   // check every 6s
-  const POLL_MAX_TRIES   = 50;     // ~5 minutes
+  let walletAddress = null;
+  let selectedMac   = '';
+  let selectedTier  = 'yearly';
+  let txHash        = '';
 
-  document.getElementById('treasuryDisplay').textContent = TREASURY;
-
-  let wallet    = '';
-  let deviceMac = '';
-  let tier      = 'yearly';
-  let txHash    = '';
-  let polling   = false;
-
-  // ─── Wallet (EIP-6963 multi-wallet discovery) ───────────────────────────────
-  // Supports MetaMask, ZKX Wallet, and any injected EIP-1193 wallet.
-  // When several are installed, the buyer picks — no window.ethereum fights.
-  const PULSECHAIN_ID = '0x171'; // 369
-  let provider = null;
-  const discovered = [];
-
-  window.addEventListener('eip6963:announceProvider', e => {
-    if (!discovered.some(d => d.info.uuid === e.detail.info.uuid)) discovered.push(e.detail);
-  });
-  window.dispatchEvent(new Event('eip6963:requestProvider'));
-
-  function walletError(e) {
-    if (!e) return 'Unknown wallet error';
-    if (e.code === 4001)   return 'Request rejected in the wallet popup.';
-    if (e.code === -32002) return 'A connection request is already open in your wallet — ' +
-      'look for its popup (it may be hiding behind this window) or click the extension icon, ' +
-      'approve or dismiss it, then try again.';
-    return e.message || String(e);
-  }
-
+  // ── Wallet ──────────────────────────────────────────────────────────────
   async function connectWallet() {
-    const info = document.getElementById('walletInfo');
-    // Re-request announcements — some wallets announce late
-    window.dispatchEvent(new Event('eip6963:requestProvider'));
-    await new Promise(r => setTimeout(r, 200));
-
-    if (discovered.length === 0 && !window.ethereum) {
-      info.innerHTML = '<span class="error">No wallet extension found in this browser. Install ' +
-        '<a href="https://zkxwallet.com" target="_blank" style="color:#c084fc;">ZKX Wallet</a> or ' +
-        '<a href="https://metamask.io" target="_blank" style="color:#c084fc;">MetaMask</a>, then reload this page.</span>';
-      return;
-    }
-
-    if (discovered.length > 1) {
-      info.innerHTML = 'Multiple wallets found — choose one:<br>' + discovered.map((d, i) =>
-        `<button class="btn-sm" style="margin:8px 8px 0 0;" onclick="pickWallet(${i})">${d.info.name}</button>`
-      ).join('');
-      return;
-    }
-
-    provider = discovered[0]?.provider || window.ethereum;
-    await finishConnect(discovered[0]?.info?.name || 'Wallet');
-  }
-
-  async function pickWallet(i) {
-    provider = discovered[i].provider;
-    await finishConnect(discovered[i].info.name);
-  }
-
-  async function finishConnect(name) {
-    const info = document.getElementById('walletInfo');
-    info.textContent = '⏳ Waiting for ' + name + ' — check its popup…';
+    if (!window.ethereum) { alert('Please install MetaMask or ZKX Wallet'); return; }
     try {
-      const accounts = await provider.request({ method: 'eth_requestAccounts' });
-      wallet = accounts[0];
-      const onPulse = await ensurePulseChain();
-      info.innerHTML = `✅ <span style="color:#22c55e;">${name}: ${wallet.slice(0,10)}…${wallet.slice(-6)}</span>` +
-        (onPulse ? ' <span style="color:#22c55e;">• PulseChain</span>'
-                 : ' <span class="error">• could not switch to PulseChain — switch manually in the wallet</span>');
-    } catch (e) {
-      info.innerHTML = `<span class="error">${walletError(e)}</span>`;
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      walletAddress = accounts[0];
+      setWalletStatus(true, walletAddress);
+      fetchTreasury();
+    } catch(e) {
+      setWalletStatus(false, 'Connection cancelled');
     }
   }
 
-  // Make sure the wallet is on PulseChain (369); switch or add it if not.
-  async function ensurePulseChain() {
-    try {
-      const id = await provider.request({ method: 'eth_chainId' });
-      if (id === PULSECHAIN_ID) return true;
-      try {
-        await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: PULSECHAIN_ID }] });
-        return true;
-      } catch (sw) {
-        if (sw.code === 4902) { // chain not added to this wallet yet
-          await provider.request({ method: 'wallet_addEthereumChain', params: [{
-            chainId: PULSECHAIN_ID,
-            chainName: 'PulseChain',
-            nativeCurrency: { name: 'Pulse', symbol: 'PLS', decimals: 18 },
-            rpcUrls: ['https://rpc.pulsechain.com'],
-            blockExplorerUrls: ['https://scan.pulsechain.com'],
-          }]});
-          return true;
-        }
-        throw sw;
-      }
-    } catch { return false; }
+  function setWalletStatus(ok, msg) {
+    const el = document.getElementById('wallet-status');
+    if (ok) {
+      el.innerHTML = `<span class="dot-ok"><i class="fa-solid fa-circle-check"></i></span><span class="lic-ok">${msg.slice(0,10)}...${msg.slice(-6)}</span>`;
+    } else {
+      el.innerHTML = `<span class="dot-inf"><i class="fa-solid fa-circle" style="font-size:8px"></i></span><span>${msg}</span>`;
+    }
   }
 
-  // ─── Device detection ───────────────────────────────────────────────────────
+  // ── Device detection ─────────────────────────────────────────────────────
   async function detectDevice() {
-    const el = document.getElementById('deviceInfo');
-    el.textContent = '🔄 Connecting…';
+    const el = document.getElementById('device-status');
+    el.innerHTML = `<span class="dot-inf"><i class="fa-solid fa-spinner fa-spin"></i></span><span>Connecting… hold BOOT button</span>`;
     try {
       const port = await navigator.serial.requestPort();
       await port.open({ baudRate: 115200 });
@@ -360,159 +281,145 @@
         if (m) {
           clearTimeout(timeout);
           reader.cancel();
-          deviceMac = m[1].toUpperCase();
-          const licensed = buf.includes('LICENSED:YES');
-          el.innerHTML = `✅ MAC: <strong style="color:#67e8f9;">${deviceMac}</strong> — ${licensed ? '✅ Licensed' : '❌ Not licensed'}`;
+          selectedMac = m[1].toUpperCase();
+          await checkLicenceStatus(selectedMac);
+          break;
+        }
+        if (buf.includes('END_STATUS') && !buf.match(/MAC:/)) {
+          clearTimeout(timeout); reader.cancel();
+          el.innerHTML = `<span class="dot-err"><i class="fa-solid fa-circle-xmark"></i></span><span>Could not read MAC. Try again.</span>`;
           break;
         }
       }
-    } catch (e) {
-      el.innerHTML = `<span style="color:#f87171;">❌ ${e.message}</span>`;
+    } catch(e) {
+      el.innerHTML = `<span class="dot-err"><i class="fa-solid fa-circle-xmark"></i></span><span>${e.message}</span>`;
     }
   }
 
-  // ─── Tier ───────────────────────────────────────────────────────────────────
-  function selectTier(t) {
-    tier = t;
-    document.getElementById('btnYearly').classList.toggle('selected',   t === 'yearly');
-    document.getElementById('btnLifetime').classList.toggle('selected', t === 'lifetime');
+  async function checkLicenceStatus(mac) {
+    const el = document.getElementById('device-status');
+    el.innerHTML = `<span class="dot-inf"><i class="fa-solid fa-spinner fa-spin"></i></span><span>MAC: <strong style="color:#67e8f9">${mac}</strong> — checking licence…</span>`;
+    try {
+      const res  = await fetch(`${WORKER}/licence/status/${encodeURIComponent(mac)}`);
+      const data = await res.json();
+      if (data.valid) {
+        const exp = new Date(data.expiry * 1000).toLocaleDateString('en-GB', { year:'numeric', month:'short', day:'numeric' });
+        el.innerHTML = `<span class="dot-ok"><i class="fa-solid fa-circle-check"></i></span>
+          <span>MAC: <strong style="color:#67e8f9">${mac}</strong> — <span class="lic-ok">✅ Licensed (${data.tier}, expires ${exp})</span></span>`;
+      } else {
+        el.innerHTML = `<span class="dot-ok"><i class="fa-solid fa-circle-check"></i></span>
+          <span>MAC: <strong style="color:#67e8f9">${mac}</strong> — <span class="lic-no">❌ Not licensed</span></span>`;
+      }
+    } catch(e) {
+      el.innerHTML = `<span class="dot-ok"><i class="fa-solid fa-circle-check"></i></span>
+        <span>MAC: <strong style="color:#67e8f9">${mac}</strong> — <span class="lic-no">Could not check licence</span></span>`;
+    }
   }
 
-  // ─── Payment ────────────────────────────────────────────────────────────────
+  // ── Tier ────────────────────────────────────────────────────────────────
+  // Yearly only — no lifetime option
+
+  // ── Treasury ─────────────────────────────────────────────────────────────
+  function fetchTreasury() {
+    document.getElementById('treasury-addr').textContent = 'Treasury: ' + TREASURY;
+  }
+
+  // ── Payment ──────────────────────────────────────────────────────────────
   async function sendPayment() {
-    if (!wallet || !provider) return alert('Connect your wallet first.');
-    if (!deviceMac)           return alert('Detect your device first.');
+    if (!walletAddress) { alert('Please connect your wallet first.'); return; }
+    if (!selectedMac)   { alert('Please connect your device first.'); return; }
 
-    // Re-check the chain at payment time — the user may have switched networks
-    if (!(await ensurePulseChain())) {
-      document.getElementById('payStatus').innerHTML =
-        '<span class="error">❌ Wallet is not on PulseChain. Switch network in the wallet and try again.</span>';
-      return;
-    }
-
-    const amount  = PLSC_AMOUNT[tier];
-    const amtWei  = (BigInt(amount) * 10n ** 18n).toString(16);
-    // ERC-20 transfer(address,uint256) calldata
-    const data = '0xa9059cbb'
-      + TREASURY.slice(2).padStart(64, '0')
-      + amtWei.padStart(64, '0');
-
-    document.getElementById('payStatus').textContent = `Sending ${amount} PLSC to treasury…`;
+    // Approximate PLSC amount (simplified — not doing live price fetch here)
+    const plscAmount = PLSC_PRICE[selectedTier];
+    const amountWei  = BigInt(plscAmount) * (10n ** 18n);
 
     try {
-      txHash = await provider.request({
+      // PLSC ERC-20 transfer
+      const data = '0xa9059cbb' +
+        TREASURY.slice(2).padStart(64,'0') +
+        amountWei.toString(16).padStart(64,'0');
+      const hash = await window.ethereum.request({
         method: 'eth_sendTransaction',
-        params: [{ from: wallet, to: PLSC_CONTRACT, data, gas: '0x15F90' }],
+        params: [{ from: walletAddress, to: PLSC_CONTRACT, data, gas: '0x7A120' }]
       });
-      document.getElementById('payStatus').innerHTML =
-        `<span class="success">✅ TX sent: ${txHash.slice(0,18)}…</span>`;
-      document.getElementById('verifyCard').style.display = 'block';
-      document.getElementById('txInput').value = txHash;
-      // Start auto-verification immediately — do NOT wait for the user
-      startAutoVerify();
-    } catch (e) {
-      document.getElementById('payStatus').innerHTML = `<span class="error">❌ ${walletError(e)}</span>`;
+      txHash = hash;
+      document.getElementById('tx-hash').value = hash;
+      document.getElementById('tx-box').style.display = 'block';
+      alert(`✅ Transaction sent!\n\nTX: ${hash}\n\nNow click "Verify & Generate Licence".`);
+    } catch(e) {
+      if (e.code !== 4001) alert('Transaction failed: ' + e.message);
     }
   }
 
-  // ─── Auto-verify loop ────────────────────────────────────────────────────────
-  // Retries while the tx is unmined or an RPC hiccups; stops immediately on
-  // success or on a permanent failure (wrong amount, tx already used, etc).
-  const RETRYABLE = new Set(['tx_not_found', 'rpc_unreachable', 'rpc_disagreement', 'internal_error']);
+  // ── Verify & issue ───────────────────────────────────────────────────────
+  async function verifyPayment() {
+    const hash = document.getElementById('tx-hash').value.trim() || txHash;
+    if (!hash)        { alert('Paste the transaction hash first.'); return; }
+    if (!selectedMac) { alert('Connect your device first.'); return; }
 
-  async function startAutoVerify() {
-    if (polling) return;
-    polling = true;
-    const el = document.getElementById('verifyStatus');
-    for (let attempt = 1; attempt <= POLL_MAX_TRIES; attempt++) {
-      el.textContent = `⏳ Waiting for on-chain confirmation… (check ${attempt})`;
-      const result = await tryVerify();
-      if (result === 'done') { polling = false; return; }
-      if (result === 'fatal') { polling = false; return; }
-      await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
-    }
-    polling = false;
-    el.innerHTML = '<span class="error">⚠️ Still not confirmed after 5 minutes. ' +
-      'Your payment is safe — click "Verify &amp; Generate Licence" above to retry.</span>';
-  }
+    const btn = document.getElementById('verify-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying…';
 
-  // Manual button — same path, single attempt, user-initiated
-  async function verifyAndGetLicence(manual) {
-    const el = document.getElementById('verifyStatus');
-    const tx = document.getElementById('txInput').value.trim();
-    if (!tx)        return el.innerHTML = '<span class="error">Paste your transaction hash first.</span>';
-    if (!deviceMac) return el.innerHTML = '<span class="error">Detect your device first.</span>';
-    txHash = tx;
-    el.textContent = '⏳ Verifying with server…';
-    await tryVerify();
-  }
-
-  // Returns 'done' | 'fatal' | 'retry'
-  async function tryVerify() {
-    const el = document.getElementById('verifyStatus');
     try {
-      const res  = await fetch(`${WORKER_URL}/licence/purchase`, {
+      const res  = await fetch(`${WORKER}/licence/purchase`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ txHash, mac: deviceMac, tier }),
+        body: JSON.stringify({ txHash: hash, mac: selectedMac, tier: selectedTier })
       });
       const data = await res.json();
 
-      if (res.ok && data.licence) {
-        showSuccess(data);
-        return 'done';
+      if (!res.ok || !data.licence) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Verify &amp; Generate Licence';
+        alert('❌ ' + (data.error || 'Verification failed. Transaction may not be confirmed yet — wait a minute and try again.'));
+        return;
       }
-      if (RETRYABLE.has(data.error)) return 'retry';
 
-      // Permanent failure — stop and tell the user why
-      el.innerHTML = `<span class="error">❌ ${friendlyError(data.error)}</span>`;
-      return 'fatal';
+      // Save to localStorage for flasher page
+      try {
+        const store = JSON.parse(localStorage.getItem('licenses') || '{}');
+        store[selectedMac] = data.licence;
+        localStorage.setItem('licenses', JSON.stringify(store));
+      } catch(e) {}
 
-    } catch (e) {
-      // Network error reaching the Worker — treat as transient
-      el.textContent = `⏳ Network hiccup, retrying… (${e.message})`;
-      return 'retry';
+      // Show success
+      const exp = new Date(data.expiry * 1000).toLocaleDateString('en-GB',
+        { year:'numeric', month:'long', day:'numeric' });
+      document.getElementById('s-mac').textContent    = selectedMac;
+      document.getElementById('s-tier').textContent   = data.tier === 'lifetime' ? 'Lifetime (10 years)' : 'Yearly';
+      document.getElementById('s-expiry').textContent = exp;
+      document.getElementById('s-key').textContent    = data.licence;
+      document.getElementById('success-box').style.display = 'block';
+      document.getElementById('tx-box').style.display      = 'none';
+      btn.style.display = 'none';
+
+      // Also re-check the device status badge
+      await checkLicenceStatus(selectedMac);
+
+    } catch(e) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Verify &amp; Generate Licence';
+      alert('Network error: ' + e.message);
     }
   }
 
-  function friendlyError(code) {
-    const map = {
-      tx_already_used:              'This transaction has already been used for a licence.',
-      tx_failed:                    'The transaction failed on-chain. Please send payment again.',
-      no_plsc_transfer_to_treasury: 'No PLSC transfer to the treasury found in this transaction.',
-      insufficient_amount:          'The amount sent is less than the licence price.',
-      'invalid tier':               'Invalid licence tier selected.',
-      invalid_tx_hash:              'That does not look like a valid transaction hash.',
-      server_not_configured:        'Server error — please contact support.',
-    };
-    return map[code] || (code || 'Verification failed');
+  // ── Accordion ────────────────────────────────────────────────────────────
+  function toggleAcc() {
+    const body = document.getElementById('acc-body');
+    const chev = document.getElementById('acc-chevron');
+    const wrap = document.getElementById('acc');
+    const open = body.style.display === 'block';
+    body.style.display = open ? 'none' : 'block';
+    chev.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+    wrap.classList.toggle('acc-open', !open);
   }
-
-  function showSuccess(data) {
-    // Save for flasher page
-    const licences = JSON.parse(localStorage.getItem('licenses') || '{}');
-    licences[deviceMac] = data.licence;
-    localStorage.setItem('licenses', JSON.stringify(licences));
-
-    try { navigator.clipboard.writeText(data.licence); } catch {}
-
-    document.getElementById('verifyCard').style.display  = 'none';
-    document.getElementById('successCard').style.display = 'block';
-    document.getElementById('successMac').textContent    = deviceMac;
-    document.getElementById('successTier').textContent   =
-      tier === 'lifetime' ? 'Lifetime (10 years)' : 'Yearly';
-    document.getElementById('successExpiry').textContent =
-      new Date(data.expiry * 1000).toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
-    document.getElementById('licenceDisplay').textContent = data.licence;
-  }
-
-  // ─── Mesh background ────────────────────────────────────────────────────────
-  const cv = document.getElementById('mesh-bg');
-  const cx = cv.getContext('2d');
-  function resize(){ cv.width=window.innerWidth; cv.height=window.innerHeight; }
-  resize(); window.addEventListener('resize', resize);
-  function drawBg(){ cx.fillStyle='rgba(10,12,31,0.18)'; cx.fillRect(0,0,cv.width,cv.height); requestAnimationFrame(drawBg); }
-  drawBg();
+  // Start open
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('acc-body').style.display = 'block';
+    document.getElementById('acc-chevron').style.transform = 'rotate(180deg)';
+    fetchTreasury();
+  });
 </script>
 </body>
 </html>
