@@ -83,7 +83,7 @@
                 </div>
                 <button onclick="checkAdminPassword()" id="login-btn" class="btn" style="width:100%;padding:14px;font-size:16px;">Login</button>
                 <div id="login-error" style="color:#ef4444;margin-top:12px;font-size:13px;display:none;">Incorrect password</div>
-                <p style="color:#374151;margin-top:18px;font-size:11px;">To reset: run <code style="color:#64748b;">wrangler secret put ADMIN_KEY</code></p>
+                <p style="color:#374151;margin-top:18px;font-size:11px;">Reset the password from the <strong>Change Admin Password</strong> panel once logged in.</p>
             </div>
         </div>
     </div>
@@ -106,6 +106,46 @@
 
         <div class="info">
             <strong>Protected by Cloudflare Access</strong> — only your email (via one-time PIN) can load this page, and this admin password is a second factor behind that. Sensitive actions are also independently checked by the Worker.
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             CHANGE ADMIN PASSWORD
+        ═══════════════════════════════════════════════════════════ -->
+        <div class="card" id="change-pw-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                <h3>&#128273; Change Admin Password</h3>
+                <span style="font-size:12px;color:#64748b;">Verified server-side &bull; stored hashed in KV</span>
+            </div>
+            <p style="color:#8b949e;font-size:13px;margin-bottom:16px;">
+                Rotates the inner admin password. Requires your current password. The new one is hashed by the Worker and stored in KV — it is never sent back or logged.
+            </p>
+            <div class="config-grid">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <div class="pw-wrap">
+                        <input type="password" id="cp-current" placeholder="Current password">
+                        <button type="button" class="pw-eye" onclick="togglePw('cp-current',this)" title="Show password">&#128065;</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>New Password (min 10 chars)</label>
+                    <div class="pw-wrap">
+                        <input type="password" id="cp-new" placeholder="New password">
+                        <button type="button" class="pw-eye" onclick="togglePw('cp-new',this)" title="Show password">&#128065;</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <div class="pw-wrap">
+                        <input type="password" id="cp-confirm" placeholder="Re-enter new password">
+                        <button type="button" class="pw-eye" onclick="togglePw('cp-confirm',this)" title="Show password">&#128065;</button>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                <button class="btn" id="cp-btn" onclick="changeAdminPassword()">Update Password</button>
+                <div id="cp-status" style="font-size:13px;color:#64748b;font-family:monospace;min-height:18px;"></div>
+            </div>
         </div>
 
         <!-- ═══════════════════════════════════════════════════════════
@@ -219,6 +259,8 @@
                     </button>
                 </div>
                 <div id="lic-detect-status" style="font-size:13px;color:#64748b;margin-top:8px;font-family:monospace;min-height:18px;"></div>
+                <!-- Existing-licence readout (populated on auto-detect) -->
+                <div id="lic-existing" style="display:none;border:1px solid;border-radius:10px;padding:12px 16px;margin-top:12px;font-size:13px;"></div>
             </div>
 
             <!-- Step 2: Tier -->
@@ -410,9 +452,9 @@
 
         // ═══════════════════════════════════════════════════════════
         //  ADMIN AUTH — verified server-side by the Worker (/admin/login,
-        //  constant-time compare against the ADMIN_KEY secret). Nothing is
-        //  stored in localStorage/sessionStorage, so the password is required
-        //  on every visit. This is the INNER layer, behind Cloudflare Access.
+        //  constant-time compare). Nothing is stored in localStorage/
+        //  sessionStorage, so the password is required on every visit.
+        //  This is the INNER layer, behind Cloudflare Access.
         // ═══════════════════════════════════════════════════════════
         let adminAuthed = false;   // in-memory only — wiped on refresh/close
 
@@ -455,6 +497,49 @@
         }
 
         // ═══════════════════════════════════════════════════════════
+        //  CHANGE ADMIN PASSWORD — POSTs { current, next } to the Worker.
+        //  Worker verifies `current`, hashes `next`, stores it in KV.
+        // ═══════════════════════════════════════════════════════════
+        async function changeAdminPassword() {
+            const cur  = document.getElementById('cp-current').value;
+            const next = document.getElementById('cp-new').value;
+            const conf = document.getElementById('cp-confirm').value;
+            const el   = document.getElementById('cp-status');
+            const btn  = document.getElementById('cp-btn');
+
+            el.style.color = '#ef4444';
+            if (!cur || !next)          { el.textContent = 'Fill in current and new password.'; return; }
+            if (next.length < 10)       { el.textContent = 'New password must be at least 10 characters.'; return; }
+            if (next !== conf)          { el.textContent = 'New passwords do not match.'; return; }
+            if (next === cur)           { el.textContent = 'New password must differ from the current one.'; return; }
+
+            btn.disabled = true; btn.textContent = 'Updating...';
+            el.style.color = '#64748b'; el.textContent = 'Submitting...';
+            try {
+                const res = await fetch(WORKER_URL + '/admin/password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ current: cur, next: next })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.ok) {
+                    el.style.color = '#22c55e';
+                    el.textContent = 'Password updated — use the new one next login.';
+                    document.getElementById('cp-current').value = '';
+                    document.getElementById('cp-new').value = '';
+                    document.getElementById('cp-confirm').value = '';
+                } else {
+                    el.style.color = '#ef4444';
+                    el.textContent = 'Error: ' + (data.error || ('HTTP ' + res.status));
+                }
+            } catch (e) {
+                el.style.color = '#ef4444';
+                el.textContent = 'Network error: ' + e.message;
+            }
+            btn.disabled = false; btn.textContent = 'Update Password';
+        }
+
+        // ═══════════════════════════════════════════════════════════
         //  LICENCE MANAGER
         // ═══════════════════════════════════════════════════════════
         let licTier = 'yearly';
@@ -472,33 +557,95 @@
             document.getElementById('lic-lifetime-price').style.color = t==='lifetime' ? '#22d3ee' : '#94a3b8';
         }
 
+        // Reads the device status block over serial, capturing BOTH the MAC
+        // and the licence status the firmware reports (LICENSED:YES / :NO).
         async function licDetectDevice() {
             const el = document.getElementById('lic-detect-status');
+            const banner = document.getElementById('lic-existing');
             el.style.color = '#64748b';
             el.textContent = 'Connecting to device...';
+            if (banner) banner.style.display = 'none';
+
+            let reader = null;
             try {
                 licSerialPort = await navigator.serial.requestPort();
                 await licSerialPort.open({ baudRate: 115200 });
-                const reader = licSerialPort.readable.getReader();
+                reader = licSerialPort.readable.getReader();
+
                 let buf = '';
-                const timeout = setTimeout(() => reader.cancel(), 12000);
-                while (true) {
+                let stop = false;
+                const finish = () => { if (!stop) { stop = true; try { reader.cancel(); } catch(e){} } };
+                const timeout = setTimeout(finish, 12000);
+
+                while (!stop) {
                     const { value, done } = await reader.read();
                     if (done) break;
                     buf += new TextDecoder().decode(value);
-                    const m = buf.match(/MAC:([0-9A-Fa-f:]{17})/);
-                    if (m) {
+                    // Stop once we have a full status block, or a MAC plus a licence line.
+                    const haveMac = /MAC:([0-9A-Fa-f:]{17})/.test(buf);
+                    const haveLic = /LICEN[SC]ED:(YES|NO)/i.test(buf);
+                    if (buf.includes('END_STATUS') || (haveMac && haveLic)) {
                         clearTimeout(timeout);
-                        reader.cancel();
-                        document.getElementById('lic-mac').value = m[1].toUpperCase();
-                        el.style.color = '#22c55e';
-                        el.textContent = 'MAC detected: ' + m[1].toUpperCase() + ' — serial port ready';
-                        break;
+                        finish();
                     }
                 }
+                try { reader.releaseLock(); } catch(e) {}
+
+                const m = buf.match(/MAC:([0-9A-Fa-f:]{17})/);
+                if (!m) {
+                    el.style.color = '#ef4444';
+                    el.textContent = 'Connected, but no MAC seen — reset the device and retry.';
+                    return;
+                }
+                const mac = m[1].toUpperCase();
+                document.getElementById('lic-mac').value = mac;
+                el.style.color = '#22c55e';
+                el.textContent = 'MAC detected: ' + mac + ' — serial port ready';
+
+                const licensed = /LICEN[SC]ED:YES/i.test(buf);
+                showExistingLicence(mac, licensed, buf);
             } catch(e) {
+                try { if (reader) reader.releaseLock(); } catch(_) {}
                 el.style.color = '#ef4444';
                 el.textContent = e.message;
+            }
+        }
+
+        // Renders the "already licensed / not licensed" readout from the
+        // firmware's own status block. If the firmware also prints an
+        // expiry/tier line, we surface it; otherwise we just show the state.
+        function showExistingLicence(mac, licensed, buf) {
+            const banner = document.getElementById('lic-existing');
+            if (!banner) return;
+
+            let extra = '';
+            const exp = buf.match(/(?:EXPIRY|EXPIRES|LICEN[SC]E_EXPIRY)[:=]\s*(\d{9,})/i);
+            if (exp) {
+                const d = new Date(parseInt(exp[1], 10) * 1000);
+                if (!isNaN(d.getTime())) {
+                    extra += ' &bull; expires ' + d.toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
+                }
+            }
+            const tierM = buf.match(/TIER[:=]\s*([A-Za-z]+)/i);
+            if (tierM) extra += ' &bull; ' + tierM[1].toLowerCase();
+
+            banner.style.display = 'block';
+            if (licensed) {
+                banner.style.background = '#0f2e1a';
+                banner.style.borderColor = '#22c55e';
+                banner.style.color = '#86efac';
+                banner.innerHTML =
+                    '<strong>&#9989; This device is already licensed.</strong> ' +
+                    '<span style="font-family:monospace;color:#67e8f9;">' + mac + '</span>' + extra +
+                    '<div style="color:#64748b;font-size:12px;margin-top:6px;">Generating &amp; sending a new licence will overwrite the one currently on this device.</div>';
+            } else {
+                banner.style.background = '#3f2a1f';
+                banner.style.borderColor = '#eab308';
+                banner.style.color = '#fcd34d';
+                banner.innerHTML =
+                    '<strong>No licence on this device yet.</strong> ' +
+                    '<span style="font-family:monospace;color:#67e8f9;">' + mac + '</span>' +
+                    '<div style="color:#64748b;font-size:12px;margin-top:6px;">Pick a tier below, then Generate and Send.</div>';
             }
         }
 
@@ -605,6 +752,7 @@
             document.getElementById('nodes-grid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#64748b;">Connect to MQTT or enable Demo Mode to see nodes.</div>`;
             document.getElementById('node-filter').addEventListener('keydown', function(e) { if(e.key==='Escape'){this.value='';renderNodes();} });
             document.getElementById('admin-password').addEventListener('keydown', function(e) { if(e.key==='Enter') checkAdminPassword(); });
+            document.getElementById('cp-confirm').addEventListener('keydown', function(e) { if(e.key==='Enter') changeAdminPassword(); });
         }
 
         window.onload = init;
