@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PLSChat • Admin Monitor</title>
+    <!-- esp-web-tools: powers the admin-only firmware flasher panel below -->
+    <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
         :root {
@@ -58,19 +60,19 @@
         .modal-content { background: var(--card); border-radius: 16px; padding: 28px; max-width: 520px; width: 90%; border: 1px solid #1f2439; }
         footer { margin-top: 40px; text-align: center; font-size: 12px; color: var(--text-muted); }
         .warning { background: #3f2a1f; border: 1px solid #eab308; color: #fcd34d; padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 20px; }
+        .info { background: #1a2f1f; border: 1px solid #22c55e; color: #86efac; padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 20px; }
         .pw-wrap { position: relative; }
         .pw-wrap input { padding-right: 44px !important; }
         .pw-eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 17px; color: #64748b; padding: 4px 6px; line-height: 1; }
         .pw-eye:hover { color: #67e8f9; }
+        esp-web-install-button { --esp-tools-button-color: #a855f7; }
     </style>
 </head>
 <body>
 
-    <!-- Login Gate -->
+    <!-- Login Gate (inner layer — sits behind Cloudflare Access) -->
     <div id="login-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,12,31,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;">
         <div style="background:#12152b;border:1px solid #374151;border-radius:16px;padding:40px;width:100%;max-width:380px;text-align:center;">
-
-            <!-- Normal login form -->
             <div id="login-form">
                 <h2 style="margin-bottom:8px;color:#67e8f9;">Admin Access</h2>
                 <p style="color:#64748b;margin-bottom:24px;font-size:14px;">Enter password to access the remote monitor</p>
@@ -81,65 +83,8 @@
                 </div>
                 <button onclick="checkAdminPassword()" id="login-btn" class="btn" style="width:100%;padding:14px;font-size:16px;">Login</button>
                 <div id="login-error" style="color:#ef4444;margin-top:12px;font-size:13px;display:none;">Incorrect password</div>
-                <div style="margin-top:18px;">
-                    <a href="#" onclick="forgotPassword();return false;" style="color:#67e8f9;font-size:13px;text-decoration:none;">Forgot password?</a>
-                </div>
-                <div id="forgot-status" style="margin-top:10px;font-size:12px;color:#64748b;display:none;"></div>
+                <p style="color:#374151;margin-top:18px;font-size:11px;">To reset: run <code style="color:#64748b;">wrangler secret put ADMIN_KEY</code></p>
             </div>
-
-            <!-- Password reset form (shown when arriving via emailed reset link) -->
-            <div id="reset-form" style="display:none;text-align:left;">
-                <h2 style="margin-bottom:8px;color:#67e8f9;text-align:center;">Reset Password</h2>
-                <p style="color:#64748b;margin-bottom:20px;font-size:14px;text-align:center;">Choose a new admin password</p>
-                <label style="font-size:13px;color:#8b949e;">New Password</label>
-                <div class="pw-wrap" style="margin:6px 0 14px;">
-                    <input type="password" id="reset-new"
-                           style="width:100%;padding:12px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
-                    <button type="button" class="pw-eye" onclick="togglePw('reset-new',this)" title="Show password">&#128065;</button>
-                </div>
-                <label style="font-size:13px;color:#8b949e;">Confirm New Password</label>
-                <div class="pw-wrap" style="margin:6px 0 18px;">
-                    <input type="password" id="reset-confirm"
-                           style="width:100%;padding:12px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
-                    <button type="button" class="pw-eye" onclick="togglePw('reset-confirm',this)" title="Show password">&#128065;</button>
-                </div>
-                <button onclick="submitPasswordReset()" class="btn" style="width:100%;padding:14px;font-size:16px;">Set New Password</button>
-                <div id="reset-error" style="color:#ef4444;margin-top:12px;font-size:13px;display:none;"></div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- Change Password Modal -->
-    <div id="change-password-modal" class="modal" onclick="if(event.target.id==='change-password-modal')closeChangePasswordModal()">
-        <div class="modal-content" onclick="event.stopImmediatePropagation()" style="max-width:420px;">
-            <h3 style="margin-bottom:20px;color:#67e8f9;">Change Admin Password</h3>
-            <div class="form-group" style="margin-bottom:12px;">
-                <label>Current Password</label>
-                <div class="pw-wrap">
-                    <input type="password" id="current-password" style="width:100%;padding:10px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
-                    <button type="button" class="pw-eye" onclick="togglePw('current-password',this)" title="Show password">&#128065;</button>
-                </div>
-            </div>
-            <div class="form-group" style="margin-bottom:12px;">
-                <label>New Password</label>
-                <div class="pw-wrap">
-                    <input type="password" id="new-password" style="width:100%;padding:10px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
-                    <button type="button" class="pw-eye" onclick="togglePw('new-password',this)" title="Show password">&#128065;</button>
-                </div>
-            </div>
-            <div class="form-group" style="margin-bottom:20px;">
-                <label>Confirm New Password</label>
-                <div class="pw-wrap">
-                    <input type="password" id="confirm-password" style="width:100%;padding:10px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
-                    <button type="button" class="pw-eye" onclick="togglePw('confirm-password',this)" title="Show password">&#128065;</button>
-                </div>
-            </div>
-            <div style="display:flex;gap:12px;">
-                <button onclick="changeAdminPassword()" class="btn" style="flex:1;">Update Password</button>
-                <button onclick="closeChangePasswordModal()" class="btn btn-secondary" style="flex:1;">Cancel</button>
-            </div>
-            <div id="change-password-error" style="color:#ef4444;margin-top:12px;font-size:13px;display:none;"></div>
         </div>
     </div>
 
@@ -156,12 +101,29 @@
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <a href="../index.html" class="btn btn-secondary">&#8592; Back to Site</a>
-                <button onclick="showChangePasswordModal()" class="btn btn-secondary" style="padding:8px 14px;font-size:13px;">Change Password</button>
             </div>
         </header>
 
-        <div class="warning">
-            <strong>Admin Only</strong> — This page should be protected. Use Cloudflare Access, Staticrypt, or move it behind authentication for production use.
+        <div class="info">
+            <strong>Protected by Cloudflare Access</strong> — only your email (via one-time PIN) can load this page, and this admin password is a second factor behind that. Sensitive actions are also independently checked by the Worker.
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             FIRMWARE FLASHER (company / v007)
+        ═══════════════════════════════════════════════════════════ -->
+        <div class="card" id="flasher-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                <h3>&#127981; Company Firmware — v007</h3>
+                <span style="font-size:12px;color:#64748b;">Tamper-enabled build &bull; ESP32-S3</span>
+            </div>
+            <p style="color:#8b949e;font-size:13px;margin-bottom:16px;">
+                Flash the v007 firmware to a company device. Hold the <strong>BOOT button</strong> on the Heltec while clicking Connect in the installer.
+                After flashing, provision it with <code style="color:#67e8f9;">COMPANY:ON</code> over serial to enable the tamper module.
+            </p>
+            <esp-web-install-button manifest="/manifest-v007.json"></esp-web-install-button>
+            <p style="color:#64748b;font-size:11px;margin-top:14px;">
+                <i>Note:</i> this flashes whatever <code>/manifest-v007.json</code> points to. Once a device has secure boot + flash encryption enabled (Release mode), it can no longer be reflashed here — that's expected.
+            </p>
         </div>
 
         <!-- MQTT Connection -->
@@ -394,7 +356,6 @@
             const node = nodes.get(nodeId);
             if (!node) return;
             document.getElementById('modal-node-id').textContent = nodeId;
-            const timeAgo = Math.floor((Date.now()-node.lastSeen.getTime())/1000);
             document.getElementById('modal-content').innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:24px;"><div><div style="font-size:12px;color:#64748b;margin-bottom:4px;">LAST RSSI</div><div style="font-size:26px;font-weight:700;" class="rssi ${node.lastRssi>-70?'good':node.lastRssi>-90?'ok':'bad'}">${node.lastRssi??'--'} dBm</div></div><div><div style="font-size:12px;color:#64748b;margin-bottom:4px;">BATTERY</div><div style="font-size:26px;font-weight:700;">${node.battery??'--'}%</div></div><div><div style="font-size:12px;color:#64748b;margin-bottom:4px;">PACKETS</div><div style="font-size:20px;font-weight:700;">${node.packetCount||0}</div></div></div><div style="margin-bottom:16px;"><div style="font-size:12px;color:#64748b;margin-bottom:4px;">LAST SEEN</div><div style="font-size:15px;">${node.lastSeen.toLocaleString()}</div></div>`;
             document.getElementById('node-modal').style.display = 'flex';
         }
@@ -448,12 +409,12 @@
         }
 
         // ═══════════════════════════════════════════════════════════
-        //  ADMIN AUTH — verified server-side by the Worker.
-        //  Nothing is stored in localStorage/sessionStorage, so the
-        //  password is required on every visit, refresh, or return.
+        //  ADMIN AUTH — verified server-side by the Worker (/admin/login,
+        //  constant-time compare against the ADMIN_KEY secret). Nothing is
+        //  stored in localStorage/sessionStorage, so the password is required
+        //  on every visit. This is the INNER layer, behind Cloudflare Access.
         // ═══════════════════════════════════════════════════════════
         let adminAuthed = false;   // in-memory only — wiped on refresh/close
-        let resetToken = null;
 
         function togglePw(id, btn) {
             const el = document.getElementById(id);
@@ -491,89 +452,6 @@
                 err.style.display = 'block';
             }
             btn.disabled = false; btn.textContent = 'Login';
-        }
-
-        async function forgotPassword() {
-            const s = document.getElementById('forgot-status');
-            s.style.display = 'block';
-            s.style.color = '#64748b';
-            s.textContent = 'Sending reset link...';
-            try {
-                const res = await fetch(WORKER_URL + '/admin/password/reset-request', { method: 'POST' });
-                const data = await res.json().catch(() => ({}));
-                if (res.ok && data.ok) {
-                    s.style.color = '#22c55e';
-                    s.textContent = 'Reset link sent to plschat@proton.me — valid for 15 minutes.';
-                } else {
-                    s.style.color = '#ef4444';
-                    s.textContent = data.error || 'Could not send reset email.';
-                }
-            } catch (e) {
-                s.style.color = '#ef4444';
-                s.textContent = 'Cannot reach server.';
-            }
-        }
-
-        async function submitPasswordReset() {
-            const np = document.getElementById('reset-new').value;
-            const cp = document.getElementById('reset-confirm').value;
-            const err = document.getElementById('reset-error');
-            err.style.display = 'none';
-            if (np.length < 6) { err.textContent = 'Password must be at least 6 characters'; err.style.display = 'block'; return; }
-            if (np !== cp) { err.textContent = 'Passwords do not match'; err.style.display = 'block'; return; }
-            try {
-                const res = await fetch(WORKER_URL + '/admin/password/reset', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: resetToken, password: np })
-                });
-                const data = await res.json().catch(() => ({}));
-                if (res.ok && data.ok) {
-                    alert('Password updated — please log in with your new password.');
-                    history.replaceState(null, '', location.pathname);
-                    resetToken = null;
-                    document.getElementById('reset-form').style.display = 'none';
-                    document.getElementById('login-form').style.display = 'block';
-                } else {
-                    err.textContent = data.error || 'Reset link invalid or expired — request a new one.';
-                    err.style.display = 'block';
-                }
-            } catch (e) {
-                err.textContent = 'Cannot reach server.';
-                err.style.display = 'block';
-            }
-        }
-
-        function showChangePasswordModal() { document.getElementById('change-password-modal').style.display = 'flex'; }
-        function closeChangePasswordModal() { document.getElementById('change-password-modal').style.display = 'none'; }
-
-        async function changeAdminPassword() {
-            const current = document.getElementById('current-password').value;
-            const newPass = document.getElementById('new-password').value;
-            const confirm = document.getElementById('confirm-password').value;
-            const err = document.getElementById('change-password-error');
-            err.style.display = 'none';
-            if (newPass.length < 6) { err.textContent = 'New password must be at least 6 characters'; err.style.display = 'block'; return; }
-            if (newPass !== confirm) { err.textContent = 'New passwords do not match'; err.style.display = 'block'; return; }
-            try {
-                const res = await fetch(WORKER_URL + '/admin/password/change', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ current: current, password: newPass })
-                });
-                const data = await res.json().catch(() => ({}));
-                if (res.ok && data.ok) {
-                    alert('Password changed successfully! Please log in again.');
-                    closeChangePasswordModal();
-                    location.reload();
-                } else {
-                    err.textContent = data.error || 'Could not change password.';
-                    err.style.display = 'block';
-                }
-            } catch (e) {
-                err.textContent = 'Cannot reach server.';
-                err.style.display = 'block';
-            }
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -724,14 +602,6 @@
         // ═══════════════════════════════════════════════════════════
 
         function init() {
-            // If we arrived from an emailed reset link, show the reset form instead of login
-            const params = new URLSearchParams(location.search);
-            if (params.get('reset')) {
-                resetToken = params.get('reset');
-                document.getElementById('login-form').style.display = 'none';
-                document.getElementById('reset-form').style.display = 'block';
-            }
-
             document.getElementById('nodes-grid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#64748b;">Connect to MQTT or enable Demo Mode to see nodes.</div>`;
             document.getElementById('node-filter').addEventListener('keydown', function(e) { if(e.key==='Escape'){this.value='';renderNodes();} });
             document.getElementById('admin-password').addEventListener('keydown', function(e) { if(e.key==='Enter') checkAdminPassword(); });
