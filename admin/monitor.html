@@ -26,8 +26,8 @@
         .logo { display: flex; align-items: center; gap: 12px; }
         .logo a { text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px; }
         .logo h1 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 600; background: linear-gradient(90deg, #a855f7, #67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .badge { background: #1f2439; color: #67e8f9; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; }
-        .btn { background: linear-gradient(90deg, #a855f7, #67e8f9); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+        .badge { background: #1f2439; color: #67e8f9; padding: 4px 12px; border-radius: 9999px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; }
+        .btn { background: linear-gradient(90deg, #a855f7, #67e8f9); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3); }
         .btn-secondary { background: #1f2439; color: var(--text); border: 1px solid #374151; }
         .btn-danger { background: #ef4444; color: white; }
@@ -35,15 +35,15 @@
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .stat { background: #0f1326; border-radius: 12px; padding: 20px; text-align: center; }
         .stat-value { font-size: 32px; font-weight: 700; color: #67e8f9; line-height: 1; }
-        .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-label { font-size: 14px; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         .node-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
         .node-card { background: #0f1326; border: 1px solid #1f2439; border-radius: 12px; padding: 18px; cursor: pointer; transition: all 0.2s ease; }
         .node-card:hover { border-color: #a855f7; transform: translateY(-2px); }
         .node-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .node-id { font-family: monospace; font-weight: 700; color: #67e8f9; font-size: 15px; }
+        .node-id { font-family: monospace; font-weight: 700; color: #67e8f9; font-size: 16px; }
         .node-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .metric { font-size: 13px; }
-        .metric-label { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .metric { font-size: 14px; }
+        .metric-label { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
         .rssi { font-weight: 700; }
         .rssi.good { color: #22c55e; }
         .rssi.ok { color: #eab308; }
@@ -51,18 +51,18 @@
         .config-section { background: #0f1326; border: 1px solid #374151; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
         .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
-        .form-group label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-        .form-group input { background: #1f2439; border: 1px solid #374151; color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; }
-        .status { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 16px; }
+        .form-group label { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+        .form-group input { background: #1f2439; border: 1px solid #374151; color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 15px; }
+        .status { display: flex; align-items: center; gap: 8px; font-size: 15px; margin-bottom: 16px; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; }
         .status-dot.connected { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background: var(--card); border-radius: 16px; padding: 28px; max-width: 520px; width: 90%; border: 1px solid #1f2439; }
-        footer { margin-top: 40px; text-align: center; font-size: 12px; color: var(--text-muted); }
-        .warning { background: #3f2a1f; border: 1px solid #eab308; color: #fcd34d; padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 20px; }
-        .info { background: #1a2f1f; border: 1px solid #22c55e; color: #86efac; padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 20px; }
+        footer { margin-top: 40px; text-align: center; font-size: 13px; color: var(--text-muted); }
+        .warning { background: #3f2a1f; border: 1px solid #eab308; color: #fcd34d; padding: 12px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 20px; }
+        .info { background: #1a2f1f; border: 1px solid #22c55e; color: #86efac; padding: 12px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 20px; }
         .pw-wrap { position: relative; }
-        .pw-wrap input { padding-right: 44px !important; }
+        .pw-wrap input { width: 100%; padding-right: 44px !important; }
         .pw-eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 17px; color: #64748b; padding: 4px 6px; line-height: 1; }
         .pw-eye:hover { color: #67e8f9; }
         esp-web-install-button { --esp-tools-button-color: #a855f7; }
@@ -75,15 +75,15 @@
         <div style="background:#12152b;border:1px solid #374151;border-radius:16px;padding:40px;width:100%;max-width:380px;text-align:center;">
             <div id="login-form">
                 <h2 style="margin-bottom:8px;color:#67e8f9;">Admin Access</h2>
-                <p style="color:#64748b;margin-bottom:24px;font-size:14px;">Enter password to access the remote monitor</p>
+                <p style="color:#64748b;margin-bottom:24px;font-size:15px;">Enter password to access the remote monitor</p>
                 <div class="pw-wrap" style="margin-bottom:16px;">
                     <input type="password" id="admin-password" placeholder="Password"
                            style="width:100%;padding:14px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:10px;font-size:16px;">
                     <button type="button" class="pw-eye" onclick="togglePw('admin-password',this)" title="Show password">&#128065;</button>
                 </div>
                 <button onclick="checkAdminPassword()" id="login-btn" class="btn" style="width:100%;padding:14px;font-size:16px;">Login</button>
-                <div id="login-error" style="color:#ef4444;margin-top:12px;font-size:13px;display:none;">Incorrect password</div>
-                <p style="color:#374151;margin-top:18px;font-size:11px;">Reset the password from the <strong>Change Admin Password</strong> panel once logged in.</p>
+                <div id="login-error" style="color:#ef4444;margin-top:12px;font-size:14px;display:none;">Incorrect password</div>
+                <p style="color:#374151;margin-top:18px;font-size:12px;">Reset the password from the <strong>Change Admin Password</strong> panel once logged in.</p>
             </div>
         </div>
     </div>
@@ -94,12 +94,15 @@
                 <a href="../index.html">
                     <div>
                         <h1>PLSChat</h1>
-                        <div style="font-size:13px;color:#67e8f9;margin-top:-6px;">ADMIN MONITOR</div>
+                        <div style="font-size:14px;color:#67e8f9;margin-top:-6px;">ADMIN MONITOR</div>
                     </div>
                 </a>
                 <div class="badge">SECURE • MQTT</div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn btn-secondary" onclick="location.reload()" title="Reload the page — you stay logged in for this tab">&#8635; Refresh</button>
+                <button id="release-serial-btn" class="btn btn-secondary" onclick="releaseSerialPort()" title="Free the USB serial port so another section (or the flasher) can use it">&#128268; Release Serial</button>
+                <button class="btn btn-secondary" onclick="lockAdmin()" title="Lock this page — password required again">&#128274; Lock</button>
                 <a href="../index.html" class="btn btn-secondary">&#8592; Back to Site</a>
             </div>
         </header>
@@ -114,9 +117,9 @@
         <div class="card" id="change-pw-card">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
                 <h3>&#128273; Change Admin Password</h3>
-                <span style="font-size:12px;color:#64748b;">Verified server-side &bull; stored hashed in KV</span>
+                <span style="font-size:13px;color:#64748b;">Verified server-side &bull; stored hashed in KV</span>
             </div>
-            <p style="color:#8b949e;font-size:13px;margin-bottom:16px;">
+            <p style="color:#8b949e;font-size:14px;margin-bottom:16px;">
                 Rotates the inner admin password. Requires your current password. The new one is hashed by the Worker and stored in KV — it is never sent back or logged.
             </p>
             <div class="config-grid">
@@ -144,7 +147,7 @@
             </div>
             <div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
                 <button class="btn" id="cp-btn" onclick="changeAdminPassword()">Update Password</button>
-                <div id="cp-status" style="font-size:13px;color:#64748b;font-family:monospace;min-height:18px;"></div>
+                <div id="cp-status" style="font-size:14px;color:#64748b;font-family:monospace;min-height:18px;"></div>
             </div>
         </div>
 
@@ -154,15 +157,15 @@
         <div class="card" id="flasher-card">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
                 <h3>&#127981; Company Firmware — v007</h3>
-                <span style="font-size:12px;color:#64748b;">Tamper-enabled build &bull; ESP32-S3</span>
+                <span style="font-size:13px;color:#64748b;">Tamper-enabled build &bull; ESP32-S3</span>
             </div>
-            <p style="color:#8b949e;font-size:13px;margin-bottom:16px;">
+            <p style="color:#8b949e;font-size:14px;margin-bottom:16px;">
                 Flash the v007 firmware to a company device. Hold the <strong>BOOT button</strong> on the Heltec while clicking Connect in the installer.
                 After flashing, provision it with <code style="color:#67e8f9;">COMPANY:ON</code> over serial to enable the tamper module.
             </p>
             <esp-web-install-button manifest="/manifest-v007.json"></esp-web-install-button>
-            <p style="color:#64748b;font-size:11px;margin-top:14px;">
-                <i>Note:</i> this flashes whatever <code>/manifest-v007.json</code> points to. Once a device has secure boot + flash encryption enabled (Release mode), it can no longer be reflashed here — that's expected.
+            <p style="color:#64748b;font-size:12px;margin-top:14px;">
+                <i>Note:</i> this flashes whatever <code>/manifest-v007.json</code> points to. Once a device has secure boot + flash encryption enabled (Release mode), it can no longer be reflashed here — that's expected. Clicking Connect automatically releases the Licence Manager's serial connection first, so you don't need to refresh between sections.
             </p>
         </div>
 
@@ -172,9 +175,9 @@
         <div class="card" id="company-card">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
                 <h3>&#128274; Company Mode &amp; Tamper</h3>
-                <span style="font-size:12px;color:#64748b;">Serial &bull; v007 &bull; persisted to NVS</span>
+                <span style="font-size:13px;color:#64748b;">Serial &bull; v007 &bull; persisted to NVS</span>
             </div>
-            <p style="color:#8b949e;font-size:13px;margin-bottom:16px;">
+            <p style="color:#8b949e;font-size:14px;margin-bottom:16px;">
                 Fresh v007 devices ship with the tamper module <strong>off</strong> (<code style="color:#67e8f9;">companyDevice = false</code>). Enabling Company Mode sends the exact command <code style="color:#67e8f9;">COMPANY:ON</code> over serial, which arms the case-lid / USB tamper watch and saves the flag to NVS so it survives reboots. Use <strong>Disable</strong> (<code style="color:#67e8f9;">COMPANY:OFF</code>) to turn it back off.
             </p>
             <div class="warning">
@@ -184,8 +187,8 @@
                 <button class="btn" onclick="setCompanyMode(true)">&#128274; Enable Company Mode (COMPANY:ON)</button>
                 <button class="btn btn-secondary" onclick="setCompanyMode(false)">Disable (COMPANY:OFF)</button>
             </div>
-            <div id="company-status" style="font-size:13px;color:#64748b;margin-top:12px;font-family:monospace;min-height:18px;word-break:break-all;"></div>
-            <p style="color:#64748b;font-size:11px;margin-top:12px;">
+            <div id="company-status" style="font-size:14px;color:#64748b;margin-top:12px;font-family:monospace;min-height:18px;word-break:break-all;"></div>
+            <p style="color:#64748b;font-size:12px;margin-top:12px;">
                 Uses the same USB serial port as the Licence Manager. If nothing is connected yet, your browser will prompt you to pick the device. Watch for <code style="color:#22c55e;">COMPANY_OK</code> in the status line above.
             </p>
         </div>
@@ -220,7 +223,7 @@
                 </div>
                 <button class="btn btn-secondary" onclick="toggleDemoMode()">Toggle Demo Mode</button>
             </div>
-            <div style="margin-top:12px;font-size:12px;color:#64748b;">
+            <div style="margin-top:12px;font-size:13px;color:#64748b;">
                 Tip: Use a secure MQTT broker with TLS (wss://). For production, enable username/password or client certificates.
             </div>
         </div>
@@ -242,7 +245,7 @@
                 <h3>Discovered Nodes</h3>
                 <div style="display:flex;gap:8px;align-items:center;">
                     <input type="text" id="node-filter" placeholder="Filter nodes..." style="background:#0f1326;border:1px solid #374151;color:#c9d1d9;padding:8px 14px;border-radius:8px;width:200px;" oninput="filterNodes()">
-                    <button class="btn btn-secondary" onclick="refreshNodesView()" style="padding:8px 14px;font-size:13px;">Refresh</button>
+                    <button class="btn btn-secondary" onclick="refreshNodesView()" style="padding:8px 14px;font-size:14px;">Refresh</button>
                 </div>
             </div>
             <div id="nodes-grid" class="node-grid"></div>
@@ -254,7 +257,7 @@
         <div class="card" id="licence-manager-card">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
                 <h3>&#128273; Licence Manager</h3>
-                <span style="font-size:12px;color:#64748b;">Ed25519 signed &#8226; stored in Worker KV</span>
+                <span style="font-size:13px;color:#64748b;">Ed25519 signed &#8226; stored in Worker KV</span>
             </div>
 
             <!-- Write Key -->
@@ -271,7 +274,7 @@
 
             <!-- Step 1: Device MAC -->
             <div class="config-section" style="margin-bottom:16px;">
-                <div style="font-size:12px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Step 1 — Device MAC</div>
+                <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Step 1 — Device MAC</div>
                 <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
                     <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0;">
                         <label>MAC Address</label>
@@ -285,16 +288,16 @@
                         &#128269; Check for existing licence
                     </button>
                 </div>
-                <div id="lic-detect-status" style="font-size:13px;color:#64748b;margin-top:8px;font-family:monospace;min-height:18px;"></div>
+                <div id="lic-detect-status" style="font-size:14px;color:#64748b;margin-top:8px;font-family:monospace;min-height:18px;"></div>
                 <!-- Existing-licence readout (populated on auto-detect) -->
-                <div id="lic-existing" style="display:none;border:1px solid;border-radius:10px;padding:12px 16px;margin-top:12px;font-size:13px;"></div>
+                <div id="lic-existing" style="display:none;border:1px solid;border-radius:10px;padding:12px 16px;margin-top:12px;font-size:14px;"></div>
                 <!-- Backend purchase check (survives re-flash) -->
-                <div id="lic-backend" style="display:none;border:1px solid;border-radius:10px;padding:12px 16px;margin-top:10px;font-size:13px;"></div>
+                <div id="lic-backend" style="display:none;border:1px solid;border-radius:10px;padding:12px 16px;margin-top:10px;font-size:14px;"></div>
             </div>
 
             <!-- Step 2: Tier -->
             <div class="config-section" style="margin-bottom:16px;">
-                <div style="font-size:12px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Step 2 — Licence Type</div>
+                <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Step 2 — Licence Type</div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
                     <div id="lic-btn-yearly" onclick="licSelectTier('yearly')"
                          style="flex:1;min-width:140px;padding:14px;background:#0a0c1f;border:2px solid #22d3ee;border-radius:10px;cursor:pointer;text-align:center;transition:.2s;">
@@ -311,7 +314,7 @@
 
             <!-- Step 3: Generate & Send -->
             <div class="config-section">
-                <div style="font-size:12px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Step 3 — Generate &amp; Send</div>
+                <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Step 3 — Generate &amp; Send</div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
                     <button onclick="licGenerate()" class="btn" style="flex:1;">
                         &#9889; Generate Signed Licence
@@ -321,14 +324,14 @@
                         &#128225; Send to Device via Serial
                     </button>
                 </div>
-                <div id="lic-status" style="font-size:13px;color:#64748b;margin-top:10px;font-family:monospace;min-height:18px;"></div>
+                <div id="lic-status" style="font-size:14px;color:#64748b;margin-top:10px;font-family:monospace;min-height:18px;"></div>
                 <div id="lic-result" style="display:none;background:#0a0c1f;border:1px solid #22c55e;border-radius:8px;padding:12px;margin-top:10px;font-family:monospace;font-size:.8em;word-break:break-all;color:#22c55e;"></div>
             </div>
 
             <!-- Step 4: Re-provision (paste an existing licence) -->
             <div class="config-section" style="margin-top:16px;">
-                <div style="font-size:12px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Step 4 — Re-provision a re-flashed device</div>
-                <p style="color:#8b949e;font-size:12px;margin-bottom:12px;">
+                <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Step 4 — Re-provision a re-flashed device</div>
+                <p style="color:#8b949e;font-size:13px;margin-bottom:12px;">
                     Flashing wipes the licence off a device, but the purchase still stands for that MAC. Paste the device's existing licence string here (or let <strong>Check for existing licence</strong> load it) and send it straight back — no new licence, no double charge.
                 </p>
                 <div class="form-group" style="margin-bottom:12px;">
@@ -340,11 +343,11 @@
                         style="background:linear-gradient(90deg,#22c55e,#16a34a);">
                     &#128225; Send Pasted Licence to Device
                 </button>
-                <div id="lic-paste-status" style="font-size:13px;color:#64748b;margin-top:10px;font-family:monospace;min-height:18px;word-break:break-all;"></div>
+                <div id="lic-paste-status" style="font-size:14px;color:#64748b;margin-top:10px;font-family:monospace;min-height:18px;word-break:break-all;"></div>
             </div>
 
             <!-- Session history -->
-            <div style="font-size:12px;color:#64748b;margin-top:16px;">
+            <div style="font-size:13px;color:#64748b;margin-top:16px;">
                 <strong style="color:#8b949e;">Session history:</strong>
                 <div id="lic-history" style="margin-top:6px;">None generated yet.</div>
             </div>
@@ -358,7 +361,7 @@
         <div class="modal-content" onclick="event.stopImmediatePropagation()">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
                 <h3 id="modal-node-id" style="color:#67e8f9;margin:0;"></h3>
-                <button onclick="closeModal()" class="btn btn-secondary" style="padding:6px 14px;font-size:13px;">Close</button>
+                <button onclick="closeModal()" class="btn btn-secondary" style="padding:6px 14px;font-size:14px;">Close</button>
             </div>
             <div id="modal-content"></div>
         </div>
@@ -433,7 +436,7 @@
                 const rssiClass = node.lastRssi > -70 ? 'good' : node.lastRssi > -90 ? 'ok' : 'bad';
                 const timeAgo = Math.floor((Date.now()-node.lastSeen.getTime())/1000);
                 const timeText = timeAgo < 60 ? `${timeAgo}s ago` : `${Math.floor(timeAgo/60)}m ago`;
-                card.innerHTML = `<div class="node-header"><div class="node-id">${node.id}</div><div style="font-size:11px;color:#64748b;">${timeText}</div></div><div class="node-metrics"><div class="metric"><div class="metric-label">RSSI</div><div class="rssi ${rssiClass}">${node.lastRssi} dBm</div></div><div class="metric"><div class="metric-label">Battery</div><div style="font-weight:700;">${node.battery}%</div></div></div>`;
+                card.innerHTML = `<div class="node-header"><div class="node-id">${node.id}</div><div style="font-size:12px;color:#64748b;">${timeText}</div></div><div class="node-metrics"><div class="metric"><div class="metric-label">RSSI</div><div class="rssi ${rssiClass}">${node.lastRssi} dBm</div></div><div class="metric"><div class="metric-label">Battery</div><div style="font-weight:700;">${node.battery}%</div></div></div>`;
                 container.appendChild(card);
             });
         }
@@ -445,7 +448,7 @@
             const node = nodes.get(nodeId);
             if (!node) return;
             document.getElementById('modal-node-id').textContent = nodeId;
-            document.getElementById('modal-content').innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:24px;"><div><div style="font-size:12px;color:#64748b;margin-bottom:4px;">LAST RSSI</div><div style="font-size:26px;font-weight:700;" class="rssi ${node.lastRssi>-70?'good':node.lastRssi>-90?'ok':'bad'}">${node.lastRssi??'--'} dBm</div></div><div><div style="font-size:12px;color:#64748b;margin-bottom:4px;">BATTERY</div><div style="font-size:26px;font-weight:700;">${node.battery??'--'}%</div></div><div><div style="font-size:12px;color:#64748b;margin-bottom:4px;">PACKETS</div><div style="font-size:20px;font-weight:700;">${node.packetCount||0}</div></div></div><div style="margin-bottom:16px;"><div style="font-size:12px;color:#64748b;margin-bottom:4px;">LAST SEEN</div><div style="font-size:15px;">${node.lastSeen.toLocaleString()}</div></div>`;
+            document.getElementById('modal-content').innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:24px;"><div><div style="font-size:13px;color:#64748b;margin-bottom:4px;">LAST RSSI</div><div style="font-size:26px;font-weight:700;" class="rssi ${node.lastRssi>-70?'good':node.lastRssi>-90?'ok':'bad'}">${node.lastRssi??'--'} dBm</div></div><div><div style="font-size:13px;color:#64748b;margin-bottom:4px;">BATTERY</div><div style="font-size:26px;font-weight:700;">${node.battery??'--'}%</div></div><div><div style="font-size:13px;color:#64748b;margin-bottom:4px;">PACKETS</div><div style="font-size:20px;font-weight:700;">${node.packetCount||0}</div></div></div><div style="margin-bottom:16px;"><div style="font-size:13px;color:#64748b;margin-bottom:4px;">LAST SEEN</div><div style="font-size:16px;">${node.lastSeen.toLocaleString()}</div></div>`;
             document.getElementById('node-modal').style.display = 'flex';
         }
 
@@ -499,11 +502,14 @@
 
         // ═══════════════════════════════════════════════════════════
         //  ADMIN AUTH — verified server-side by the Worker (/admin/login,
-        //  constant-time compare). Nothing is stored in localStorage/
-        //  sessionStorage, so the password is required on every visit.
-        //  This is the INNER layer, behind Cloudflare Access.
+        //  constant-time compare). On success a flag is kept in
+        //  sessionStorage for THIS TAB ONLY, so a refresh doesn't log you
+        //  out; closing the tab (or the Lock button) clears it. This
+        //  overlay is a convenience gate — every sensitive action is still
+        //  independently verified server-side (Write Key / current
+        //  password), and Cloudflare Access sits in front of everything.
         // ═══════════════════════════════════════════════════════════
-        let adminAuthed = false;   // in-memory only — wiped on refresh/close
+        let adminAuthed = false;
 
         function togglePw(id, btn) {
             const el = document.getElementById(id);
@@ -529,6 +535,7 @@
                 const data = await res.json().catch(() => ({}));
                 if (res.ok && data.ok) {
                     adminAuthed = true;
+                    try { sessionStorage.setItem('plschat_admin_session', '1'); } catch(e) {}
                     document.getElementById('admin-password').value = '';
                     document.getElementById('login-overlay').style.display = 'none';
                 } else {
@@ -592,6 +599,7 @@
         let licTier = 'yearly';
         let licCurrentLicence = '';
         let licSerialPort = null;
+        let activeSerialReader = null;   // any in-flight response reader, so Release can free it
         let licHistory = [];
 
         function licSelectTier(t) {
@@ -618,6 +626,7 @@
                 licSerialPort = await navigator.serial.requestPort();
                 await licSerialPort.open({ baudRate: 115200 });
                 reader = licSerialPort.readable.getReader();
+                activeSerialReader = reader;
 
                 let buf = '';
                 let stop = false;
@@ -637,6 +646,7 @@
                     }
                 }
                 try { reader.releaseLock(); } catch(e) {}
+                activeSerialReader = null;
 
                 const m = buf.match(/MAC:([0-9A-Fa-f:]{17})/);
                 if (!m) {
@@ -659,7 +669,7 @@
             } catch(e) {
                 try { if (reader) reader.releaseLock(); } catch(_) {}
                 el.style.color = '#ef4444';
-                el.textContent = e.message;
+                el.textContent = e.message + ' — if another section or the flasher is holding the USB port, click \"Release Serial\" in the top bar (or unplug/replug), then retry.';
             }
         }
 
@@ -689,7 +699,7 @@
                 banner.innerHTML =
                     '<strong>&#9989; This device is already licensed.</strong> ' +
                     '<span style="font-family:monospace;color:#67e8f9;">' + mac + '</span>' + extra +
-                    '<div style="color:#64748b;font-size:12px;margin-top:6px;">Generating &amp; sending a new licence will overwrite the one currently on this device.</div>';
+                    '<div style="color:#64748b;font-size:13px;margin-top:6px;">Generating &amp; sending a new licence will overwrite the one currently on this device.</div>';
             } else {
                 banner.style.background = '#3f2a1f';
                 banner.style.borderColor = '#eab308';
@@ -697,7 +707,7 @@
                 banner.innerHTML =
                     '<strong>No licence on this device yet.</strong> ' +
                     '<span style="font-family:monospace;color:#67e8f9;">' + mac + '</span>' +
-                    '<div style="color:#64748b;font-size:12px;margin-top:6px;">Pick a tier below, then Generate and Send.</div>';
+                    '<div style="color:#64748b;font-size:13px;margin-top:6px;">Pick a tier below, then Generate and Send.</div>';
             }
         }
 
@@ -742,7 +752,7 @@
                 box.style.background='#0f2e1a'; box.style.borderColor='#22c55e'; box.style.color='#86efac';
                 box.innerHTML =
                     '<strong>&#128179; A purchased licence exists for this MAC.</strong>' + extra +
-                    '<div style="color:#64748b;font-size:12px;margin-top:6px;">Loaded into the re-provision box (Step 4) — just click <em>Send Pasted Licence to Device</em> to restore it. No new purchase needed.</div>';
+                    '<div style="color:#64748b;font-size:13px;margin-top:6px;">Loaded into the re-provision box (Step 4) — just click <em>Send Pasted Licence to Device</em> to restore it. No new purchase needed.</div>';
                 const paste = document.getElementById('lic-paste');
                 if (paste && !paste.value.trim()) paste.value = result.licence;
                 return;
@@ -823,7 +833,7 @@
 
                 licHistory.unshift({ mac, tier: licTier, exp, time: new Date().toLocaleTimeString() });
                 document.getElementById('lic-history').innerHTML = licHistory.slice(0,5).map(h =>
-                    '<div style="padding:4px 0;border-bottom:1px solid #1f2439;font-size:12px;">' +
+                    '<div style="padding:4px 0;border-bottom:1px solid #1f2439;font-size:13px;">' +
                     '<span style="color:#67e8f9;font-family:monospace;">' + h.mac + '</span> &bull; ' +
                     '<span style="color:#a855f7;">' + h.tier + '</span> &bull; expires ' + h.exp +
                     '<span style="float:right;color:#374151;">' + h.time + '</span></div>'
@@ -851,8 +861,10 @@
                 writer.releaseLock();
                 el.textContent='Sent — waiting for device response...';
                 setTimeout(async () => {
+                    let reader = null;
                     try {
-                        const reader = licSerialPort.readable.getReader();
+                        reader = licSerialPort.readable.getReader();
+                        activeSerialReader = reader;
                         let buf = '';
                         const timeout = setTimeout(() => reader.cancel(), 5000);
                         while (true) {
@@ -875,11 +887,14 @@
                     } catch(e) {
                         el.style.color='#ef4444';
                         el.textContent='Could not read device response: ' + e.message;
+                    } finally {
+                        if (reader) { try { reader.releaseLock(); } catch(_) {} }
+                        if (activeSerialReader === reader) activeSerialReader = null;
                     }
                 }, 600);
             } catch(e) {
                 el.style.color='#ef4444';
-                el.textContent='Serial error: ' + e.message;
+                el.textContent='Serial error: ' + e.message + ' — if another section or the flasher is holding the USB port, click \"Release Serial\" in the top bar (or unplug/replug), then retry.';
             }
         }
 
@@ -932,8 +947,10 @@
                 writer.releaseLock();
                 el.textContent = 'Sent ' + cmd + ' — waiting for device...';
                 setTimeout(async () => {
+                    let reader = null;
                     try {
-                        const reader = licSerialPort.readable.getReader();
+                        reader = licSerialPort.readable.getReader();
+                        activeSerialReader = reader;
                         let buf = '';
                         const timeout = setTimeout(() => reader.cancel(), 5000);
                         while (true) {
@@ -952,15 +969,60 @@
                     } catch(e) {
                         el.style.color = '#ef4444';
                         el.textContent = 'Could not read device response: ' + e.message;
+                    } finally {
+                        if (reader) { try { reader.releaseLock(); } catch(_) {} }
+                        if (activeSerialReader === reader) activeSerialReader = null;
                     }
                 }, 600);
             } catch(e) {
                 el.style.color = '#ef4444';
-                el.textContent = 'Serial error: ' + e.message;
+                el.textContent = 'Serial error: ' + e.message + ' — if another section or the flasher is holding the USB port, click \"Release Serial\" in the top bar (or unplug/replug), then retry.';
+            }
+        }
+
+        // Re-lock the page (clears the tab session; password required again).
+        function lockAdmin() {
+            try { sessionStorage.removeItem('plschat_admin_session'); } catch(e) {}
+            adminAuthed = false;
+            document.getElementById('admin-password').value = '';
+            document.getElementById('login-overlay').style.display = 'flex';
+        }
+
+        // Free the USB serial port so another section (or the web flasher)
+        // can claim it — no full page refresh needed. Cancels any in-flight
+        // response reader first, since a locked reader blocks port.close().
+        async function releaseSerialPort(showFeedback = true) {
+            try {
+                if (activeSerialReader) {
+                    try { await activeSerialReader.cancel(); } catch(e) {}
+                    try { activeSerialReader.releaseLock(); } catch(e) {}
+                    activeSerialReader = null;
+                }
+                if (licSerialPort) {
+                    try { await licSerialPort.close(); } catch(e) {}
+                }
+            } finally {
+                licSerialPort = null;
+                if (showFeedback) {
+                    const b = document.getElementById('release-serial-btn');
+                    if (b) { const t = b.innerHTML; b.innerHTML = '&#10003; Port released'; setTimeout(() => { b.innerHTML = t; }, 1500); }
+                }
             }
         }
 
         function init() {
+            // Same-tab session: skip the login overlay if already unlocked in this tab.
+            try {
+                if (sessionStorage.getItem('plschat_admin_session') === '1') {
+                    adminAuthed = true;
+                    document.getElementById('login-overlay').style.display = 'none';
+                }
+            } catch(e) {}
+            // The web flasher needs exclusive USB access — release our serial
+            // handle automatically the moment its Connect button is clicked.
+            const flashBtn = document.querySelector('esp-web-install-button');
+            if (flashBtn) flashBtn.addEventListener('click', () => releaseSerialPort(false), true);
+
             document.getElementById('nodes-grid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#64748b;">Connect to MQTT or enable Demo Mode to see nodes.</div>`;
             document.getElementById('node-filter').addEventListener('keydown', function(e) { if(e.key==='Escape'){this.value='';renderNodes();} });
             document.getElementById('admin-password').addEventListener('keydown', function(e) { if(e.key==='Enter') checkAdminPassword(); });
