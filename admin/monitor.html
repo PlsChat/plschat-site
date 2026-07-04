@@ -166,6 +166,30 @@
             </p>
         </div>
 
+        <!-- ═══════════════════════════════════════════════════════════
+             COMPANY MODE / TAMPER ACTIVATION
+        ═══════════════════════════════════════════════════════════ -->
+        <div class="card" id="company-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                <h3>&#128274; Company Mode &amp; Tamper</h3>
+                <span style="font-size:12px;color:#64748b;">Serial &bull; v007 &bull; persisted to NVS</span>
+            </div>
+            <p style="color:#8b949e;font-size:13px;margin-bottom:16px;">
+                Fresh v007 devices ship with the tamper module <strong>off</strong> (<code style="color:#67e8f9;">companyDevice = false</code>). Enabling Company Mode sends the exact command <code style="color:#67e8f9;">COMPANY:ON</code> over serial, which arms the case-lid / USB tamper watch and saves the flag to NVS so it survives reboots. Use <strong>Disable</strong> (<code style="color:#67e8f9;">COMPANY:OFF</code>) to turn it back off.
+            </p>
+            <div class="warning">
+                Only enable this on <strong>owner-deployed company units</strong>. With tamper armed, opening the case (or, if VBUS-trip is on, attaching USB) will lock or wipe that device's own keys per its policy. Set the tamper policy first if you need WIPE vs LOCK.
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                <button class="btn" onclick="setCompanyMode(true)">&#128274; Enable Company Mode (COMPANY:ON)</button>
+                <button class="btn btn-secondary" onclick="setCompanyMode(false)">Disable (COMPANY:OFF)</button>
+            </div>
+            <div id="company-status" style="font-size:13px;color:#64748b;margin-top:12px;font-family:monospace;min-height:18px;word-break:break-all;"></div>
+            <p style="color:#64748b;font-size:11px;margin-top:12px;">
+                Uses the same USB serial port as the Licence Manager. If nothing is connected yet, your browser will prompt you to pick the device. Watch for <code style="color:#22c55e;">COMPANY_OK</code> in the status line above.
+            </p>
+        </div>
+
         <!-- MQTT Connection -->
         <div class="card">
             <h3 style="margin-bottom:16px;">MQTT Connection</h3>
@@ -257,10 +281,15 @@
                     <button onclick="licDetectDevice()" class="btn btn-secondary" style="padding:10px 18px;white-space:nowrap;">
                         &#128268; Auto-detect via USB
                     </button>
+                    <button onclick="licCheckExisting()" class="btn btn-secondary" style="padding:10px 18px;white-space:nowrap;">
+                        &#128269; Check for existing licence
+                    </button>
                 </div>
                 <div id="lic-detect-status" style="font-size:13px;color:#64748b;margin-top:8px;font-family:monospace;min-height:18px;"></div>
                 <!-- Existing-licence readout (populated on auto-detect) -->
                 <div id="lic-existing" style="display:none;border:1px solid;border-radius:10px;padding:12px 16px;margin-top:12px;font-size:13px;"></div>
+                <!-- Backend purchase check (survives re-flash) -->
+                <div id="lic-backend" style="display:none;border:1px solid;border-radius:10px;padding:12px 16px;margin-top:10px;font-size:13px;"></div>
             </div>
 
             <!-- Step 2: Tier -->
@@ -294,6 +323,24 @@
                 </div>
                 <div id="lic-status" style="font-size:13px;color:#64748b;margin-top:10px;font-family:monospace;min-height:18px;"></div>
                 <div id="lic-result" style="display:none;background:#0a0c1f;border:1px solid #22c55e;border-radius:8px;padding:12px;margin-top:10px;font-family:monospace;font-size:.8em;word-break:break-all;color:#22c55e;"></div>
+            </div>
+
+            <!-- Step 4: Re-provision (paste an existing licence) -->
+            <div class="config-section" style="margin-top:16px;">
+                <div style="font-size:12px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Step 4 — Re-provision a re-flashed device</div>
+                <p style="color:#8b949e;font-size:12px;margin-bottom:12px;">
+                    Flashing wipes the licence off a device, but the purchase still stands for that MAC. Paste the device's existing licence string here (or let <strong>Check for existing licence</strong> load it) and send it straight back — no new licence, no double charge.
+                </p>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label>Existing licence string (<code style="color:#67e8f9;">v1|MAC|expiry|tier|sig</code>)</label>
+                    <textarea id="lic-paste" rows="3" placeholder="v1|90:70:69:83:E6:1C|1782000000|yearly|a1b2c3..."
+                              style="width:100%;padding:10px;background:#0a0c1f;border:1px solid #374151;color:#c9d1d9;border-radius:8px;font-family:monospace;font-size:.8em;resize:vertical;word-break:break-all;"></textarea>
+                </div>
+                <button onclick="licSendPasted()" class="btn" id="lic-paste-send-btn"
+                        style="background:linear-gradient(90deg,#22c55e,#16a34a);">
+                    &#128225; Send Pasted Licence to Device
+                </button>
+                <div id="lic-paste-status" style="font-size:13px;color:#64748b;margin-top:10px;font-family:monospace;min-height:18px;word-break:break-all;"></div>
             </div>
 
             <!-- Session history -->
@@ -604,6 +651,11 @@
 
                 const licensed = /LICEN[SC]ED:YES/i.test(buf);
                 showExistingLicence(mac, licensed, buf);
+
+                // Also ask the backend whether this MAC already has a purchased
+                // licence — this is the part that survives a re-flash.
+                const backend = await licLookupExisting(mac);
+                showBackendLicence(backend, mac);
             } catch(e) {
                 try { if (reader) reader.releaseLock(); } catch(_) {}
                 el.style.color = '#ef4444';
@@ -647,6 +699,89 @@
                     '<span style="font-family:monospace;color:#67e8f9;">' + mac + '</span>' +
                     '<div style="color:#64748b;font-size:12px;margin-top:6px;">Pick a tier below, then Generate and Send.</div>';
             }
+        }
+
+        // Checks the Worker for a licence already issued/purchased for this MAC.
+        // This is what survives a re-flash: the device itself reports LICENSED:NO
+        // after flashing, but the purchase record lives server-side. Requires the
+        // Write Key, and needs a matching Worker route: POST /admin/licence/lookup.
+        async function licLookupExisting(mac) {
+            const writeKey = document.getElementById('lic-write-key').value.trim();
+            if (!writeKey) return { needKey: true };
+            try {
+                const res = await fetch(WORKER_URL + '/admin/licence/lookup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Write-Key': writeKey },
+                    body: JSON.stringify({ mac })
+                });
+                if (res.status === 404 || res.status === 501) return { unsupported: true };
+                if (res.status === 401 || res.status === 403) return { unauthorized: true };
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.found && data.licence) return { found: true, ...data };
+                return { found: false };
+            } catch (e) {
+                return { error: e.message };
+            }
+        }
+
+        // Renders the backend purchase-check result under Step 1 and, when a
+        // licence is found, loads it into the Step 4 re-provision box.
+        function showBackendLicence(result, mac) {
+            const box = document.getElementById('lic-backend');
+            if (!box) return;
+            const neutral = () => { box.style.background='#0f1326'; box.style.borderColor='#374151'; box.style.color='#8b949e'; };
+            box.style.display = 'block';
+
+            if (result.found) {
+                let extra = '';
+                if (result.tier) extra += ' &bull; ' + String(result.tier).toLowerCase();
+                if (result.expiry) {
+                    const d = new Date(result.expiry * 1000);
+                    if (!isNaN(d.getTime())) extra += ' &bull; expires ' + d.toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
+                }
+                box.style.background='#0f2e1a'; box.style.borderColor='#22c55e'; box.style.color='#86efac';
+                box.innerHTML =
+                    '<strong>&#128179; A purchased licence exists for this MAC.</strong>' + extra +
+                    '<div style="color:#64748b;font-size:12px;margin-top:6px;">Loaded into the re-provision box (Step 4) — just click <em>Send Pasted Licence to Device</em> to restore it. No new purchase needed.</div>';
+                const paste = document.getElementById('lic-paste');
+                if (paste && !paste.value.trim()) paste.value = result.licence;
+                return;
+            }
+            if (result.needKey) {
+                neutral();
+                box.innerHTML = 'Enter your <strong>Write Key</strong> above, then Check again to see whether this MAC already has a purchased licence.';
+                return;
+            }
+            if (result.unsupported) {
+                neutral();
+                box.innerHTML = 'Backend licence lookup isn\'t live yet (the Worker has no <code>/admin/licence/lookup</code> route). You can still paste the licence into Step 4 and send it.';
+                return;
+            }
+            if (result.unauthorized) {
+                box.style.background='#3f2a1f'; box.style.borderColor='#eab308'; box.style.color='#fcd34d';
+                box.innerHTML = 'Write Key was rejected by the Worker — double-check it, then Check again.';
+                return;
+            }
+            if (result.error) {
+                neutral();
+                box.innerHTML = 'Couldn\'t reach the backend to check for an existing licence (' + result.error + '). You can still paste one into Step 4.';
+                return;
+            }
+            neutral();
+            box.innerHTML = 'No purchased licence found on the server for <span style="font-family:monospace;color:#67e8f9;">' + (mac || '') + '</span>. If this is a new device, generate one in Step 3.';
+        }
+
+        // Manual backend check using whatever MAC is in the field (no serial needed).
+        async function licCheckExisting() {
+            const mac = document.getElementById('lic-mac').value.trim().toUpperCase();
+            const box = document.getElementById('lic-backend');
+            if (!mac || mac.length !== 17) {
+                if (box) { box.style.display='block'; box.style.background='#3f2a1f'; box.style.borderColor='#eab308'; box.style.color='#fcd34d'; box.innerHTML='Enter or auto-detect a valid MAC first.'; }
+                return;
+            }
+            if (box) { box.style.display='block'; box.style.background='#0f1326'; box.style.borderColor='#374151'; box.style.color='#8b949e'; box.innerHTML='Checking the server for an existing licence...'; }
+            const backend = await licLookupExisting(mac);
+            showBackendLicence(backend, mac);
         }
 
         async function licGenerate() {
@@ -700,9 +835,10 @@
             }
         }
 
-        async function licSendToDevice() {
-            if (!licCurrentLicence) return;
-            const el = document.getElementById('lic-status');
+        // Shared serial write + response read, used by both "Send to Device"
+        // (freshly generated) and "Send Pasted Licence" (re-flashed device).
+        async function licWriteLicenceToDevice(licence, el) {
+            if (!licence) return;
             try {
                 if (!licSerialPort || !licSerialPort.writable) {
                     licSerialPort = await navigator.serial.requestPort();
@@ -711,7 +847,7 @@
                 el.style.color='#64748b';
                 el.textContent='Sending licence to device...';
                 const writer = licSerialPort.writable.getWriter();
-                await writer.write(new TextEncoder().encode('LICENSE:' + licCurrentLicence + '\n'));
+                await writer.write(new TextEncoder().encode('LICENSE:' + licence + '\n'));
                 writer.releaseLock();
                 el.textContent='Sent — waiting for device response...';
                 setTimeout(async () => {
@@ -746,7 +882,83 @@
                 el.textContent='Serial error: ' + e.message;
             }
         }
+
+        async function licSendToDevice() {
+            if (!licCurrentLicence) return;
+            licWriteLicenceToDevice(licCurrentLicence, document.getElementById('lic-status'));
+        }
+
+        // Send a licence pasted into the Step 4 box (re-flashed device flow).
+        async function licSendPasted() {
+            const el = document.getElementById('lic-paste-status');
+            const raw = document.getElementById('lic-paste').value.trim();
+            if (!raw) { el.style.color='#ef4444'; el.textContent='Paste a licence string first.'; return; }
+            // Light client-side sanity check — the device still verifies the signature.
+            const parts = raw.split('|');
+            if (parts[0] !== 'v1' || parts.length < 5) {
+                el.style.color='#ef4444';
+                el.textContent='That doesn\'t look like a v1 licence (expected v1|MAC|expiry|tier|sig).';
+                return;
+            }
+            // Warn (don't block) if the licence MAC differs from the detected/entered MAC.
+            const licMac = (parts[1] || '').toUpperCase();
+            const fieldMac = document.getElementById('lic-mac').value.trim().toUpperCase();
+            if (fieldMac && licMac && fieldMac !== licMac) {
+                if (!confirm('Heads up: this licence is for ' + licMac + ', but the MAC field shows ' + fieldMac + '.\n\nA device only accepts a licence issued for its own MAC. Send anyway?')) {
+                    el.style.color='#64748b'; el.textContent='Cancelled — MAC mismatch.';
+                    return;
+                }
+            }
+            licWriteLicenceToDevice(raw, el);
+        }
         // ═══════════════════════════════════════════════════════════
+
+        // ── Company / tamper mode ───────────────────────────────
+        // Sends the EXACT command the v007 firmware matches (it trims the line
+        // but is case-sensitive): COMPANY:ON enables companyDevice + arms the
+        // tamper watch; COMPANY:OFF disables it. Device replies COMPANY_OK.
+        async function setCompanyMode(enable) {
+            const el = document.getElementById('company-status');
+            const cmd = enable ? 'COMPANY:ON' : 'COMPANY:OFF';
+            try {
+                if (!licSerialPort || !licSerialPort.writable) {
+                    licSerialPort = await navigator.serial.requestPort();
+                    await licSerialPort.open({ baudRate: 115200 });
+                }
+                el.style.color = '#64748b';
+                el.textContent = 'Sending ' + cmd + ' ...';
+                const writer = licSerialPort.writable.getWriter();
+                await writer.write(new TextEncoder().encode(cmd + '\n'));
+                writer.releaseLock();
+                el.textContent = 'Sent ' + cmd + ' — waiting for device...';
+                setTimeout(async () => {
+                    try {
+                        const reader = licSerialPort.readable.getReader();
+                        let buf = '';
+                        const timeout = setTimeout(() => reader.cancel(), 5000);
+                        while (true) {
+                            const { value, done } = await reader.read();
+                            if (done) break;
+                            buf += new TextDecoder().decode(value);
+                            if (buf.includes('COMPANY_OK')) {
+                                clearTimeout(timeout); reader.cancel();
+                                el.style.color = '#22c55e';
+                                el.textContent = enable
+                                    ? 'Company mode ENABLED — tamper armed (COMPANY_OK). Set tamper policy next if needed.'
+                                    : 'Company mode DISABLED (COMPANY_OK).';
+                                break;
+                            }
+                        }
+                    } catch(e) {
+                        el.style.color = '#ef4444';
+                        el.textContent = 'Could not read device response: ' + e.message;
+                    }
+                }, 600);
+            } catch(e) {
+                el.style.color = '#ef4444';
+                el.textContent = 'Serial error: ' + e.message;
+            }
+        }
 
         function init() {
             document.getElementById('nodes-grid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#64748b;">Connect to MQTT or enable Demo Mode to see nodes.</div>`;
