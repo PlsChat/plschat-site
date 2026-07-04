@@ -137,9 +137,9 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 <div class="mt-4 flex items-center gap-x-3 text-sm">
 <label class="flex items-center gap-x-2 cursor-pointer">
 <input type="checkbox" id="require-password-checkbox" class="accent-cyan-400 w-4 h-4">
-<span class="text-zinc-300">Require device password on connect</span>
+<span class="text-zinc-300">Require a passphrase before connecting</span>
 </label>
-<span class="text-[10px] px-2 py-0.5 rounded bg-amber-400/10 text-amber-300 border border-amber-400/20">Recommended for added security</span>
+<span class="text-[10px] px-2 py-0.5 rounded bg-white/5 text-zinc-400 border border-white/10">Local browser gate only — not verified by the device</span>
 </div>
 
 <div id="connected-device-badge" class="hidden mt-3 inline-flex items-center gap-x-2 px-3 py-1.5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 text-emerald-300 text-xs"></div>
@@ -179,7 +179,7 @@ Nodes appear when the connected device receives their packets or status over LoR
 <h3 class="font-semibold text-lg">Recent Packets</h3>
 <div class="flex gap-2">
 <button onclick="clearPackets()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Clear</button>
-<button onclick="copyPackets()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Copy</button>
+<button onclick="copyPackets(event)" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Copy</button>
 </div>
 </div>
 <div class="max-h-[200px] overflow-auto">
@@ -462,7 +462,7 @@ function getRequirePasswordCheckbox() {
 
 function promptForDevicePassword() {
   return new Promise((resolve) => {
-    const pw = prompt('Enter device web UI password to unlock full status:');
+    const pw = prompt('Enter the passphrase to continue connecting:');
     resolve(pw ? pw.trim() : null);
   });
 }
@@ -477,7 +477,7 @@ async function connectSerial() {
   if (requirePasswordOnConnect) {
     const pw = await promptForDevicePassword();
     if (!pw) {
-      alert('Password required. Connection cancelled.');
+      alert('Passphrase required. Connection cancelled.');
       return;
     }
     devicePassword = pw; // store for this session
@@ -739,15 +739,19 @@ function clearLog() {
 }
 
 // ===== NEW: Copy packets function =====
-function copyPackets() {
+function copyPackets(evt) {
+  // Capture the button now, synchronously. window.event is cleared by the time
+  // the clipboard promise resolves, so referencing it inside .then() is unreliable.
+  const btn = (evt && evt.currentTarget) ? evt.currentTarget : null;
   const text = packets.map(p => {
     const time = p.timestamp.toLocaleTimeString();
     return `[${time}] ${p.from} → ${p.to} | ${p.type} | RSSI: ${p.rssi || '-'}`;
   }).join('\n');
   navigator.clipboard.writeText(text).then(() => {
-    const origText = event.target ? event.target.textContent : '';
-    if (event.target) event.target.textContent = 'Copied!';
-    setTimeout(() => { if (event.target) event.target.textContent = 'Copy'; }, 1200);
+    if (btn) {
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 1200);
+    }
   }).catch(() => alert('Copy failed'));
 }
 
