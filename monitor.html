@@ -24,12 +24,16 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 .mini-chart { height: 60px; background: #0f1326; border-radius: 8px; }
 
+/* --- View toggle --- */
 .view-toggle-btn.active { background: rgba(255,255,255,0.1); color: #67e8f9; }
+
+/* --- Status dots --- */
 .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; flex-shrink: 0; }
 .status-dot.online { background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,0.7); }
 .status-dot.offline { background: #475569; }
 .status-dot.published { background: #c084fc; box-shadow: 0 0 6px rgba(192,132,252,0.7); }
 
+/* --- Leaflet theming (light basemap for readability, dark UI chrome) --- */
 #leaflet-map { background: #dce3ea; }
 .leaflet-container { background: #dce3ea !important; font-family: 'Inter', sans-serif !important; }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #0a0c1f; color: #c9d1d9; border: 1px solid rgba(255,255,255,0.1); }
@@ -46,6 +50,7 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 .leaflet-tooltip-top:before { border-top-color: #0a0c1f !important; }
 #map-visual.place-mode-active #leaflet-map { cursor: crosshair; }
 
+/* --- Repeater search/select --- */
 .repeater-option { padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); }
 .repeater-option:hover { background: rgba(255,255,255,0.06); }
 .repeater-option.add-new { color: #67e8f9; }
@@ -86,7 +91,6 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 </div>
 </div>
 </nav>
-
 <div id="mobile-menu" class="hidden md:hidden border-b border-white/10 bg-[#0a0c1f]">
 <div class="px-6 py-4 flex flex-col gap-y-1 text-sm">
 <a href="index.html" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Home</a>
@@ -129,7 +133,7 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 <button onclick="resetKnownRepeaters()" class="inline-flex items-center gap-x-2 px-5 py-3 border border-red-400/30 text-red-300 hover:bg-red-400/10 rounded-2xl transition-colors"><i class="fa-solid fa-trash"></i> <span>Reset Known Repeaters</span></button>
 </div>
 
-<!-- Optional Password Toggle -->
+<!-- NEW: Optional password protection toggle -->
 <div class="mt-4 flex items-center gap-x-3 text-sm">
 <label class="flex items-center gap-x-2 cursor-pointer">
 <input type="checkbox" id="require-password-checkbox" class="accent-cyan-400 w-4 h-4">
@@ -139,7 +143,11 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 </div>
 
 <div id="connected-device-badge" class="hidden mt-3 inline-flex items-center gap-x-2 px-3 py-1.5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 text-emerald-300 text-xs"></div>
-<p class="text-xs text-zinc-500 mt-3">Works in Chrome/Edge. Node must print verbose logs to serial.</p>
+<p class="text-xs text-zinc-500 mt-3">Works in Chrome/Edge. Node must print verbose logs to serial. <strong class="text-red-300">Reset Known Repeaters</strong> permanently clears every saved/pinned repeater stored in this browser — including any left over from Simulate Traffic — and cannot be undone. <strong class="text-zinc-300">Only the device currently connected via Web Serial</strong> can be renamed, relocated, or published/removed from the public map — every other discovered repeater is view-only until you connect it directly.</p>
+</div>
+
+<div class="mb-4 px-1 text-xs text-zinc-500">
+Nodes appear when the connected device receives their packets or status over LoRa. Repeaters you've added or pinned stay listed even when offline.
 </div>
 
 <!-- Stats -->
@@ -151,7 +159,7 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 </div>
 
 <div class="grid lg:grid-cols-12 gap-6">
-<!-- Live Serial Log -->
+<!-- Live Log -->
 <div class="lg:col-span-7 card p-6">
 <div class="flex items-center justify-between mb-4">
 <h3 class="font-semibold text-lg">Live Serial Log</h3>
@@ -199,19 +207,34 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 <!-- Mesh Visualization / Map -->
 <div class="card p-6 mt-6">
 <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-<h3 class="font-semibold text-lg">Mesh Visualization</h3>
+<h3 class="font-semibold text-lg">Mesh Visualization <span class="text-xs text-zinc-500">— see how repeaters connect</span></h3>
 <div class="flex items-center gap-2 flex-wrap">
+
 <div class="flex border border-white/10 rounded-xl overflow-hidden mr-1">
 <button id="view-network-btn" onclick="switchMeshView('network')" class="view-toggle-btn active text-xs px-3 py-1.5 hover:bg-white/5 transition-colors"><i class="fa-solid fa-diagram-project mr-1"></i>Network</button>
 <button id="view-map-btn" onclick="switchMeshView('map')" class="view-toggle-btn text-xs px-3 py-1.5 hover:bg-white/5 transition-colors"><i class="fa-solid fa-map-location-dot mr-1"></i>Map</button>
 </div>
+
 <div id="network-controls" class="flex gap-2">
 <button onclick="resetMeshLayout()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Reset</button>
 <button onclick="autoArrangeByRSSI()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Auto by RSSI</button>
 </div>
+
 <div id="map-controls" class="hidden flex gap-2 items-center flex-wrap relative">
+<div class="relative">
+<input type="text" id="repeater-search" placeholder="Search repeaters to place..." autocomplete="off"
+  class="bg-[#0f1326] border border-white/10 rounded-xl px-3 py-1.5 text-xs w-56 focus:outline-none focus:border-cyan-400/50"
+  oninput="handleRepeaterSearchInput()" onfocus="showRepeaterSearchDropdown()" onblur="hideRepeaterSearchDropdownDeferred()">
+<div id="repeater-search-dropdown" class="hidden absolute left-0 top-[calc(100%+6px)] w-72 max-h-60 overflow-auto bg-[#0a0c1f] border border-white/10 rounded-xl shadow-2xl z-[1500] text-xs"></div>
+</div>
+<div id="place-armed-badge" class="hidden items-center gap-2 text-xs px-3 py-1.5 rounded-xl border border-cyan-400/40 bg-cyan-400/10 text-cyan-300">
+<i class="fa-solid fa-location-crosshairs"></i>
+<span id="place-armed-label"></span>
+<button onclick="cancelPlacement()" class="text-cyan-300 hover:text-white ml-1 text-base leading-none">&times;</button>
+</div>
 <button onclick="centerMap()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Center</button>
 </div>
+
 </div>
 </div>
 
@@ -221,7 +244,9 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 <div id="map-visual" class="mesh-visual h-[600px] relative hidden">
 <div id="leaflet-map" class="w-full h-full rounded-2xl"></div>
 </div>
-</div>
+
+<p id="network-caption" class="text-[11px] text-zinc-500 mt-2 text-center">Click a node for detailed stats • Drag to rearrange • Double-click to set custom label • Nodes appear when received by the connected device</p>
+<p id="map-caption" class="text-[11px] text-zinc-500 mt-2 text-center hidden">Click a placed repeater for stats • Drag a pin to nudge its position • Search above to place a new one • The dashed circle is an editable estimated range, not measured coverage</p>
 </div>
 </div>
 
@@ -343,6 +368,7 @@ let packetCount = 0, ppsInterval = null;
 let simulationActive = false, simulateIntervalId = null;
 let connectedDeviceId = null;
 let currentModalNodeId = null;
+let rssiChartCtx = null;
 let canvas, ctx;
 let meshNodes = [];
 let meshPositions = new Map();
@@ -380,28 +406,56 @@ let placeMode = false;
 let placeTargetId = null;
 let justDraggedMarker = false;
 
+// ===== NEW: Optional password state =====
 let requirePasswordOnConnect = false;
-let devicePassword = null;
+let devicePassword = null; // temporary for the session
 
 function loadRegistry() {
-  try { return JSON.parse(localStorage.getItem(REGISTRY_KEY)) || {}; } catch(e) { return {}; }
+  try {
+    const raw = localStorage.getItem(REGISTRY_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
 }
 function saveRegistry() {
-  try { localStorage.setItem(REGISTRY_KEY, JSON.stringify(registry)); } catch(e){}
+  try { localStorage.setItem(REGISTRY_KEY, JSON.stringify(registry)); } catch (e) {}
+}
+function registerKnownIfNeeded(id) {
+  if (simulationActive) return;
+  if (!registry[id]) {
+    registry[id] = { label: null, lat: null, lon: null, manuallyAdded: false, addedAt: new Date().toISOString() };
+    saveRegistry();
+  }
+}
+function applyRegistryToNodes() {
+  Object.keys(registry).forEach(id => {
+    if (!nodes.has(id)) {
+      const n = createNewNode(id, null);
+      nodes.set(id, n);
+    }
+    const n = nodes.get(id);
+    const r = registry[id];
+    if (r.label) n.customLabel = r.label;
+    n.lat = (r.lat !== undefined) ? r.lat : null;
+    n.lon = (r.lon !== undefined) ? r.lon : null;
+  });
 }
 
-function canEditNode(id) { return !!id && id === connectedDeviceId; }
+function canEditNode(id) {
+  return !!id && id === connectedDeviceId;
+}
 function updateConnectedDeviceBadge() {
   const badge = document.getElementById('connected-device-badge');
   if (!badge) return;
   if (connectedDeviceId) {
     badge.classList.remove('hidden');
-    badge.innerHTML = `Editing unlocked for: <strong>${connectedDeviceId}</strong>`;
+    badge.innerHTML = `<i class="fa-solid fa-lock-open"></i> Editing unlocked for: <strong>${repeaterDisplayName(connectedDeviceId)}</strong>`;
   } else {
     badge.classList.add('hidden');
+    badge.innerHTML = '';
   }
 }
 
+// ===== NEW: Password protection helpers =====
 function getRequirePasswordCheckbox() {
   return document.getElementById('require-password-checkbox');
 }
@@ -426,14 +480,13 @@ async function connectSerial() {
       alert('Password required. Connection cancelled.');
       return;
     }
-    devicePassword = pw;
+    devicePassword = pw; // store for this session
   } else {
     devicePassword = null;
   }
 
   connectedDeviceId = null;
   updateConnectedDeviceBadge();
-
   try {
     port = await navigator.serial.requestPort();
     await port.open({ baudRate: 115200 });
@@ -471,7 +524,7 @@ async function disconnectSerial() {
   isConnected = false; updateConnectionUI(false);
   if (ppsInterval) { clearInterval(ppsInterval); ppsInterval = null; }
   connectedDeviceId = null;
-  devicePassword = null;
+  devicePassword = null; // clear password on disconnect
   updateConnectedDeviceBadge();
   if (leafletMap) updateMapMarkers();
 }
@@ -513,7 +566,9 @@ function processFullStatusBlock(block, timestamp) {
   const nodeIdMatch = block.match(/NODE_ID[:=]\s*([0-9A-Fa-f]+)/i);
   if (!nodeIdMatch) return;
   const nodeId = nodeIdMatch[1].toUpperCase();
-  if (!nodes.has(nodeId)) nodes.set(nodeId, createNewNode(nodeId, timestamp));
+  if (!nodes.has(nodeId)) {
+    nodes.set(nodeId, createNewNode(nodeId, timestamp));
+  }
   const node = nodes.get(nodeId);
   node.lastSeen = timestamp;
   node.online = true;
@@ -528,13 +583,23 @@ function processFullStatusBlock(block, timestamp) {
     if (leafletMap) updateMapMarkers();
   }
 
-  const batMatch = block.match(/BAT[:=]\s*([0-9]+)%/i); if (batMatch) node.battery = parseInt(batMatch[1]);
-  const rssiMatch = block.match(/LORA_RSSI[:=]\s*(-?\d+)/i); if (rssiMatch) { node.lastRssi = parseInt(rssiMatch[1]); addToRssiHistory(node, node.lastRssi); }
-  const snrMatch = block.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i); if (snrMatch) node.lastSnr = parseFloat(snrMatch[1]);
-  const uptimeMatch = block.match(/UPTIME[:=]\s*([0-9hms ]+)/i); if (uptimeMatch) node.uptime = uptimeMatch[1].trim();
-  const relayMatch = block.match(/PKT_RELAY[:=]\s*(\d+)/i); if (relayMatch) node.relay = parseInt(relayMatch[1]);
-  const contactsMatch = block.match(/CONTACTS[:=]\s*(\d+)/i); if (contactsMatch) node.contacts = parseInt(contactsMatch[1]);
-  const messagesMatch = block.match(/MESSAGES[:=]\s*(\d+)/i); if (messagesMatch) node.messages = parseInt(messagesMatch[1]);
+  const batMatch = block.match(/BAT[:=]\s*([0-9]+)%/i);
+  if (batMatch) node.battery = parseInt(batMatch[1]);
+  const rssiMatch = block.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
+  if (rssiMatch) {
+    node.lastRssi = parseInt(rssiMatch[1]);
+    addToRssiHistory(node, node.lastRssi);
+  }
+  const snrMatch = block.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
+  if (snrMatch) node.lastSnr = parseFloat(snrMatch[1]);
+  const uptimeMatch = block.match(/UPTIME[:=]\s*([0-9hms ]+)/i);
+  if (uptimeMatch) node.uptime = uptimeMatch[1].trim();
+  const relayMatch = block.match(/PKT_RELAY[:=]\s*(\d+)/i);
+  if (relayMatch) node.relay = parseInt(relayMatch[1]);
+  const contactsMatch = block.match(/CONTACTS[:=]\s*(\d+)/i);
+  if (contactsMatch) node.contacts = parseInt(contactsMatch[1]);
+  const messagesMatch = block.match(/MESSAGES[:=]\s*(\d+)/i);
+  if (messagesMatch) node.messages = parseInt(messagesMatch[1]);
 
   renderNodesList();
   if (currentMeshView === 'map') updateMapMarkers();
@@ -544,7 +609,9 @@ function parseIndividualStatusLine(line, timestamp) {
   const nodeIdMatch = line.match(/NODE_ID[:=]\s*([0-9A-Fa-f]+)/i);
   if (!nodeIdMatch) return;
   const nodeId = nodeIdMatch[1].toUpperCase();
-  if (!nodes.has(nodeId)) nodes.set(nodeId, createNewNode(nodeId, timestamp));
+  if (!nodes.has(nodeId)) {
+    nodes.set(nodeId, createNewNode(nodeId, timestamp));
+  }
   const node = nodes.get(nodeId);
   node.lastSeen = timestamp;
   node.online = true;
@@ -559,13 +626,23 @@ function parseIndividualStatusLine(line, timestamp) {
     if (leafletMap) updateMapMarkers();
   }
 
-  const batMatch = line.match(/BAT[:=]\s*([0-9]+)%/i); if (batMatch) node.battery = parseInt(batMatch[1]);
-  const rssiMatch = line.match(/LORA_RSSI[:=]\s*(-?\d+)/i); if (rssiMatch) { node.lastRssi = parseInt(rssiMatch[1]); addToRssiHistory(node, node.lastRssi); }
-  const snrMatch = line.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i); if (snrMatch) node.lastSnr = parseFloat(snrMatch[1]);
-  const uptimeMatch = line.match(/UPTIME[:=]\s*([0-9hms ]+)/i); if (uptimeMatch) node.uptime = uptimeMatch[1].trim();
-  const relayMatch = line.match(/PKT_RELAY[:=]\s*(\d+)/i); if (relayMatch) node.relay = parseInt(relayMatch[1]);
-  const contactsMatch = line.match(/CONTACTS[:=]\s*(\d+)/i); if (contactsMatch) node.contacts = parseInt(contactsMatch[1]);
-  const messagesMatch = line.match(/MESSAGES[:=]\s*(\d+)/i); if (messagesMatch) node.messages = parseInt(messagesMatch[1]);
+  const batMatch = line.match(/BAT[:=]\s*([0-9]+)%/i);
+  if (batMatch) node.battery = parseInt(batMatch[1]);
+  const rssiMatch = line.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
+  if (rssiMatch) {
+    node.lastRssi = parseInt(rssiMatch[1]);
+    addToRssiHistory(node, node.lastRssi);
+  }
+  const snrMatch = line.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
+  if (snrMatch) node.lastSnr = parseFloat(snrMatch[1]);
+  const uptimeMatch = line.match(/UPTIME[:=]\s*([0-9hms ]+)/i);
+  if (uptimeMatch) node.uptime = uptimeMatch[1].trim();
+  const relayMatch = line.match(/PKT_RELAY[:=]\s*(\d+)/i);
+  if (relayMatch) node.relay = parseInt(relayMatch[1]);
+  const contactsMatch = line.match(/CONTACTS[:=]\s*(\d+)/i);
+  if (contactsMatch) node.contacts = parseInt(contactsMatch[1]);
+  const messagesMatch = line.match(/MESSAGES[:=]\s*(\d+)/i);
+  if (messagesMatch) node.messages = parseInt(messagesMatch[1]);
 
   renderNodesList();
   if (currentMeshView === 'map') updateMapMarkers();
@@ -573,11 +650,26 @@ function parseIndividualStatusLine(line, timestamp) {
 
 function createNewNode(nodeId, timestamp) {
   return {
-    id: nodeId, firstSeen: timestamp, lastSeen: timestamp, packetCount: 0,
-    lastRssi: null, lastSnr: null, types: new Set(), customLabel: null,
-    battery: null, uptime: null, relay: 0, contacts: null, messages: null,
-    rssiHistory: [], online: timestamp !== null, everHeard: timestamp !== null,
-    publishedOnly: false, lastPublished: null, lat: null, lon: null
+    id: nodeId,
+    firstSeen: timestamp,
+    lastSeen: timestamp,
+    packetCount: 0,
+    lastRssi: null,
+    lastSnr: null,
+    types: new Set(),
+    customLabel: null,
+    battery: null,
+    uptime: null,
+    relay: 0,
+    contacts: null,
+    messages: null,
+    rssiHistory: [],
+    online: timestamp !== null,
+    everHeard: timestamp !== null,
+    publishedOnly: false,
+    lastPublished: null,
+    lat: null,
+    lon: null
   };
 }
 
@@ -606,7 +698,8 @@ function parsePacketLine(line, timestamp) {
 }
 
 function recordLink(parsed) {
-  if (!parsed.from || parsed.from === '????' || !parsed.to || parsed.to === 'BCAST') return;
+  if (!parsed.from || parsed.from === '????') return;
+  if (!parsed.to || parsed.to === 'BCAST') return;
   const key = [parsed.from, parsed.to].sort().join('|');
   const existing = linkCounts.get(key);
   linkCounts.set(key, { count: (existing ? existing.count : 0) + 1, lastSeen: Date.now() });
@@ -639,26 +732,23 @@ function filterLog() {
   });
 }
 
+// ===== NEW: Clear log function =====
 function clearLog() {
   document.getElementById('log-container').innerHTML = '';
   logLines = [];
 }
 
+// ===== NEW: Copy packets function =====
 function copyPackets() {
-  if (packets.length === 0) { alert("No packets to copy yet."); return; }
   const text = packets.map(p => {
-    const time = p.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    return `[${time}] ${p.from} → ${p.to} | ${p.type} | RSSI: ${p.rssi ?? '-'}`;
+    const time = p.timestamp.toLocaleTimeString();
+    return `[${time}] ${p.from} → ${p.to} | ${p.type} | RSSI: ${p.rssi || '-'}`;
   }).join('\n');
-
-  navigator.clipboard.writeText(text)
-    .then(() => alert("Packets copied to clipboard!"))
-    .catch(() => {
-      const textarea = document.createElement("textarea");
-      textarea.value = text; document.body.appendChild(textarea); textarea.select();
-      document.execCommand("copy"); document.body.removeChild(textarea);
-      alert("Packets copied to clipboard!");
-    });
+  navigator.clipboard.writeText(text).then(() => {
+    const origText = event.target ? event.target.textContent : '';
+    if (event.target) event.target.textContent = 'Copied!';
+    setTimeout(() => { if (event.target) event.target.textContent = 'Copy'; }, 1200);
+  }).catch(() => alert('Copy failed'));
 }
 
 function updatePacketTable() {
@@ -679,11 +769,20 @@ function updatePacketTable() {
 
 function updateNodeFromPacket(parsed) {
   if (!parsed.from || parsed.from === '????') return;
-  if (!nodes.has(parsed.from)) nodes.set(parsed.from, createNewNode(parsed.from, parsed.timestamp));
+  if (!nodes.has(parsed.from)) {
+    nodes.set(parsed.from, createNewNode(parsed.from, parsed.timestamp));
+  }
   const node = nodes.get(parsed.from);
-  node.lastSeen = parsed.timestamp; node.online = true; node.everHeard = true; node.publishedOnly = false;
-  node.packetCount++; registerKnownIfNeeded(parsed.from);
-  if (parsed.rssi !== null) { node.lastRssi = parsed.rssi; addToRssiHistory(node, parsed.rssi); }
+  node.lastSeen = parsed.timestamp;
+  node.online = true;
+  node.everHeard = true;
+  node.publishedOnly = false;
+  node.packetCount++;
+  registerKnownIfNeeded(parsed.from);
+  if (parsed.rssi !== null) {
+    node.lastRssi = parsed.rssi;
+    addToRssiHistory(node, parsed.rssi);
+  }
   if (parsed.snr !== null) node.lastSnr = parsed.snr;
   node.types.add(parsed.type);
   renderNodesList();
@@ -697,32 +796,52 @@ function renderNodesList() {
   if (breakdown) {
     const heardCount = Array.from(nodes.values()).filter(n => n.everHeard).length;
     const publishedCount = Array.from(nodes.values()).filter(n => n.publishedOnly).length;
-    breakdown.innerHTML = nodes.size === 0 ? 'No nodes yet.' :
-      `<span class="text-cyan-300">${heardCount} heard via LoRa</span>` +
-      (publishedCount > 0 ? ` &middot; <span class="text-purple-300">${publishedCount} published only</span>` : '');
+    if (nodes.size === 0) {
+      breakdown.textContent = 'No nodes yet.';
+    } else {
+      breakdown.innerHTML = `<span class="text-cyan-300">${heardCount} heard via LoRa</span>` +
+        (publishedCount > 0 ? ` &middot; <span class="text-purple-300">${publishedCount} published only (not heard by this device)</span>` : '');
+    }
   }
-  if (nodes.size === 0) { container.innerHTML = `<div style="padding:20px;color:#64748b;font-size:13px;text-align:center">No nodes seen yet.</div>`; return; }
-
+  if (nodes.size === 0) {
+    container.innerHTML = `<div style="padding:20px;color:#64748b;font-size:13px;text-align:center">No nodes seen yet.</div>`;
+    return;
+  }
   let html = '';
   Array.from(nodes.values()).sort((a, b) => {
     const rank = (n) => n.online ? 0 : (n.publishedOnly ? 1 : 2);
-    if (rank(a) !== rank(b)) return rank(a) - rank(b);
-    const at = a.lastSeen ? a.lastSeen.getTime() : 0;
-    const bt = b.lastSeen ? b.lastSeen.getTime() : 0;
+    const ra = rank(a), rb = rank(b);
+    if (ra !== rb) return ra - rb;
+    const at = a.lastSeen ? a.lastSeen.getTime() : (a.lastPublished && a.lastPublished.lastReportedAt ? new Date(a.lastPublished.lastReportedAt).getTime() : 0);
+    const bt = b.lastSeen ? b.lastSeen.getTime() : (b.lastPublished && b.lastPublished.lastReportedAt ? new Date(b.lastPublished.lastReportedAt).getTime() : 0);
     return bt - at;
   }).forEach(node => {
-    const timeAgo = node.lastSeen ? Math.floor((Date.now() - node.lastSeen.getTime()) / 1000) + 's ago' : 'never';
+    const timeAgo = node.lastSeen ? (() => {
+      const ago = Math.floor((Date.now() - node.lastSeen.getTime()) / 1000);
+      return ago < 60 ? ago + 's ago' : Math.floor(ago / 60) + 'm ago';
+    })() : null;
+    const publishedAgo = (node.lastPublished && node.lastPublished.lastReportedAt) ? (() => {
+      const ago = Math.floor((Date.now() - new Date(node.lastPublished.lastReportedAt).getTime()) / 1000);
+      return ago < 60 ? ago + 's ago' : Math.floor(ago / 60) + 'm ago';
+    })() : null;
     const rssi = node.lastRssi ? `<span class="text-emerald-400">${node.lastRssi} dBm</span>` : '';
     const bat = node.battery ? `<span class="text-emerald-400">${node.battery}%</span>` : '';
     const dotClass = node.online ? 'online' : (node.publishedOnly ? 'published' : 'offline');
+    const dot = `<span class="status-dot ${dotClass}"></span>`;
+    const subline = node.online
+      ? `${node.packetCount} pkts • ${timeAgo}`
+      : (node.publishedOnly
+          ? `<i class="fa-solid fa-tower-broadcast"></i> published only • not heard by this device${publishedAgo ? ' • ' + publishedAgo : ''}`
+          : `${node.packetCount} pkts • ${timeAgo || 'never seen'}`);
     html += `<div onclick="showNodeDetail('${node.id}')" style="padding:8px 10px;border-bottom:1px solid #1f2439;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-      <div style="display:flex;align-items:center"><span class="status-dot ${dotClass}"></span><div><div style="font-family:monospace;color:#67e8f9;font-weight:600">${node.customLabel || node.id}</div><div style="font-size:11px;color:#64748b">${node.packetCount} pkts • ${timeAgo}</div></div></div>
+      <div style="display:flex;align-items:center">${dot}<div><div style="font-family:monospace;color:#67e8f9;font-weight:600">${node.customLabel || node.id}</div><div style="font-size:11px;color:#64748b">${subline}</div></div></div>
       <div style="text-align:right;font-size:12px">${bat || rssi}</div>
     </div>`;
   });
   container.innerHTML = html;
 }
 
+// ===== NEW: Refresh nodes list =====
 function refreshNodesList() {
   renderNodesList();
   if (currentMeshView === 'map' && leafletMap) updateMapMarkers();
@@ -730,9 +849,13 @@ function refreshNodesList() {
 
 function updateStats() {
   document.getElementById('stat-packets').textContent = packetCount;
-  document.getElementById('stat-nodes').textContent = Array.from(nodes.values()).filter(n => n.everHeard).length;
+  const heardCount = Array.from(nodes.values()).filter(n => n.everHeard).length;
+  document.getElementById('stat-nodes').textContent = heardCount;
   const recent = packets.filter(p => p.rssi !== null).slice(0, 20);
-  if (recent.length > 0) document.getElementById('stat-avg-rssi').textContent = (recent.reduce((s, p) => s + p.rssi, 0) / recent.length).toFixed(0);
+  if (recent.length > 0) {
+    const avg = recent.reduce((s, p) => s + p.rssi, 0) / recent.length;
+    document.getElementById('stat-avg-rssi').textContent = avg.toFixed(0);
+  }
 }
 
 function updatePPS() {
@@ -740,6 +863,8 @@ function updatePPS() {
   const recent = packets.filter(p => (now - p.timestamp.getTime()) < 5000);
   document.getElementById('stat-pps').textContent = (recent.length / 5).toFixed(1);
 }
+
+/* ===================== NETWORK (canvas) VIEW ===================== */
 
 function initMeshCanvas() {
   canvas = document.getElementById('mesh-canvas');
@@ -757,18 +882,20 @@ function initMeshCanvas() {
 }
 
 function updateMeshVisualization() {
-  if (currentMeshView !== 'network' || !canvas) return;
+  if (currentMeshView !== 'network' || !canvas) { meshNodes = buildMeshNodeList(); return; }
   meshNodes = buildMeshNodeList();
   drawMesh();
 }
 
 function buildMeshNodeList() {
   const list = [];
-  const sorted = Array.from(nodes.values()).sort((a, b) => b.packetCount - a.packetCount).slice(0, MAX_MESH_NODES);
+  const sorted = Array.from(nodes.values())
+    .sort((a, b) => b.packetCount - a.packetCount)
+    .slice(0, MAX_MESH_NODES);
   sorted.forEach((node, i) => {
     let pos = meshPositions.get(node.id);
     if (!pos) {
-      const cx = canvas.width / 2, cy = canvas.height / 2;
+      const cx = canvas ? canvas.width / 2 : 150; const cy = canvas ? canvas.height / 2 : 150;
       const angle = (i / sorted.length) * Math.PI * 2;
       const dist = 80 + (node.lastRssi ? (node.lastRssi + 110) * 0.8 : 60);
       pos = { x: cx + Math.cos(angle) * Math.min(dist, 140), y: cy + Math.sin(angle) * Math.min(dist, 100) };
@@ -786,16 +913,29 @@ function drawMesh() {
   for (let i = 0; i < meshNodes.length; i++) {
     for (let j = i + 1; j < meshNodes.length; j++) {
       const a = meshNodes[i], b = meshNodes[j];
-      if (Math.hypot(a.x - b.x, a.y - b.y) < 200) { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      if (dist < 200) {
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
     }
   }
   meshNodes.forEach(node => {
     const age = node.lastSeen ? (Date.now() - node.lastSeen.getTime()) / 1000 : Infinity;
     const alpha = node.online ? Math.max(0.3, 1 - Math.min(age / 180, 0.75)) : 0.35;
-    ctx.fillStyle = `rgba(${node.online ? '103,232,249' : '100,116,139'}, ${alpha})`;
-    ctx.beginPath(); ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2); ctx.fill();
+    const color = node.online ? '103, 232, 249' : '100, 116, 139';
+    ctx.shadowColor = node.online ? '#67e8f9' : 'transparent'; ctx.shadowBlur = node.online ? 10 : 0;
+    ctx.fillStyle = `rgba(${color}, ${alpha})`;
+    ctx.beginPath(); ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+
     ctx.fillStyle = '#c9d1d9'; ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(node.customLabel || node.id.substring(0,6), node.x, node.y + node.size + 15);
+    const label = node.customLabel || (node.id.length > 6 ? node.id.substring(0, 6) : node.id);
+    ctx.fillText(label, node.x, node.y + node.size + 15);
+
+    if (node.lastRssi !== null) {
+      const norm = Math.max(0, Math.min(1, (node.lastRssi + 110) / 45));
+      ctx.strokeStyle = `rgba(103, 232, 249, ${0.2 + norm * 0.5})`; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(node.x, node.y, node.size + 4, 0, Math.PI * 2); ctx.stroke();
+    }
   });
 }
 
@@ -803,55 +943,40 @@ function getMousePos(e) {
   const rect = canvas.getBoundingClientRect();
   return { x: (e.clientX - rect.left) * (canvas.width / rect.width), y: (e.clientY - rect.top) * (canvas.height / rect.height) };
 }
-
 function handleMeshClick(e) {
   const pos = getMousePos(e);
   for (let node of meshNodes) {
-    if (Math.hypot(pos.x - node.x, pos.y - node.y) < (node.size + 12) ** 2) { showNodeDetail(node.id); return; }
+    const dx = pos.x - node.x; const dy = pos.y - node.y;
+    if (dx * dx + dy * dy < (node.size + 12) * (node.size + 12)) { showNodeDetail(node.id); return; }
   }
 }
-
-function handleMeshMouseDown(e) {
-  const pos = getMousePos(e);
-  for (let node of meshNodes) {
-    if (Math.hypot(pos.x - node.x, pos.y - node.y) < (node.size + 10) ** 2) { draggedNode = node; dragOffsetX = pos.x - node.x; dragOffsetY = pos.y - node.y; break; }
-  }
-}
-
-function handleMeshMouseMove(e) {
-  if (!draggedNode) return;
-  const pos = getMousePos(e);
-  draggedNode.x = Math.max(30, Math.min(canvas.width-30, pos.x - dragOffsetX));
-  draggedNode.y = Math.max(30, Math.min(canvas.height-30, pos.y - dragOffsetY));
-  meshPositions.set(draggedNode.id, {x: draggedNode.x, y: draggedNode.y});
-  drawMesh();
-}
-
-function handleMeshMouseUp() { draggedNode = null; }
-
+function handleMeshMouseDown(e) { const pos = getMousePos(e); draggedNode = null; for (let node of meshNodes) { const dx = pos.x - node.x; const dy = pos.y - node.y; if (dx*dx + dy*dy < (node.size + 10)*(node.size + 10)) { draggedNode = node; dragOffsetX = dx; dragOffsetY = dy; break; } } }
+function handleMeshMouseMove(e) { if (!draggedNode) return; const pos = getMousePos(e); draggedNode.x = Math.max(30, Math.min(canvas.width-30, pos.x-dragOffsetX)); draggedNode.y = Math.max(30, Math.min(canvas.height-30, pos.y-dragOffsetY)); meshPositions.set(draggedNode.id, {x: draggedNode.x, y: draggedNode.y}); drawMesh(); }
+function handleMeshMouseUp(e) { draggedNode = null; }
 function handleMeshDoubleClick(e) {
   const pos = getMousePos(e);
   for (let node of meshNodes) {
-    if (Math.hypot(pos.x - node.x, pos.y - node.y) < (node.size + 12) ** 2) {
-      if (!canEditNode(node.id)) { alert('You can only rename the device currently connected via Web Serial.'); return; }
+    const dx = pos.x - node.x; const dy = pos.y - node.y;
+    if (dx * dx + dy * dy < (node.size + 12) * (node.size + 12)) {
+      if (!canEditNode(node.id)) { alert('You can only rename the device currently connected to this browser via Web Serial. Connect to this device directly to rename it.'); return; }
       const newLabel = prompt(`Set custom label for node ${node.id}:`, node.customLabel || '');
       if (newLabel !== null) {
         const clean = newLabel.trim() || null;
         if (nodes.has(node.id)) nodes.get(node.id).customLabel = clean;
         node.customLabel = clean;
         if (!registry[node.id]) registry[node.id] = { label: null, lat: null, lon: null, manuallyAdded: false, addedAt: new Date().toISOString() };
-        registry[node.id].label = clean; saveRegistry();
-        renderNodesList(); drawMesh(); if (leafletMap) updateMapMarkers();
+        registry[node.id].label = clean;
+        saveRegistry();
+        renderNodesList(); drawMesh();
+        if (leafletMap) updateMapMarkers();
       }
       return;
     }
   }
 }
-
 function resetMeshLayout() { meshPositions.clear(); updateMeshVisualization(); }
-
 function autoArrangeByRSSI() {
-  const cx = canvas.width / 2, cy = canvas.height / 2;
+  const cx = canvas.width / 2; const cy = canvas.height / 2;
   meshNodes.forEach((node, i) => {
     const dist = 65 + (node.lastRssi ? (node.lastRssi + 110) * 0.85 : 65);
     const angle = (i / meshNodes.length) * Math.PI * 2;
@@ -862,6 +987,8 @@ function autoArrangeByRSSI() {
   drawMesh();
 }
 
+/* ===================== MAP VIEW ===================== */
+
 function switchMeshView(view) {
   currentMeshView = view;
   const netBtn = document.getElementById('view-network-btn');
@@ -870,48 +997,367 @@ function switchMeshView(view) {
   const mapVis = document.getElementById('map-visual');
   const netControls = document.getElementById('network-controls');
   const mapControls = document.getElementById('map-controls');
+  const netCaption = document.getElementById('network-caption');
+  const mapCaption = document.getElementById('map-caption');
 
   if (view === 'network') {
     netBtn.classList.add('active'); mapBtn.classList.remove('active');
     netVis.classList.remove('hidden'); mapVis.classList.add('hidden');
     netControls.classList.remove('hidden'); mapControls.classList.add('hidden');
+    netCaption.classList.remove('hidden'); mapCaption.classList.add('hidden');
     updateMeshVisualization();
   } else {
     mapBtn.classList.add('active'); netBtn.classList.remove('active');
     mapVis.classList.remove('hidden'); netVis.classList.add('hidden');
     mapControls.classList.remove('hidden'); netControls.classList.add('hidden');
-    setTimeout(() => { initMap(); if (leafletMap) leafletMap.invalidateSize(); updateMapMarkers(); }, 30);
+    mapCaption.classList.remove('hidden'); netCaption.classList.add('hidden');
+    setTimeout(() => {
+      initMap();
+      if (leafletMap) leafletMap.invalidateSize();
+      updateMapMarkers();
+    }, 30);
   }
 }
 
 function initMap() {
   if (leafletMap) return;
-  leafletMap = L.map('leaflet-map', { zoomControl: true }).setView([20, 0], 2);
+  leafletMap = L.map('leaflet-map', { zoomControl: true, attributionControl: true, worldCopyJump: true }).setView([20, 0], 2);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap, &copy; CARTO', maxZoom: 20
+    attribution: '&copy; OpenStreetMap, &copy; CARTO',
+    maxZoom: 20,
+    subdomains: 'abcd'
   }).addTo(leafletMap);
   haloLayerGroup = L.layerGroup().addTo(leafletMap);
   markerLayerGroup = L.layerGroup().addTo(leafletMap);
   leafletMap.on('click', handleLeafletClick);
 }
 
-function updateMapMarkers() {
-  if (!leafletMap) return;
-  console.log("Map markers update (simplified for stability)");
+function repeaterIcon(online, editable, publishedOnly) {
+  return L.divIcon({
+    className: '',
+    html: `<div class="repeater-marker ${online ? 'online' : 'offline'} ${editable ? '' : 'locked'} ${publishedOnly ? 'published-only' : ''}"></div>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8]
+  });
 }
 
-function handleLeafletClick(e) { /* placeholder */ }
+function rssiToRangeKm(rssi) {
+  const minRssi = -120, maxRssi = -30;
+  const minKm = 1, maxKm = 10;
+  const clamped = Math.max(minRssi, Math.min(maxRssi, rssi));
+  const t = (clamped - minRssi) / (maxRssi - minRssi);
+  return minKm + t * (maxKm - minKm);
+}
+
+function getRangeKm(id) {
+  const r = registry[id];
+  const mode = (r && r.rangeMode) ? r.rangeMode : 'auto';
+  const node = nodes.get(id);
+  if (mode === 'manual') {
+    return (r && r.rangeKm) ? r.rangeKm : DEFAULT_RANGE_KM;
+  }
+  if (node && node.lastRssi !== null && node.lastRssi !== undefined) {
+    return rssiToRangeKm(node.lastRssi);
+  }
+  return (r && r.rangeKm) ? r.rangeKm : DEFAULT_RANGE_KM;
+}
+
+function haloStyle(online) {
+  return {
+    radius: 0,
+    color: online ? '#0891b2' : '#94a3b8',
+    weight: 1.5,
+    dashArray: '4,5',
+    fillColor: online ? '#0891b2' : '#94a3b8',
+    fillOpacity: 0.08,
+    opacity: 0.55,
+    interactive: false
+  };
+}
+
+function updateMapMarkers() {
+  if (!leafletMap) return;
+  const seenIds = new Set();
+  nodes.forEach((node, id) => {
+    const r = registry[id];
+    const lat = (r && r.lat !== null && r.lat !== undefined) ? r.lat : node.lat;
+    const lon = (r && r.lon !== null && r.lon !== undefined) ? r.lon : node.lon;
+    if (lat === null || lat === undefined || lon === null || lon === undefined) {
+      if (mapMarkers.has(id)) { markerLayerGroup.removeLayer(mapMarkers.get(id)); mapMarkers.delete(id); }
+      if (mapHalos.has(id)) { haloLayerGroup.removeLayer(mapHalos.get(id)); mapHalos.delete(id); }
+      return;
+    }
+    seenIds.add(id);
+    const label = node.customLabel || id;
+    const radiusM = getRangeKm(id) * 1000;
+
+    let halo = mapHalos.get(id);
+    if (!halo) {
+      halo = L.circle([lat, lon], { ...haloStyle(node.online), radius: radiusM }).addTo(haloLayerGroup);
+      mapHalos.set(id, halo);
+    } else {
+      halo.setLatLng([lat, lon]);
+      halo.setRadius(radiusM);
+      halo.setStyle(haloStyle(node.online));
+    }
+
+    let marker = mapMarkers.get(id);
+    if (!marker) {
+      marker = L.marker([lat, lon], { icon: repeaterIcon(node.online, canEditNode(id), node.publishedOnly), draggable: true }).addTo(markerLayerGroup);
+      if (!canEditNode(id)) marker.dragging.disable();
+      marker.on('click', () => { if (justDraggedMarker) { justDraggedMarker = false; return; } if (!placeMode) showNodeDetail(id); });
+      marker.on('drag', () => { const ll = marker.getLatLng(); halo.setLatLng(ll); drawMapLinks(); });
+      marker.on('dragend', () => {
+        if (!canEditNode(id)) return;
+        const ll = marker.getLatLng();
+        if (!registry[id]) registry[id] = { label: null, lat: null, lon: null, rangeKm: null, manuallyAdded: false, addedAt: new Date().toISOString() };
+        registry[id].lat = ll.lat; registry[id].lon = ll.lng;
+        saveRegistry();
+        node.lat = ll.lat; node.lon = ll.lng;
+        justDraggedMarker = true;
+        setTimeout(() => { justDraggedMarker = false; }, 250);
+      });
+      mapMarkers.set(id, marker);
+    } else {
+      marker.setLatLng([lat, lon]);
+      marker.setIcon(repeaterIcon(node.online, canEditNode(id), node.publishedOnly));
+      if (canEditNode(id)) marker.dragging.enable(); else marker.dragging.disable();
+    }
+    marker.unbindTooltip();
+    const tooltipLabel = label + (node.publishedOnly ? ' · published only' : '');
+    marker.bindTooltip(tooltipLabel, { permanent: true, direction: 'top', offset: [0, -8], className: 'repeater-tooltip' });
+  });
+  Array.from(mapMarkers.keys()).forEach(id => {
+    if (!seenIds.has(id)) { markerLayerGroup.removeLayer(mapMarkers.get(id)); mapMarkers.delete(id); }
+  });
+  Array.from(mapHalos.keys()).forEach(id => {
+    if (!seenIds.has(id)) { haloLayerGroup.removeLayer(mapHalos.get(id)); mapHalos.delete(id); }
+  });
+  drawMapLinks();
+}
+
+function drawMapLinks() {
+  if (!leafletMap) return;
+  mapLines.forEach(l => leafletMap.removeLayer(l));
+  mapLines = [];
+  linkCounts.forEach((info, key) => {
+    const [a, b] = key.split('|');
+    const ma = mapMarkers.get(a), mb = mapMarkers.get(b);
+    if (!ma || !mb) return;
+    const age = (Date.now() - info.lastSeen) / 1000;
+    const alpha = Math.max(0.12, 1 - Math.min(age / 300, 0.85));
+    const line = L.polyline([ma.getLatLng(), mb.getLatLng()], { color: '#67e8f9', weight: 2, opacity: alpha }).addTo(leafletMap);
+    mapLines.push(line);
+  });
+}
+
+function handleLeafletClick(e) {
+  if (!placeMode || !placeTargetId) return;
+  const id = placeTargetId;
+  if (!registry[id]) registry[id] = { label: null, lat: null, lon: null, manuallyAdded: false, addedAt: new Date().toISOString() };
+  registry[id].lat = e.latlng.lat;
+  registry[id].lon = e.latlng.lng;
+  saveRegistry();
+  const n = nodes.get(id);
+  if (n) { n.lat = e.latlng.lat; n.lon = e.latlng.lng; }
+  updateMapMarkers();
+  cancelPlacement();
+}
+
+function repeaterDisplayName(id) {
+  const n = nodes.get(id);
+  return (n && n.customLabel) ? n.customLabel : id;
+}
+
+function isPlaced(id) {
+  const r = registry[id];
+  return !!(r && r.lat !== null && r.lat !== undefined);
+}
+
+function showRepeaterSearchDropdown() {
+  renderRepeaterDropdown(document.getElementById('repeater-search').value.trim());
+}
+
+function hideRepeaterSearchDropdownDeferred() {
+  setTimeout(() => {
+    const dd = document.getElementById('repeater-search-dropdown');
+    if (dd) dd.classList.add('hidden');
+  }, 150);
+}
+
+function handleRepeaterSearchInput() {
+  renderRepeaterDropdown(document.getElementById('repeater-search').value.trim());
+}
+
+function renderRepeaterDropdown(filterText) {
+  const dd = document.getElementById('repeater-search-dropdown');
+  if (!dd) return;
+  const q = filterText.toLowerCase();
+  const matches = Array.from(nodes.keys())
+    .filter(id => !q || id.toLowerCase().includes(q) || repeaterDisplayName(id).toLowerCase().includes(q))
+    .sort((a, b) => {
+      const ap = isPlaced(a), bp = isPlaced(b);
+      if (ap !== bp) return ap ? 1 : -1;
+      return repeaterDisplayName(a).localeCompare(repeaterDisplayName(b));
+    });
+
+  let html = '';
+  if (matches.length === 0 && !q) {
+    html += `<div style="padding:14px 12px;color:#64748b;">No known repeaters yet — type a name below to add one.</div>`;
+  }
+  matches.forEach(id => {
+    const placed = isPlaced(id);
+    const name = repeaterDisplayName(id);
+    html += `<div class="repeater-option" onmousedown="selectRepeaterForPlacement('${id}')">
+      <span><span class="status-dot ${nodes.get(id).online ? 'online' : 'offline'}"></span>${name}${name !== id ? ` <span style="color:#64748b">(${id})</span>` : ''}</span>
+      <span style="color:${placed ? '#34d399' : '#64748b'};font-size:10px;white-space:nowrap;margin-left:8px;">${placed ? '✓ placed' : 'unplaced'}</span>
+    </div>`;
+  });
+  const exactMatch = q && Array.from(nodes.keys()).some(id => id.toLowerCase() === q || repeaterDisplayName(id).toLowerCase() === q);
+  if (q && !exactMatch) {
+    html += `<div class="repeater-option add-new" onmousedown="addAndArmRepeater('${q.replace(/'/g, "\\'")}')">
+      <span><i class="fa-solid fa-plus mr-2"></i>Add "${filterText}" as new repeater</span>
+    </div>`;
+  }
+  dd.innerHTML = html;
+  dd.classList.remove('hidden');
+}
+
+function selectRepeaterForPlacement(id) {
+  placeTargetId = id;
+  placeMode = true;
+  const badge = document.getElementById('place-armed-badge');
+  badge.classList.remove('hidden'); badge.classList.add('flex');
+  document.getElementById('place-armed-label').textContent = `Click the map to place: ${repeaterDisplayName(id)}`;
+  const search = document.getElementById('repeater-search');
+  search.value = ''; search.blur();
+  document.getElementById('repeater-search-dropdown').classList.add('hidden');
+  const mapVis = document.getElementById('map-visual');
+  if (mapVis) mapVis.classList.add('place-mode-active');
+}
+
+function cancelPlacement() {
+  placeMode = false;
+  placeTargetId = null;
+  const badge = document.getElementById('place-armed-badge');
+  badge.classList.add('hidden'); badge.classList.remove('flex');
+  const mapVis = document.getElementById('map-visual');
+  if (mapVis) mapVis.classList.remove('place-mode-active');
+}
+
+function addAndArmRepeater(rawText) {
+  const id = rawText.trim().toUpperCase().replace(/\s+/g, '-');
+  if (!id) return;
+  if (!nodes.has(id)) nodes.set(id, createNewNode(id, null));
+  if (!registry[id]) {
+    registry[id] = { label: null, lat: null, lon: null, manuallyAdded: true, addedAt: new Date().toISOString() };
+  } else {
+    registry[id].manuallyAdded = true;
+  }
+  saveRegistry();
+  renderNodesList();
+  updateMapMarkers();
+  selectRepeaterForPlacement(id);
+}
+
+function centerMap() {
+  if (!leafletMap) return;
+  const pts = Array.from(mapMarkers.values()).map(m => m.getLatLng());
+  if (pts.length === 0) { alert('No repeaters placed on the map yet.'); return; }
+  if (pts.length === 1) { leafletMap.setView(pts[0], 13); return; }
+  leafletMap.fitBounds(L.latLngBounds(pts), { padding: [40, 40] });
+}
+
+/* ===================== NODE DETAIL MODAL ===================== */
+
+function drawRSSIChart(history) {
+  const canvasEl = document.getElementById('rssi-chart');
+  if (!canvasEl || !history || history.length === 0) {
+    if (canvasEl) { const c = canvasEl.getContext('2d'); c.clearRect(0, 0, canvasEl.width, canvasEl.height); }
+    return;
+  }
+  const ctxChart = canvasEl.getContext('2d');
+  ctxChart.clearRect(0, 0, canvasEl.width, canvasEl.height);
+  const w = canvasEl.width; const h = canvasEl.height; const padding = 4;
+  const minVal = Math.min(...history, -120);
+  const maxVal = Math.max(...history, -50);
+  const range = maxVal - minVal || 1;
+  ctxChart.strokeStyle = '#67e8f9'; ctxChart.lineWidth = 2;
+  ctxChart.beginPath();
+  history.forEach((val, i) => {
+    const x = padding + (i / (history.length - 1)) * (w - padding * 2);
+    const y = h - padding - ((val - minVal) / range) * (h - padding * 2);
+    if (i === 0) ctxChart.moveTo(x, y); else ctxChart.lineTo(x, y);
+  });
+  ctxChart.stroke();
+  ctxChart.fillStyle = '#67e8f9';
+  history.forEach((val, i) => {
+    const x = padding + (i / (history.length - 1)) * (w - padding * 2);
+    const y = h - padding - ((val - minVal) / range) * (h - padding * 2);
+    ctxChart.beginPath(); ctxChart.arc(x, y, 2, 0, Math.PI * 2); ctxChart.fill();
+  });
+}
 
 function showNodeDetail(nodeId) {
   const node = nodes.get(nodeId);
   if (!node) return;
   currentModalNodeId = nodeId;
   document.getElementById('modal-node-id').textContent = node.customLabel || nodeId;
-  document.getElementById('modal-status').innerHTML = node.online 
-    ? '<span class="status-dot online"></span><span class="text-emerald-400">Online</span>' 
-    : '<span class="status-dot offline"></span><span class="text-zinc-500">Offline</span>';
-  document.getElementById('modal-battery').innerHTML = node.battery ? `${node.battery}%` : '--';
-  document.getElementById('modal-rssi').innerHTML = node.lastRssi ? `${node.lastRssi} dBm` : '--';
+  document.getElementById('modal-status').innerHTML = node.online
+    ? '<span class="status-dot online"></span><span class="text-emerald-400">Online — heard this session</span>'
+    : (node.publishedOnly
+        ? '<span class="status-dot published"></span><span class="text-purple-300">Published to Coverage Map — not yet heard by this device</span>'
+        : '<span class="status-dot offline"></span><span class="text-zinc-500">Offline — not heard this session</span>');
+  document.getElementById('modal-battery').innerHTML = node.battery !== null ? `${node.battery}<span class="text-base font-normal text-zinc-400">%</span>` : '--';
+  document.getElementById('modal-rssi').innerHTML = node.lastRssi !== null ? `${node.lastRssi} <span class="text-base font-normal text-zinc-400">dBm</span>` : '--';
+  document.getElementById('modal-snr').textContent = node.lastSnr !== null ? node.lastSnr.toFixed(1) : '--';
+  document.getElementById('modal-packets').textContent = node.packetCount;
+  document.getElementById('modal-relay').textContent = node.relay || '--';
+  document.getElementById('modal-contacts').textContent = node.contacts || '--';
+
+  const timeAgo = node.lastSeen ? (() => {
+    const ago = Math.floor((Date.now() - node.lastSeen.getTime()) / 1000);
+    return ago < 60 ? ago + 's ago' : Math.floor(ago / 60) + 'm ago';
+  })() : (node.publishedOnly ? 'Never heard — known only from the public Coverage Map' : 'Never (known repeater only)');
+  document.getElementById('modal-last-seen').textContent = timeAgo;
+  document.getElementById('modal-uptime').textContent = node.uptime || (node.firstSeen ? Math.floor((Date.now() - node.firstSeen.getTime()) / 60000) + 'm (session)' : '--');
+
+  const typesContainer = document.getElementById('modal-types');
+  typesContainer.innerHTML = '';
+  if (node.types.size > 0) {
+    node.types.forEach(type => {
+      const span = document.createElement('span');
+      span.className = `px-3 py-1 rounded-full text-xs ${type === 'DATA' ? 'bg-blue-900 text-blue-300' : type === 'HELLO' ? 'bg-emerald-900 text-emerald-300' : 'bg-amber-900 text-amber-300'}`;
+      span.textContent = type;
+      typesContainer.appendChild(span);
+    });
+  } else {
+    typesContainer.innerHTML = `<span class="text-xs text-zinc-500">No types recorded yet</span>`;
+  }
+
+  const rangeR = registry[nodeId];
+  document.getElementById('modal-range-auto').checked = !(rangeR && rangeR.rangeMode === 'manual');
+  toggleRangeAutoFromModal();
+
+  const isShared = !!(rangeR && rangeR.shared);
+  document.getElementById('modal-share-btn-label').textContent = isShared ? 'Update Public Listing' : 'Share to Public Coverage Map';
+  document.getElementById('modal-unshare-btn').classList.toggle('hidden', !isShared);
+  document.getElementById('modal-share-hint').textContent = isShared
+    ? 'Visible on the public Coverage Map. Updating refreshes its label, location, and latest readings.'
+    : 'Publishes this repeater\'s label, the location you placed, and its latest readings to everyone.';
+
+  const editable = canEditNode(nodeId);
+  document.getElementById('modal-lock-note').classList.toggle('hidden', editable);
+  ['modal-edit-label-btn', 'modal-set-location-btn', 'modal-range-save-btn', 'modal-share-btn', 'modal-unshare-btn'].forEach(btnId => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.classList.toggle('opacity-40', !editable);
+    btn.classList.toggle('pointer-events-none', !editable);
+    btn.title = editable ? '' : 'Connect this device directly via Web Serial to edit it.';
+  });
+
+  setTimeout(() => { drawRSSIChart(node.rssiHistory || []); }, 50);
+
   document.getElementById('node-modal').classList.remove('hidden');
   document.getElementById('node-modal').classList.add('flex');
 }
@@ -922,22 +1368,287 @@ function hideNodeModal() {
   currentModalNodeId = null;
 }
 
-function fetchPublishedRepeaters() { /* placeholder */ }
+function editLabelFromModal() {
+  if (!currentModalNodeId) return;
+  if (!canEditNode(currentModalNodeId)) { alert('You can only rename the device currently connected to this browser via Web Serial. Connect to this device directly to rename it.'); return; }
+  const node = nodes.get(currentModalNodeId);
+  if (!node) return;
+  const newLabel = prompt(`Set custom label for node ${currentModalNodeId}:`, node.customLabel || '');
+  if (newLabel !== null) {
+    const clean = newLabel.trim() || null;
+    node.customLabel = clean;
+    if (!registry[currentModalNodeId]) registry[currentModalNodeId] = { label: null, lat: null, lon: null, manuallyAdded: false, addedAt: new Date().toISOString() };
+    registry[currentModalNodeId].label = clean;
+    saveRegistry();
+    const meshNode = meshNodes.find(n => n.id === currentModalNodeId);
+    if (meshNode) meshNode.customLabel = clean;
+    renderNodesList();
+    drawMesh();
+    if (leafletMap) updateMapMarkers();
+    const idToReopen = currentModalNodeId;
+    hideNodeModal();
+    setTimeout(() => showNodeDetail(idToReopen), 150);
+  }
+}
 
-function exportSession() { alert("Export not fully implemented in this clean version"); }
+function toggleRangeAutoFromModal() {
+  const id = currentModalNodeId;
+  const auto = document.getElementById('modal-range-auto').checked;
+  const input = document.getElementById('modal-range-input');
+  const hint = document.getElementById('modal-range-hint');
+  const r = id ? registry[id] : null;
+  const node = id ? nodes.get(id) : null;
 
-function toggleSimulateTraffic() { alert("Simulate Traffic is disabled in this clean version for stability"); }
+  if (auto) {
+    input.disabled = true;
+    input.classList.add('opacity-50');
+    if (node && node.lastRssi !== null && node.lastRssi !== undefined) {
+      input.value = rssiToRangeKm(node.lastRssi).toFixed(1);
+      hint.textContent = `Auto-estimated from last RSSI (${node.lastRssi} dBm) — a stronger signal draws a bigger circle. Heuristic only, not measured coverage, and it updates as new readings come in.`;
+    } else {
+      input.value = DEFAULT_RANGE_KM;
+      hint.textContent = `No signal reading yet for this repeater — showing a default estimate until it's heard.`;
+    }
+  } else {
+    input.disabled = false;
+    input.classList.remove('opacity-50');
+    input.value = (r && r.rangeKm) ? r.rangeKm : DEFAULT_RANGE_KM;
+    hint.textContent = `Manual value you set — fixed regardless of signal strength.`;
+  }
+}
+
+function setLocationFromModal() {
+  const id = currentModalNodeId;
+  if (!id) return;
+  if (!canEditNode(id)) { alert('You can only set or move the location of the device currently connected to this browser via Web Serial.'); return; }
+  hideNodeModal();
+  switchMeshView('map');
+  setTimeout(() => { selectRepeaterForPlacement(id); }, 80);
+}
+
+function saveRangeFromModal() {
+  const id = currentModalNodeId;
+  if (!id) return;
+  if (!canEditNode(id)) { alert('You can only change the transmission range of the device currently connected to this browser via Web Serial.'); return; }
+  if (!registry[id]) registry[id] = { label: null, lat: null, lon: null, rangeKm: null, rangeMode: 'auto', manuallyAdded: false, addedAt: new Date().toISOString() };
+  const auto = document.getElementById('modal-range-auto').checked;
+  if (auto) {
+    registry[id].rangeMode = 'auto';
+  } else {
+    const val = parseFloat(document.getElementById('modal-range-input').value);
+    if (!val || val <= 0) { alert('Enter a range greater than 0 km.'); return; }
+    registry[id].rangeMode = 'manual';
+    registry[id].rangeKm = val;
+  }
+  saveRegistry();
+  if (leafletMap) updateMapMarkers();
+}
+
+async function shareToPublicMap() {
+  const id = currentModalNodeId;
+  if (!id) return;
+  if (!canEditNode(id)) { alert('You can only publish the device currently connected to this browser via Web Serial to the public Coverage Map.'); return; }
+  const node = nodes.get(id);
+  if (!node) return;
+  const r = registry[id];
+
+  if (!r || r.lat === null || r.lat === undefined) {
+    alert('Place this repeater on the map first (Set / Move Location on Map), then share it.');
+    return;
+  }
+  if (API_BASE.includes('REPLACE-ME')) {
+    alert('The Coverage API isn\'t configured yet — set API_BASE and WRITE_KEY near the top of this page\'s script (see DEPLOY.md) before sharing.');
+    return;
+  }
+
+  const already = !!r.shared;
+  const confirmed = confirm(
+    (already ? 'Update' : 'Publish') + ` "${repeaterDisplayName(id)}" on the public Coverage Map?\n\n` +
+    'This will make its label, the location you placed, and its latest battery/signal readings visible to anyone who visits coverage-map.html.'
+  );
+  if (!confirmed) return;
+
+  const payload = {
+    label: node.customLabel || id,
+    lat: r.lat,
+    lon: r.lon,
+    rangeKm: getRangeKm(id),
+    rangeMode: (r.rangeMode === 'manual') ? 'manual' : 'auto',
+    lastBattery: node.battery,
+    lastRssi: node.lastRssi,
+    lastSnr: node.lastSnr,
+    lastMessages: node.messages
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/api/repeaters/${encodeURIComponent(id)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Write-Key': getWriteKey() },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Server responded ' + res.status);
+    r.shared = true;
+    saveRegistry();
+    showNodeDetail(id);
+    fetchPublishedRepeaters();
+    alert('Published. It should appear on coverage-map.html within a few seconds.');
+  } catch (e) {
+    alert('Could not publish: ' + e.message);
+  }
+}
+
+async function unshareFromPublicMap() {
+  const id = currentModalNodeId;
+  if (!id) return;
+  if (!canEditNode(id)) { alert('You can only remove the device currently connected to this browser via Web Serial from the public Coverage Map.'); return; }
+  if (!confirm(`Remove "${repeaterDisplayName(id)}" from the public Coverage Map?`)) return;
+  if (API_BASE.includes('REPLACE-ME')) {
+    alert('The Coverage API isn\'t configured yet — see DEPLOY.md.');
+    return;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/api/repeaters/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { 'X-Write-Key': getWriteKey() }
+    });
+    if (!res.ok) throw new Error('Server responded ' + res.status);
+    if (registry[id]) { registry[id].shared = false; saveRegistry(); }
+    showNodeDetail(id);
+    fetchPublishedRepeaters();
+  } catch (e) {
+    alert('Could not remove: ' + e.message);
+  }
+}
+
+/* ===================== PUBLISHED REPEATERS BRIDGE ===================== */
+
+async function fetchPublishedRepeaters() {
+  if (API_BASE.includes('REPLACE-ME')) return;
+  try {
+    const res = await fetch(`${API_BASE}/api/repeaters`);
+    if (!res.ok) throw new Error('Server responded ' + res.status);
+    const data = await res.json();
+    publishedRepeaters.clear();
+    (data.repeaters || []).forEach(r => publishedRepeaters.set(r.id, r));
+    mergePublishedRepeaters();
+  } catch (e) {
+    console.warn('Could not fetch published repeaters:', e.message);
+  }
+}
+
+function mergePublishedRepeaters() {
+  publishedRepeaters.forEach((r, id) => {
+    let node = nodes.get(id);
+    if (!node) {
+      node = createNewNode(id, null);
+      nodes.set(id, node);
+    }
+    node.lastPublished = r;
+    node.publishedOnly = !node.everHeard;
+    if (node.lat === null || node.lat === undefined) node.lat = r.lat;
+    if (node.lon === null || node.lon === undefined) node.lon = r.lon;
+    if (!node.customLabel && r.label) node.customLabel = r.label;
+  });
+  renderNodesList();
+  if (currentMeshView === 'map' && leafletMap) updateMapMarkers();
+}
+
+/* ===================== EXPORT / SIMULATE / CLEAR ===================== */
+
+function exportSession() {
+  const data = {
+    exportedAt: new Date().toISOString(),
+    nodes: Array.from(nodes.entries()).map(([id, n]) => ({
+      id, ...n, types: Array.from(n.types || []), rssiHistory: n.rssiHistory || []
+    })),
+    packets: packets.slice(0, 100),
+    knownRepeaters: registry
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `plschat-monitor-${new Date().toISOString().slice(0,19)}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function toggleSimulateTraffic() {
+  if (simulationActive) stopSimulateTraffic(); else startSimulateTraffic();
+}
+
+function startSimulateTraffic() {
+  if (simulationActive) return;
+  simulationActive = true;
+  const icon = document.getElementById('simulate-btn-icon');
+  const label = document.getElementById('simulate-btn-label');
+  if (icon) icon.className = 'fa-solid fa-stop';
+  if (label) label.textContent = 'Stop Simulation';
+
+  const sample = ['A1B2', 'C3D4', '1122', '3344', 'E5F6'];
+  connectedDeviceId = sample[0];
+  updateConnectedDeviceBadge();
+  const types = ['DATA', 'HELLO', 'ACK'];
+  simulateIntervalId = setInterval(() => {
+    const from = sample[Math.floor(Math.random()*sample.length)];
+    let to = sample[Math.floor(Math.random()*sample.length)]; if (to === from) to = sample[(sample.indexOf(from)+1) % sample.length];
+    const rssi = Math.floor(Math.random()*45) - 115;
+    processSerialLine(`[SIM] RX from=${from} to=${to} type=${types[Math.floor(Math.random()*types.length)]} rssi=${rssi}`);
+    if (Math.random() < 0.35) {
+      const bat = 65 + Math.floor(Math.random()*35);
+      const snr = (Math.random() * 8 - 2).toFixed(1);
+      const relay = Math.floor(Math.random() * 20);
+      const contacts = 2 + Math.floor(Math.random() * 5);
+      processSerialLine(`=== PLSCHAT_STATUS ===`);
+      processSerialLine(`NODE_ID:${from}`);
+      processSerialLine(`BAT:${bat}%`);
+      processSerialLine(`LORA_RSSI:${rssi}`);
+      processSerialLine(`LORA_SNR:${snr}`);
+      processSerialLine(`UPTIME:04h12m`);
+      processSerialLine(`PKT_RELAY:${relay}`);
+      processSerialLine(`CONTACTS:${contacts}`);
+      processSerialLine(`MESSAGES:18`);
+      processSerialLine(`=== END_STATUS ===`);
+    }
+  }, 650);
+}
+
+function stopSimulateTraffic() {
+  if (simulateIntervalId) { clearInterval(simulateIntervalId); simulateIntervalId = null; }
+  simulationActive = false;
+  connectedDeviceId = null;
+  updateConnectedDeviceBadge();
+  if (leafletMap) updateMapMarkers();
+  const icon = document.getElementById('simulate-btn-icon');
+  const label = document.getElementById('simulate-btn-label');
+  if (icon) icon.className = 'fa-solid fa-play';
+  if (label) label.textContent = 'Simulate Traffic';
+}
 
 function clearAll() {
   document.getElementById('log-container').innerHTML = '';
   logLines = []; packets = []; document.getElementById('packet-table-body').innerHTML = '';
-  nodes.clear(); linkCounts.clear();
+  nodes.clear();
+  linkCounts.clear();
+  applyRegistryToNodes();
+  mergePublishedRepeaters();
   renderNodesList();
+  cancelPlacement();
+  document.getElementById('node-count-badge').textContent = nodes.size;
+  packetCount = 0;
+  document.getElementById('stat-packets').textContent = '0';
+  updateStats();
+  document.getElementById('stat-avg-rssi').textContent = '--';
+  if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  meshNodes = [];
+  if (leafletMap) updateMapMarkers();
 }
 
 function resetKnownRepeaters() {
-  if (!confirm('Reset all known repeaters?')) return;
-  registry = {}; localStorage.removeItem(REGISTRY_KEY); clearAll();
+  if (!confirm('This permanently removes every known/pinned repeater stored in this browser — including saved labels, map locations, and any leftover entries from Simulate Traffic. This cannot be undone. Continue?')) return;
+  if (simulationActive) stopSimulateTraffic();
+  registry = {};
+  try { localStorage.removeItem(REGISTRY_KEY); } catch (e) {}
+  clearAll();
 }
 
 function clearPackets() { packets = []; document.getElementById('packet-table-body').innerHTML = ''; }
@@ -948,20 +1659,30 @@ function copyLog() {
 }
 
 function init() {
+  // Restore password checkbox state from localStorage if desired (optional enhancement)
   const checkbox = getRequirePasswordCheckbox();
   if (checkbox) {
-    checkbox.checked = localStorage.getItem('plschat_require_password') === 'true';
-    checkbox.addEventListener('change', () => localStorage.setItem('plschat_require_password', checkbox.checked));
+    const saved = localStorage.getItem('plschat_require_password');
+    if (saved === 'true') checkbox.checked = true;
+    checkbox.addEventListener('change', () => {
+      localStorage.setItem('plschat_require_password', checkbox.checked);
+    });
   }
+
+  document.getElementById('filter-input').addEventListener('keydown', e => { if (e.key === 'Escape') { document.getElementById('filter-input').value = ''; filterLog(); } });
   applyRegistryToNodes();
   renderNodesList();
   initMeshCanvas();
   updateMeshVisualization();
+  fetchPublishedRepeaters();
+  setInterval(fetchPublishedRepeaters, PUBLISHED_REFRESH_MS);
   setTimeout(() => {
     const log = document.getElementById('log-container');
-    if (log.children.length === 0) log.innerHTML = `<div style="padding:40px 20px;text-align:center;color:#64748b;font-size:13px">Click <strong>Connect to Node</strong> or <strong>Simulate Traffic</strong> to start.</div>`;
-  }, 800);
-  console.log('%c[PLSChat Monitor] Cleaned & fixed version loaded successfully.', 'color:#22c55e');
+    if (log.children.length === 0) {
+      log.innerHTML = `<div style="padding:40px 20px;text-align:center;color:#64748b;font-size:13px">Click <strong>Connect to Node</strong> or <strong>Simulate Traffic</strong> to start.</div>`;
+    }
+  }, 1200);
+  console.log('%c[PLSChat Monitor] Updated with Clear/Copy/Refresh buttons + optional password toggle.', 'color:#22c55e');
 }
 window.onload = init;
 </script>
