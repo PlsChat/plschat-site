@@ -163,7 +163,7 @@
                 Flash the v007 firmware to a company device. Hold the <strong>BOOT button</strong> on the Heltec while clicking Connect in the installer.
                 After flashing, provision it with <code style="color:#67e8f9;">COMPANY:ON</code> over serial to enable the tamper module.
             </p>
-            <esp-web-install-button manifest="/manifest-v007.json"></esp-web-install-button>
+            <esp-web-install-button manifest="/manifest-v007.json?v=2"></esp-web-install-button>
             <p style="color:#64748b;font-size:12px;margin-top:14px;">
                 <i>Note:</i> this flashes whatever <code>/manifest-v007.json</code> points to. Once a device has secure boot + flash encryption enabled (Release mode), it can no longer be reflashed here — that's expected. Clicking Connect automatically releases the Licence Manager's serial connection first, so you don't need to refresh between sections.
             </p>
