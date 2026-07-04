@@ -848,6 +848,7 @@ function renderNodesList() {
 // ===== NEW: Refresh nodes list =====
 function refreshNodesList() {
   renderNodesList();
+  fetchPublishedRepeaters();   // pull the latest published repeaters from the server, not just redraw
   if (currentMeshView === 'map' && leafletMap) updateMapMarkers();
 }
 
