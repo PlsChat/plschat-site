@@ -6,10 +6,10 @@
     {
       "chipFamily": "ESP32-S3",
       "parts": [
-        { "path": "PLSChat_v007_1.ino.bootloader.bin?v=1", "offset": 0 },
-        { "path": "PLSChat_v007_1.ino.partitions.bin?v=1", "offset": 32768 },
-        { "path": "boot_app0.bin?v=1", "offset": 57344 },
-        { "path": "PLSChat_v007_1.ino.bin?v=1", "offset": 65536 }
+        { "path": "PLSChat_v007.1.ino.bootloader.bin?v=2", "offset": 0 },
+        { "path": "PLSChat_v007.1.ino.partitions.bin?v=2", "offset": 32768 },
+        { "path": "boot_app0.bin?v=2", "offset": 57344 },
+        { "path": "PLSChat_v007.1.ino.bin?v=2", "offset": 65536 }
       ]
     }
   ]
