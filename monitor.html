@@ -132,6 +132,16 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 <button onclick="clearAll()" class="inline-flex items-center gap-x-2 px-5 py-3 border border-white/20 hover:bg-white/5 rounded-2xl transition-colors">Clear All</button>
 <button onclick="resetKnownRepeaters()" class="inline-flex items-center gap-x-2 px-5 py-3 border border-red-400/30 text-red-300 hover:bg-red-400/10 rounded-2xl transition-colors"><i class="fa-solid fa-trash"></i> <span>Reset Known Repeaters</span></button>
 </div>
+
+<!-- NEW: Optional password protection toggle -->
+<div class="mt-4 flex items-center gap-x-3 text-sm">
+<label class="flex items-center gap-x-2 cursor-pointer">
+<input type="checkbox" id="require-password-checkbox" class="accent-cyan-400 w-4 h-4">
+<span class="text-zinc-300">Require device password on connect</span>
+</label>
+<span class="text-[10px] px-2 py-0.5 rounded bg-amber-400/10 text-amber-300 border border-amber-400/20">Recommended for added security</span>
+</div>
+
 <div id="connected-device-badge" class="hidden mt-3 inline-flex items-center gap-x-2 px-3 py-1.5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 text-emerald-300 text-xs"></div>
 <p class="text-xs text-zinc-500 mt-3">Works in Chrome/Edge. Node must print verbose logs to serial. <strong class="text-red-300">Reset Known Repeaters</strong> permanently clears every saved/pinned repeater stored in this browser — including any left over from Simulate Traffic — and cannot be undone. <strong class="text-zinc-300">Only the device currently connected via Web Serial</strong> can be renamed, relocated, or published/removed from the public map — every other discovered repeater is view-only until you connect it directly.</p>
 </div>
@@ -156,6 +166,7 @@ Nodes appear when the connected device receives their packets or status over LoR
 <div class="flex gap-2">
 <input type="text" id="filter-input" placeholder="Filter..." class="bg-[#0f1326] border border-white/10 rounded-xl px-4 py-2 text-sm w-48" oninput="filterLog()">
 <button onclick="copyLog()" class="px-4 py-2 text-sm border border-white/10 rounded-xl hover:bg-white/5">Copy</button>
+<button onclick="clearLog()" class="px-4 py-2 text-sm border border-white/10 rounded-xl hover:bg-white/5">Clear</button>
 </div>
 </div>
 <div id="log-container" class="log-container h-[380px] overflow-auto bg-black/30 p-4 rounded-2xl text-xs"></div>
@@ -166,7 +177,10 @@ Nodes appear when the connected device receives their packets or status over LoR
 <div class="card p-6">
 <div class="flex items-center justify-between mb-4">
 <h3 class="font-semibold text-lg">Recent Packets</h3>
+<div class="flex gap-2">
 <button onclick="clearPackets()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Clear</button>
+<button onclick="copyPackets()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Copy</button>
+</div>
 </div>
 <div class="max-h-[200px] overflow-auto">
 <table class="packet-table w-full text-sm">
@@ -179,7 +193,10 @@ Nodes appear when the connected device receives their packets or status over LoR
 <div class="card p-6">
 <div class="flex items-center justify-between mb-1">
 <h3 class="font-semibold text-lg">Discovered Nodes</h3>
+<div class="flex items-center gap-x-2">
 <span id="node-count-badge" class="text-xs px-3 py-1 bg-white/10 rounded-full">0</span>
+<button onclick="refreshNodesList()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Refresh</button>
+</div>
 </div>
 <div id="nodes-breakdown" class="text-[11px] text-zinc-500 mb-3">No nodes yet.</div>
 <div id="nodes-list" class="max-h-[200px] overflow-auto text-sm"></div>
@@ -349,7 +366,7 @@ let port = null, reader = null, isConnected = false;
 let logLines = [], packets = [], nodes = new Map();
 let packetCount = 0, ppsInterval = null;
 let simulationActive = false, simulateIntervalId = null;
-let connectedDeviceId = null; // NODE_ID of the device with an active Web Serial connection (or, during simulation, the simulated local device) — only this node may be renamed, relocated, or (un)published
+let connectedDeviceId = null;
 let currentModalNodeId = null;
 let rssiChartCtx = null;
 let canvas, ctx;
@@ -359,12 +376,9 @@ let draggedNode = null, dragOffsetX = 0, dragOffsetY = 0;
 const MAX_LOG_LINES = 300;
 const MAX_PACKETS = 50;
 const MAX_RSSI_HISTORY = 15;
-const MAX_MESH_NODES = 40; // Increased to show more devices
-const DEFAULT_RANGE_KM = 5; // starting estimate for a repeater's transmission halo
+const MAX_MESH_NODES = 40;
+const DEFAULT_RANGE_KM = 5;
 
-// ===== Public Coverage Map API =====
-// Fill these in after deploying the Worker (see DEPLOY.md). Until then, "Share to
-// Public Coverage Map" will show a clear error instead of failing silently.
 const API_BASE = 'https://plschat-coverage-api.plschat.workers.dev';
 function getWriteKey() {
   let key = localStorage.getItem('plschat_write_key');
@@ -375,30 +389,26 @@ function getWriteKey() {
   return key || '';
 }
 
-// ===== Repeater registry (persisted across sessions) =====
 const REGISTRY_KEY = 'plschat_known_repeaters';
 let registry = loadRegistry();
-
-// ===== Published repeaters bridge (from the public Coverage Map, not RF) =====
-// These are repeaters anyone has published via "Share to Public Coverage Map" — pulled
-// straight from the public API. This has nothing to do with LoRa range: a repeater on
-// the other side of the world shows up here exactly the same as one next door. They are
-// shown clearly marked as "published only" so they're never confused with nodes this
-// device has actually heard over the air.
-let publishedRepeaters = new Map(); // id -> latest API record
+let publishedRepeaters = new Map();
 const PUBLISHED_REFRESH_MS = 30000;
 
 let currentMeshView = 'network';
 let leafletMap = null;
 let haloLayerGroup = null;
 let markerLayerGroup = null;
-let mapMarkers = new Map();   // id -> L.marker
-let mapHalos = new Map();     // id -> L.circle
+let mapMarkers = new Map();
+let mapHalos = new Map();
 let mapLines = [];
-let linkCounts = new Map();   // "idA|idB" sorted -> {count, lastSeen}
+let linkCounts = new Map();
 let placeMode = false;
 let placeTargetId = null;
 let justDraggedMarker = false;
+
+// ===== NEW: Optional password state =====
+let requirePasswordOnConnect = false;
+let devicePassword = null; // temporary for the session
 
 function loadRegistry() {
   try {
@@ -410,9 +420,6 @@ function saveRegistry() {
   try { localStorage.setItem(REGISTRY_KEY, JSON.stringify(registry)); } catch (e) {}
 }
 function registerKnownIfNeeded(id) {
-  // Simulated traffic must never get written into the persistent repeater registry —
-  // otherwise fake nodes from "Simulate Traffic" would survive page refreshes forever,
-  // exactly like a real discovered repeater would.
   if (simulationActive) return;
   if (!registry[id]) {
     registry[id] = { label: null, lat: null, lon: null, manuallyAdded: false, addedAt: new Date().toISOString() };
@@ -433,11 +440,6 @@ function applyRegistryToNodes() {
   });
 }
 
-// Ownership gate: only the device currently connected to this browser via Web Serial
-// (or, during a Simulate Traffic demo, the simulated stand-in device) may be renamed,
-// relocated, have its range edited, or be published/removed from the public map. This
-// stops one browser session from moving/renaming/deleting repeaters that belong to
-// other people, just because their packets are visible on this mesh.
 function canEditNode(id) {
   return !!id && id === connectedDeviceId;
 }
@@ -453,10 +455,37 @@ function updateConnectedDeviceBadge() {
   }
 }
 
+// ===== NEW: Password protection helpers =====
+function getRequirePasswordCheckbox() {
+  return document.getElementById('require-password-checkbox');
+}
+
+function promptForDevicePassword() {
+  return new Promise((resolve) => {
+    const pw = prompt('Enter device web UI password to unlock full status:');
+    resolve(pw ? pw.trim() : null);
+  });
+}
+
 async function connectSerial() {
   if (!('serial' in navigator)) { alert("Web Serial only works in Chrome/Edge."); return; }
-  if (simulationActive) stopSimulateTraffic(); // don't mix fake and real traffic
-  connectedDeviceId = null; // re-lock editing until the newly connected device reports its own identity
+  if (simulationActive) stopSimulateTraffic();
+
+  const checkbox = getRequirePasswordCheckbox();
+  requirePasswordOnConnect = checkbox ? checkbox.checked : false;
+
+  if (requirePasswordOnConnect) {
+    const pw = await promptForDevicePassword();
+    if (!pw) {
+      alert('Password required. Connection cancelled.');
+      return;
+    }
+    devicePassword = pw; // store for this session
+  } else {
+    devicePassword = null;
+  }
+
+  connectedDeviceId = null;
   updateConnectedDeviceBadge();
   try {
     port = await navigator.serial.requestPort();
@@ -468,10 +497,12 @@ async function connectSerial() {
     ppsInterval = setInterval(updatePPS, 1000);
   } catch (err) { alert("Failed to connect: " + err.message); updateConnectionUI(false); }
 }
+
 function updateConnectionUI(connected) {
   document.getElementById('connect-btn').style.display = connected ? 'none' : 'inline-flex';
   document.getElementById('disconnect-btn').style.display = connected ? 'inline-flex' : 'none';
 }
+
 async function readSerialLoop() {
   if (!port || !port.readable) return;
   const decoder = new TextDecoder();
@@ -486,12 +517,14 @@ async function readSerialLoop() {
     }
   } catch (e) {} finally { if (reader) { reader.releaseLock(); reader = null; } }
 }
+
 async function disconnectSerial() {
   if (reader) { try { await reader.cancel(); } catch(e){} reader = null; }
   if (port) { try { await port.close(); } catch(e){} port = null; }
   isConnected = false; updateConnectionUI(false);
   if (ppsInterval) { clearInterval(ppsInterval); ppsInterval = null; }
-  connectedDeviceId = null; // lock editing back down — no device is connected anymore
+  connectedDeviceId = null;
+  devicePassword = null; // clear password on disconnect
   updateConnectedDeviceBadge();
   if (leafletMap) updateMapMarkers();
 }
@@ -632,9 +665,9 @@ function createNewNode(nodeId, timestamp) {
     messages: null,
     rssiHistory: [],
     online: timestamp !== null,
-    everHeard: timestamp !== null, // actually received via Web Serial/LoRa at some point, vs. only known from the local registry or the public Coverage Map
-    publishedOnly: false,          // known only because it's published on the public Coverage Map — never heard by this device
-    lastPublished: null,           // most recent record fetched from the public Coverage API, if any
+    everHeard: timestamp !== null,
+    publishedOnly: false,
+    lastPublished: null,
     lat: null,
     lon: null
   };
@@ -699,6 +732,25 @@ function filterLog() {
   });
 }
 
+// ===== NEW: Clear log function =====
+function clearLog() {
+  document.getElementById('log-container').innerHTML = '';
+  logLines = [];
+}
+
+// ===== NEW: Copy packets function =====
+function copyPackets() {
+  const text = packets.map(p => {
+    const time = p.timestamp.toLocaleTimeString();
+    return `[${time}] ${p.from} → ${p.to} | ${p.type} | RSSI: ${p.rssi || '-'}`;
+  }).join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const origText = event.target ? event.target.textContent : '';
+    if (event.target) event.target.textContent = 'Copied!';
+    setTimeout(() => { if (event.target) event.target.textContent = 'Copy'; }, 1200);
+  }).catch(() => alert('Copy failed'));
+}
+
 function updatePacketTable() {
   const tbody = document.getElementById('packet-table-body');
   tbody.innerHTML = '';
@@ -757,8 +809,6 @@ function renderNodesList() {
   }
   let html = '';
   Array.from(nodes.values()).sort((a, b) => {
-    // Heard-this-session nodes first, then published-only (known from the public map
-    // but never actually received over the air), then everything else.
     const rank = (n) => n.online ? 0 : (n.publishedOnly ? 1 : 2);
     const ra = rank(a), rb = rank(b);
     if (ra !== rb) return ra - rb;
@@ -791,11 +841,14 @@ function renderNodesList() {
   container.innerHTML = html;
 }
 
+// ===== NEW: Refresh nodes list =====
+function refreshNodesList() {
+  renderNodesList();
+  if (currentMeshView === 'map' && leafletMap) updateMapMarkers();
+}
+
 function updateStats() {
   document.getElementById('stat-packets').textContent = packetCount;
-  // "Unique Nodes" reflects what's actually been heard over LoRa this session — it
-  // intentionally excludes published-only entries pulled in from the public Coverage
-  // Map, so this stat keeps meaning "nodes my connected device has received."
   const heardCount = Array.from(nodes.values()).filter(n => n.everHeard).length;
   document.getElementById('stat-nodes').textContent = heardCount;
   const recent = packets.filter(p => p.rssi !== null).slice(0, 20);
@@ -974,8 +1027,8 @@ function initMap() {
     maxZoom: 20,
     subdomains: 'abcd'
   }).addTo(leafletMap);
-  haloLayerGroup = L.layerGroup().addTo(leafletMap);   // added first → renders underneath
-  markerLayerGroup = L.layerGroup().addTo(leafletMap); // added second → renders on top
+  haloLayerGroup = L.layerGroup().addTo(leafletMap);
+  markerLayerGroup = L.layerGroup().addTo(leafletMap);
   leafletMap.on('click', handleLeafletClick);
 }
 
@@ -988,9 +1041,6 @@ function repeaterIcon(online, editable, publishedOnly) {
   });
 }
 
-// Heuristic only — there's no real propagation model behind this (no terrain, antenna
-// height, SF/BW data). It maps a typical LoRa RSSI window to a range window so that a
-// stronger last-heard signal draws a bigger circle than a weaker one. Not measured coverage.
 function rssiToRangeKm(rssi) {
   const minRssi = -120, maxRssi = -30;
   const minKm = 1, maxKm = 10;
@@ -1006,7 +1056,6 @@ function getRangeKm(id) {
   if (mode === 'manual') {
     return (r && r.rangeKm) ? r.rangeKm : DEFAULT_RANGE_KM;
   }
-  // auto mode: derive from the last heard RSSI if we have one
   if (node && node.lastRssi !== null && node.lastRssi !== undefined) {
     return rssiToRangeKm(node.lastRssi);
   }
@@ -1015,7 +1064,7 @@ function getRangeKm(id) {
 
 function haloStyle(online) {
   return {
-    radius: 0, // set per-call
+    radius: 0,
     color: online ? '#0891b2' : '#94a3b8',
     weight: 1.5,
     dashArray: '4,5',
@@ -1059,7 +1108,7 @@ function updateMapMarkers() {
       marker.on('click', () => { if (justDraggedMarker) { justDraggedMarker = false; return; } if (!placeMode) showNodeDetail(id); });
       marker.on('drag', () => { const ll = marker.getLatLng(); halo.setLatLng(ll); drawMapLinks(); });
       marker.on('dragend', () => {
-        if (!canEditNode(id)) return; // defensive — dragging should already be disabled for non-owned markers
+        if (!canEditNode(id)) return;
         const ll = marker.getLatLng();
         if (!registry[id]) registry[id] = { label: null, lat: null, lon: null, rangeKm: null, manuallyAdded: false, addedAt: new Date().toISOString() };
         registry[id].lat = ll.lat; registry[id].lon = ll.lng;
@@ -1130,7 +1179,6 @@ function showRepeaterSearchDropdown() {
 }
 
 function hideRepeaterSearchDropdownDeferred() {
-  // small delay so a click on a dropdown row registers before blur hides it
   setTimeout(() => {
     const dd = document.getElementById('repeater-search-dropdown');
     if (dd) dd.classList.add('hidden');
@@ -1149,7 +1197,7 @@ function renderRepeaterDropdown(filterText) {
     .filter(id => !q || id.toLowerCase().includes(q) || repeaterDisplayName(id).toLowerCase().includes(q))
     .sort((a, b) => {
       const ap = isPlaced(a), bp = isPlaced(b);
-      if (ap !== bp) return ap ? 1 : -1; // unplaced first — those are the ones you usually want to place
+      if (ap !== bp) return ap ? 1 : -1;
       return repeaterDisplayName(a).localeCompare(repeaterDisplayName(b));
     });
 
@@ -1409,7 +1457,7 @@ async function shareToPublicMap() {
     return;
   }
   if (API_BASE.includes('REPLACE-ME')) {
-    alert('The Coverage API isn\'t configured yet \u2014 set API_BASE and WRITE_KEY near the top of this page\'s script (see DEPLOY.md) before sharing.');
+    alert('The Coverage API isn\'t configured yet — set API_BASE and WRITE_KEY near the top of this page\'s script (see DEPLOY.md) before sharing.');
     return;
   }
 
@@ -1442,7 +1490,7 @@ async function shareToPublicMap() {
     r.shared = true;
     saveRegistry();
     showNodeDetail(id);
-    fetchPublishedRepeaters(); // pick up our own publish immediately rather than waiting for the next poll
+    fetchPublishedRepeaters();
     alert('Published. It should appear on coverage-map.html within a few seconds.');
   } catch (e) {
     alert('Could not publish: ' + e.message);
@@ -1455,7 +1503,7 @@ async function unshareFromPublicMap() {
   if (!canEditNode(id)) { alert('You can only remove the device currently connected to this browser via Web Serial from the public Coverage Map.'); return; }
   if (!confirm(`Remove "${repeaterDisplayName(id)}" from the public Coverage Map?`)) return;
   if (API_BASE.includes('REPLACE-ME')) {
-    alert('The Coverage API isn\'t configured yet \u2014 see DEPLOY.md.');
+    alert('The Coverage API isn\'t configured yet — see DEPLOY.md.');
     return;
   }
   try {
@@ -1473,12 +1521,6 @@ async function unshareFromPublicMap() {
 }
 
 /* ===================== PUBLISHED REPEATERS BRIDGE ===================== */
-// Pulls the public, read-only repeater list from the same Coverage API that
-// coverage-map.html uses (GET /api/repeaters — no write key needed). This is what
-// lets a repeater that someone else has published show up here even if your
-// connected device has never heard it over LoRa — e.g. a friend's device that's
-// far outside your radio range. It is intentionally one-way: nothing fetched here
-// is ever written back to the Coverage API.
 
 async function fetchPublishedRepeaters() {
   if (API_BASE.includes('REPLACE-ME')) return;
@@ -1502,9 +1544,6 @@ function mergePublishedRepeaters() {
       nodes.set(id, node);
     }
     node.lastPublished = r;
-    // Only flag as "published only" if we've genuinely never heard this node ourselves —
-    // a node this device has heard over LoRa keeps showing as a real online node even
-    // though it also happens to be published to the public map.
     node.publishedOnly = !node.everHeard;
     if (node.lat === null || node.lat === undefined) node.lat = r.lat;
     if (node.lon === null || node.lon === undefined) node.lon = r.lon;
@@ -1546,14 +1585,13 @@ function startSimulateTraffic() {
   if (label) label.textContent = 'Stop Simulation';
 
   const sample = ['A1B2', 'C3D4', '1122', '3344', 'E5F6'];
-  connectedDeviceId = sample[0]; // stand in as "this browser's connected device" so the ownership lock is testable without real hardware
+  connectedDeviceId = sample[0];
   updateConnectedDeviceBadge();
   const types = ['DATA', 'HELLO', 'ACK'];
   simulateIntervalId = setInterval(() => {
     const from = sample[Math.floor(Math.random()*sample.length)];
     let to = sample[Math.floor(Math.random()*sample.length)]; if (to === from) to = sample[(sample.indexOf(from)+1) % sample.length];
     const rssi = Math.floor(Math.random()*45) - 115;
-    // [SIM] prefix (rather than [LoRa]) so simulated lines are visually distinguishable in the log
     processSerialLine(`[SIM] RX from=${from} to=${to} type=${types[Math.floor(Math.random()*types.length)]} rssi=${rssi}`);
     if (Math.random() < 0.35) {
       const bat = 65 + Math.floor(Math.random()*35);
@@ -1591,8 +1629,8 @@ function clearAll() {
   logLines = []; packets = []; document.getElementById('packet-table-body').innerHTML = '';
   nodes.clear();
   linkCounts.clear();
-  applyRegistryToNodes(); // known/manually-added/pinned repeaters reappear, marked offline
-  mergePublishedRepeaters(); // published-only repeaters from the public map reappear too
+  applyRegistryToNodes();
+  mergePublishedRepeaters();
   renderNodesList();
   cancelPlacement();
   document.getElementById('node-count-badge').textContent = nodes.size;
@@ -1605,10 +1643,6 @@ function clearAll() {
   if (leafletMap) updateMapMarkers();
 }
 
-// Full factory reset of the persistent repeater registry — distinct from clearAll(),
-// which intentionally preserves real/pinned repeaters across a session clear. This is
-// the button to use to flush out stale or simulated entries that shouldn't have been
-// saved (e.g. from a Simulate Traffic run before this fix existed).
 function resetKnownRepeaters() {
   if (!confirm('This permanently removes every known/pinned repeater stored in this browser — including saved labels, map locations, and any leftover entries from Simulate Traffic. This cannot be undone. Continue?')) return;
   if (simulationActive) stopSimulateTraffic();
@@ -1625,6 +1659,16 @@ function copyLog() {
 }
 
 function init() {
+  // Restore password checkbox state from localStorage if desired (optional enhancement)
+  const checkbox = getRequirePasswordCheckbox();
+  if (checkbox) {
+    const saved = localStorage.getItem('plschat_require_password');
+    if (saved === 'true') checkbox.checked = true;
+    checkbox.addEventListener('change', () => {
+      localStorage.setItem('plschat_require_password', checkbox.checked);
+    });
+  }
+
   document.getElementById('filter-input').addEventListener('keydown', e => { if (e.key === 'Escape') { document.getElementById('filter-input').value = ''; filterLog(); } });
   applyRegistryToNodes();
   renderNodesList();
@@ -1638,7 +1682,7 @@ function init() {
       log.innerHTML = `<div style="padding:40px 20px;text-align:center;color:#64748b;font-size:13px">Click <strong>Connect to Node</strong> or <strong>Simulate Traffic</strong> to start.</div>`;
     }
   }, 1200);
-  console.log('%c[PLSChat Monitor] Network/Map toggle + persistent repeater registry + published-repeaters bridge enabled.', 'color:#22c55e');
+  console.log('%c[PLSChat Monitor] Updated with Clear/Copy/Refresh buttons + optional password toggle.', 'color:#22c55e');
 }
 window.onload = init;
 </script>
