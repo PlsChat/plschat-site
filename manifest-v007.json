@@ -1,12 +1,12 @@
 {
-  "name": "PLSChat Firmware — v007 (Company / Tamper + Security tab)",
-  "version": "007b",
+  "name": "PLSChat Firmware — v007 (Company / Tamper + Security tab + WiFi time-sync)",
+  "version": "007c",
   "new_install_prompt_erase": true,
   "builds": [
     {
       "chipFamily": "ESP32-S3",
       "parts": [
-        { "path": "PLSChat_v007.ino.merged.bin?v=7b", "offset": 0 }
+        { "path": "PLSChat_v007.ino.merged.bin?v=7c", "offset": 0 }
       ]
     }
   ]
