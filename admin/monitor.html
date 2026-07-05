@@ -12,7 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PLSChat • Admin Monitor</title>
     <!-- esp-web-tools: powers the admin-only firmware flasher panel below -->
-    <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+    <script type="module" src="https://unpkg.com/esp-web-tools@10.2.1/dist/web/install-button.js?module"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
         :root {
@@ -204,64 +204,6 @@
             </p>
         </div>
 
-        <!-- MQTT Connection -->
-        <div class="card">
-            <h3 style="margin-bottom:16px;">MQTT Connection</h3>
-            <div class="config-grid">
-                <div class="form-group">
-                    <label>Broker URL (wss://)</label>
-                    <input type="text" id="broker-url" value="wss://broker.hivemq.com:8884/mqtt" placeholder="wss://your-broker:8884/mqtt">
-                </div>
-                <div class="form-group">
-                    <label>Username (optional)</label>
-                    <input type="text" id="mqtt-user" placeholder="username">
-                </div>
-                <div class="form-group">
-                    <label>Password (optional)</label>
-                    <input type="password" id="mqtt-pass" placeholder="password">
-                </div>
-                <div class="form-group">
-                    <label>Topic Prefix</label>
-                    <input type="text" id="topic-prefix" value="plschat/" placeholder="plschat/">
-                </div>
-            </div>
-            <div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-                <button id="connect-btn" class="btn" onclick="connectMQTT()">Connect to MQTT</button>
-                <button id="disconnect-btn" class="btn btn-secondary" onclick="disconnectMQTT()" style="display:none;">Disconnect</button>
-                <div class="status">
-                    <div id="status-dot" class="status-dot"></div>
-                    <span id="status-text">Disconnected</span>
-                </div>
-                <button class="btn btn-secondary" onclick="toggleDemoMode()">Toggle Demo Mode</button>
-            </div>
-            <div style="margin-top:12px;font-size:13px;color:#64748b;">
-                Tip: Use a secure MQTT broker with TLS (wss://). For production, enable username/password or client certificates.
-            </div>
-        </div>
-
-        <!-- Network Stats -->
-        <div class="card">
-            <h3 style="margin-bottom:16px;">Network Overview</h3>
-            <div class="stats-grid">
-                <div class="stat"><div class="stat-value" id="stat-nodes">0</div><div class="stat-label">Nodes Online</div></div>
-                <div class="stat"><div class="stat-value" id="stat-avg-rssi">--</div><div class="stat-label">Avg RSSI (dBm)</div></div>
-                <div class="stat"><div class="stat-value" id="stat-avg-battery">--</div><div class="stat-label">Avg Battery %</div></div>
-                <div class="stat"><div class="stat-value" id="stat-packets">0</div><div class="stat-label">Packets (last min)</div></div>
-            </div>
-        </div>
-
-        <!-- Nodes List -->
-        <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap;">
-                <h3>Discovered Nodes</h3>
-                <div style="display:flex;gap:8px;align-items:center;">
-                    <input type="text" id="node-filter" placeholder="Filter nodes..." style="background:#0f1326;border:1px solid #374151;color:#c9d1d9;padding:8px 14px;border-radius:8px;width:200px;" oninput="filterNodes()">
-                    <button class="btn btn-secondary" onclick="refreshNodesView()" style="padding:8px 14px;font-size:14px;">Refresh</button>
-                </div>
-            </div>
-            <div id="nodes-grid" class="node-grid"></div>
-        </div>
-
         <!-- ═══════════════════════════════════════════════════════════
              LICENCE MANAGER
         ═══════════════════════════════════════════════════════════ -->
@@ -371,149 +313,9 @@
         <footer>PLSChat Admin Monitor &bull; Connects via MQTT &bull; For authorized maintainers only</footer>
     </div>
 
-    <!-- Node Detail Modal -->
-    <div id="node-modal" class="modal" onclick="if(event.target.id==='node-modal')closeModal()">
-        <div class="modal-content" onclick="event.stopImmediatePropagation()">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                <h3 id="modal-node-id" style="color:#67e8f9;margin:0;"></h3>
-                <button onclick="closeModal()" class="btn btn-secondary" style="padding:6px 14px;font-size:14px;">Close</button>
-            </div>
-            <div id="modal-content"></div>
-        </div>
-    </div>
 
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script>
         const WORKER_URL = 'https://plschat-coverage-api.plschat.workers.dev';
-
-        let client = null;
-        let nodes = new Map();
-        let demoInterval = null;
-        let isDemoMode = false;
-
-        function generateDemoData() {
-            const demoNodes = ['A1B2C3','D4E5F6','112233','445566','778899','AABBCC'];
-            const now = Date.now();
-            demoNodes.forEach((id) => {
-                if (!nodes.has(id)) {
-                    nodes.set(id, { id, lastRssi: -70 - Math.floor(Math.random()*35), battery: 60 + Math.floor(Math.random()*40), lastSeen: new Date(now - Math.random()*1000*60*30), packetCount: Math.floor(Math.random()*200), lastUpdate: new Date() });
-                } else {
-                    const n = nodes.get(id);
-                    n.lastRssi = Math.max(-110, Math.min(-50, n.lastRssi + (Math.random()-.5)*8));
-                    n.battery = Math.max(10, Math.min(100, n.battery + (Math.random()-.5)*3));
-                    n.lastSeen = new Date(); n.packetCount += Math.floor(Math.random()*3); n.lastUpdate = new Date();
-                }
-            });
-            updateUI();
-        }
-
-        function toggleDemoMode() {
-            isDemoMode = !isDemoMode;
-            if (isDemoMode) {
-                if (client) disconnectMQTT();
-                generateDemoData();
-                if (demoInterval) clearInterval(demoInterval);
-                demoInterval = setInterval(generateDemoData, 2500);
-                document.getElementById('connect-btn').style.display = 'none';
-                document.getElementById('disconnect-btn').style.display = 'inline-flex';
-                document.getElementById('status-text').textContent = 'Demo Mode Active';
-                document.getElementById('status-dot').classList.add('connected');
-            } else {
-                if (demoInterval) { clearInterval(demoInterval); demoInterval = null; }
-                nodes.clear(); updateUI();
-                document.getElementById('connect-btn').style.display = 'inline-flex';
-                document.getElementById('disconnect-btn').style.display = 'none';
-                document.getElementById('status-text').textContent = 'Disconnected';
-                document.getElementById('status-dot').classList.remove('connected');
-            }
-        }
-
-        function updateUI() {
-            const arr = Array.from(nodes.values());
-            document.getElementById('stat-nodes').textContent = arr.length;
-            if (arr.length > 0) {
-                document.getElementById('stat-avg-rssi').textContent = (arr.reduce((s,n)=>s+n.lastRssi,0)/arr.length).toFixed(0);
-                document.getElementById('stat-avg-battery').textContent = (arr.reduce((s,n)=>s+n.battery,0)/arr.length).toFixed(0)+'%';
-                document.getElementById('stat-packets').textContent = Math.floor(arr.reduce((s,n)=>s+(n.packetCount||0),0)/10);
-            }
-            renderNodes();
-        }
-
-        function renderNodes(filter='') {
-            const container = document.getElementById('nodes-grid');
-            container.innerHTML = '';
-            const filtered = Array.from(nodes.values()).filter(n=>n.id.toLowerCase().includes(filter.toLowerCase())).sort((a,b)=>b.lastSeen-a.lastSeen);
-            if (filtered.length === 0) { container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#64748b;">No nodes found.</div>`; return; }
-            filtered.forEach(node => {
-                const card = document.createElement('div');
-                card.className = 'node-card';
-                card.onclick = () => showNodeDetail(node.id);
-                const rssiClass = node.lastRssi > -70 ? 'good' : node.lastRssi > -90 ? 'ok' : 'bad';
-                const timeAgo = Math.floor((Date.now()-node.lastSeen.getTime())/1000);
-                const timeText = timeAgo < 60 ? `${timeAgo}s ago` : `${Math.floor(timeAgo/60)}m ago`;
-                card.innerHTML = `<div class="node-header"><div class="node-id">${node.id}</div><div style="font-size:12px;color:#64748b;">${timeText}</div></div><div class="node-metrics"><div class="metric"><div class="metric-label">RSSI</div><div class="rssi ${rssiClass}">${node.lastRssi} dBm</div></div><div class="metric"><div class="metric-label">Battery</div><div style="font-weight:700;">${node.battery}%</div></div></div>`;
-                container.appendChild(card);
-            });
-        }
-
-        function filterNodes() { renderNodes(document.getElementById('node-filter').value); }
-        function refreshNodesView() { renderNodes(document.getElementById('node-filter').value); }
-
-        function showNodeDetail(nodeId) {
-            const node = nodes.get(nodeId);
-            if (!node) return;
-            document.getElementById('modal-node-id').textContent = nodeId;
-            document.getElementById('modal-content').innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:24px;"><div><div style="font-size:13px;color:#64748b;margin-bottom:4px;">LAST RSSI</div><div style="font-size:26px;font-weight:700;" class="rssi ${node.lastRssi>-70?'good':node.lastRssi>-90?'ok':'bad'}">${node.lastRssi??'--'} dBm</div></div><div><div style="font-size:13px;color:#64748b;margin-bottom:4px;">BATTERY</div><div style="font-size:26px;font-weight:700;">${node.battery??'--'}%</div></div><div><div style="font-size:13px;color:#64748b;margin-bottom:4px;">PACKETS</div><div style="font-size:20px;font-weight:700;">${node.packetCount||0}</div></div></div><div style="margin-bottom:16px;"><div style="font-size:13px;color:#64748b;margin-bottom:4px;">LAST SEEN</div><div style="font-size:16px;">${node.lastSeen.toLocaleString()}</div></div>`;
-            document.getElementById('node-modal').style.display = 'flex';
-        }
-
-        function closeModal() { document.getElementById('node-modal').style.display = 'none'; }
-
-        function connectMQTT() {
-            const brokerUrl = document.getElementById('broker-url').value.trim();
-            const username = document.getElementById('mqtt-user').value.trim();
-            const password = document.getElementById('mqtt-pass').value.trim();
-            const topicPrefix = document.getElementById('topic-prefix').value.trim() || 'plschat/';
-            if (!brokerUrl) { alert('Please enter a broker URL'); return; }
-            try {
-                client = mqtt.connect(brokerUrl, { username: username||undefined, password: password||undefined, reconnectPeriod: 5000, connectTimeout: 10000 });
-                client.on('connect', () => { updateConnectionUI(true); client.subscribe(`${topicPrefix}#`); });
-                client.on('message', (topic, message) => { handleMQTTMessage(topic, message.toString()); });
-                client.on('error', (err) => { alert('MQTT error: '+err.message); disconnectMQTT(); });
-                client.on('close', () => updateConnectionUI(false));
-            } catch(err) { alert('Failed to connect: '+err.message); }
-        }
-
-        function handleMQTTMessage(topic, payload) {
-            try {
-                const data = JSON.parse(payload);
-                const parts = topic.split('/');
-                if (parts.includes('nodes') && parts.length >= 3) {
-                    const nodeId = parts[parts.length-1];
-                    if (!nodes.has(nodeId)) nodes.set(nodeId, { id:nodeId, lastRssi:null, battery:null, lastSeen:new Date(), packetCount:0, lastUpdate:new Date() });
-                    const node = nodes.get(nodeId);
-                    if (data.rssi !== undefined) node.lastRssi = data.rssi;
-                    if (data.battery !== undefined) node.battery = data.battery;
-                    if (data.packetCount !== undefined) node.packetCount = data.packetCount;
-                    if (data.snr !== undefined) node.snr = data.snr;
-                    node.lastSeen = new Date(); node.lastUpdate = new Date();
-                    updateUI();
-                }
-            } catch(e) {}
-        }
-
-        function disconnectMQTT() {
-            if (client) { client.end(); client = null; }
-            updateConnectionUI(false);
-            if (demoInterval) { clearInterval(demoInterval); demoInterval = null; }
-        }
-
-        function updateConnectionUI(connected) {
-            document.getElementById('status-dot').classList.toggle('connected', connected);
-            document.getElementById('status-text').textContent = connected ? 'Connected to MQTT' : 'Disconnected';
-            document.getElementById('connect-btn').style.display = connected ? 'none' : 'inline-flex';
-            document.getElementById('disconnect-btn').style.display = connected ? 'inline-flex' : 'none';
-        }
 
         // ═══════════════════════════════════════════════════════════
         //  ADMIN AUTH — verified server-side by the Worker (/admin/login,
@@ -1052,8 +854,6 @@
             const flashBtn = document.querySelector('esp-web-install-button');
             if (flashBtn) flashBtn.addEventListener('click', () => releaseSerialPort(false), true);
 
-            document.getElementById('nodes-grid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#64748b;">Connect to MQTT or enable Demo Mode to see nodes.</div>`;
-            document.getElementById('node-filter').addEventListener('keydown', function(e) { if(e.key==='Escape'){this.value='';renderNodes();} });
             document.getElementById('admin-password').addEventListener('keydown', function(e) { if(e.key==='Enter') checkAdminPassword(); });
             document.getElementById('cp-confirm').addEventListener('keydown', function(e) { if(e.key==='Enter') changeAdminPassword(); });
         }
