@@ -166,6 +166,10 @@
                 <h3>&#127981; Company Firmware — v007</h3>
                 <span style="font-size:13px;color:#64748b;">Tamper-enabled build &bull; ESP32-S3</span>
             </div>
+            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                <button class="btn btn-secondary" onclick="location.reload()" style="padding:8px 14px;font-size:14px;" title="Reload the page">&#8635; Refresh</button>
+                <button class="btn btn-secondary" onclick="releaseSerialPort(true, this)" style="padding:8px 14px;font-size:14px;" title="Free the USB serial port so another section (or the flasher) can use it">&#128268; Release Serial</button>
+            </div>
             <p style="color:#8b949e;font-size:14px;margin-bottom:16px;">
                 Flash the v007 firmware to a company device. Hold the <strong>BOOT button</strong> on the Heltec while clicking Connect in the installer.
                 After flashing, provision it with <code style="color:#67e8f9;">COMPANY:ON</code> over serial to enable the tamper module.
@@ -265,6 +269,10 @@
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
                 <h3>&#128273; Licence Manager</h3>
                 <span style="font-size:13px;color:#64748b;">Ed25519 signed &#8226; stored in Worker KV</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                <button class="btn btn-secondary" onclick="location.reload()" style="padding:8px 14px;font-size:14px;" title="Reload the page">&#8635; Refresh</button>
+                <button class="btn btn-secondary" onclick="releaseSerialPort(true, this)" style="padding:8px 14px;font-size:14px;" title="Free the USB serial port so another section (or the flasher) can use it">&#128268; Release Serial</button>
             </div>
 
             <!-- Write Key -->
@@ -517,6 +525,12 @@
         //  password), and Cloudflare Access sits in front of everything.
         // ═══════════════════════════════════════════════════════════
         let adminAuthed = false;
+        // How long a successful login stays valid across refreshes WITHOUT
+        // re-entering the password. 0 = require the password on every page
+        // load / refresh (this is what fixes "it never asks for my PW").
+        // Set to e.g. 15 to stay logged in for 15 minutes of refreshes,
+        // then re-prompt — handy now that each section has its own Refresh.
+        const ADMIN_REMEMBER_MINUTES = 0;
 
         function togglePw(id, btn) {
             const el = document.getElementById(id);
@@ -542,7 +556,7 @@
                 const data = await res.json().catch(() => ({}));
                 if (res.ok && data.ok) {
                     adminAuthed = true;
-                    try { sessionStorage.setItem('plschat_admin_session', '1'); } catch(e) {}
+                    try { sessionStorage.setItem('plschat_admin_session', '1'); sessionStorage.setItem('plschat_admin_ts', String(Date.now())); } catch(e) {}
                     document.getElementById('admin-password').value = '';
                     document.getElementById('login-overlay').style.display = 'none';
                 } else {
@@ -989,7 +1003,7 @@
 
         // Re-lock the page (clears the tab session; password required again).
         function lockAdmin() {
-            try { sessionStorage.removeItem('plschat_admin_session'); } catch(e) {}
+            try { sessionStorage.removeItem('plschat_admin_session'); sessionStorage.removeItem('plschat_admin_ts'); } catch(e) {}
             adminAuthed = false;
             document.getElementById('admin-password').value = '';
             document.getElementById('login-overlay').style.display = 'flex';
@@ -998,7 +1012,7 @@
         // Free the USB serial port so another section (or the web flasher)
         // can claim it — no full page refresh needed. Cancels any in-flight
         // response reader first, since a locked reader blocks port.close().
-        async function releaseSerialPort(showFeedback = true) {
+        async function releaseSerialPort(showFeedback = true, btnEl = null) {
             try {
                 if (activeSerialReader) {
                     try { await activeSerialReader.cancel(); } catch(e) {}
@@ -1011,18 +1025,26 @@
             } finally {
                 licSerialPort = null;
                 if (showFeedback) {
-                    const b = document.getElementById('release-serial-btn');
+                    const b = btnEl || document.getElementById('release-serial-btn');
                     if (b) { const t = b.innerHTML; b.innerHTML = '&#10003; Port released'; setTimeout(() => { b.innerHTML = t; }, 1500); }
                 }
             }
         }
 
         function init() {
-            // Same-tab session: skip the login overlay if already unlocked in this tab.
+            // Same-tab session: skip the login overlay ONLY if a login is still
+            // inside the remember window. With ADMIN_REMEMBER_MINUTES = 0 this is
+            // never true, so the password is required on every load / refresh.
             try {
-                if (sessionStorage.getItem('plschat_admin_session') === '1') {
+                const ok = sessionStorage.getItem('plschat_admin_session') === '1';
+                const ts = parseInt(sessionStorage.getItem('plschat_admin_ts') || '0', 10);
+                const fresh = ADMIN_REMEMBER_MINUTES > 0 && ok && (Date.now() - ts) < ADMIN_REMEMBER_MINUTES * 60000;
+                if (fresh) {
                     adminAuthed = true;
                     document.getElementById('login-overlay').style.display = 'none';
+                } else {
+                    sessionStorage.removeItem('plschat_admin_session');
+                    sessionStorage.removeItem('plschat_admin_ts');
                 }
             } catch(e) {}
             // The web flasher needs exclusive USB access — release our serial
