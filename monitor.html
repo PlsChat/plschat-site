@@ -1,1702 +1,876 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<!-- Favicons -->
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
-<meta name="theme-color" content="#0a0c1f">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PLSChat • Network Monitor</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
-body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: #c9d1d9; }
-.font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
-.nav-link { transition: color 0.1s ease; }
-.nav-link:hover { color: #c026d3; }
-.card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; }
-.stat-value { font-size: 28px; font-weight: 700; color: #67e8f9; }
-.log-container { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; }
-.packet-table th { background: #0f1326; color: #8b949e; font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-.mesh-visual { background: #0f1326; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); }
-.node-id { font-family: monospace; background: #1f2439; padding: 2px 8px; border-radius: 6px; font-size: 12px; }
-.modal { animation: fadeInScale 0.2s ease forwards; }
-@keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-.mini-chart { height: 60px; background: #0f1326; border-radius: 8px; }
-
-/* --- View toggle --- */
-.view-toggle-btn.active { background: rgba(255,255,255,0.1); color: #67e8f9; }
-
-/* --- Status dots --- */
-.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; flex-shrink: 0; }
-.status-dot.online { background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,0.7); }
-.status-dot.offline { background: #475569; }
-.status-dot.published { background: #c084fc; box-shadow: 0 0 6px rgba(192,132,252,0.7); }
-
-/* --- Leaflet theming (light basemap for readability, dark UI chrome) --- */
-#leaflet-map { background: #dce3ea; }
-.leaflet-container { background: #dce3ea !important; font-family: 'Inter', sans-serif !important; }
-.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #0a0c1f; color: #c9d1d9; border: 1px solid rgba(255,255,255,0.1); }
-.leaflet-control-attribution { background: rgba(10,12,31,0.75) !important; color: #94a3b8 !important; font-size: 10px !important; }
-.leaflet-control-attribution a { color: #67e8f9 !important; }
-.leaflet-control-zoom a { background: #0a0c1f !important; color: #c9d1d9 !important; border-color: rgba(255,255,255,0.1) !important; }
-.leaflet-control-zoom a:hover { background: #161b3a !important; }
-.repeater-marker { width: 18px; height: 18px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
-.repeater-marker.online { background: #0891b2; box-shadow: 0 0 0 4px rgba(8,145,178,0.35), 0 1px 4px rgba(0,0,0,0.4); }
-.repeater-marker.offline { background: #94a3b8; }
-.repeater-marker.locked { opacity: 0.55; }
-.repeater-marker.published-only { border-style: dashed; border-color: #c084fc; }
-.repeater-tooltip { background: #0a0c1f !important; color: #e2e8f0 !important; border: 1px solid rgba(255,255,255,0.15) !important; font-size: 11px !important; font-weight: 600 !important; padding: 3px 9px !important; border-radius: 8px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important; }
-.leaflet-tooltip-top:before { border-top-color: #0a0c1f !important; }
-#map-visual.place-mode-active #leaflet-map { cursor: crosshair; }
-
-/* --- Repeater search/select --- */
-.repeater-option { padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); }
-.repeater-option:hover { background: rgba(255,255,255,0.06); }
-.repeater-option.add-new { color: #67e8f9; }
-</style>
+    <meta charset="UTF-8">
+    <!-- Host guard (belt-and-braces on top of the Pages _middleware redirect):
+         this admin page must only run on the Access-protected apex. If it is
+         ever loaded via the raw Cloudflare Pages URL, a preview URL, or any
+         other host, bounce to plschat.net before the panel is usable. -->
+    <script>
+    (function () {
+        var ALLOWED = ['plschat.net', 'www.plschat.net', 'localhost', '127.0.0.1'];
+        if (ALLOWED.indexOf(location.hostname) === -1) {
+            location.replace('https://plschat.net' + location.pathname + location.search + location.hash);
+        }
+    })();
+    </script>
+    <!-- Favicons -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#0a0c1f">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLSChat • Admin Monitor</title>
+    <!-- esp-web-tools: powers the admin-only firmware flasher panel below -->
+    <script type="module" src="https://unpkg.com/esp-web-tools@10.2.1/dist/web/install-button.js?module"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+        :root {
+            --bg: #0a0c1f;
+            --card: #12152b;
+            --accent: #a855f7;
+            --accent2: #67e8f9;
+            --text: #c9d1d9;
+            --text-muted: #8b949e;
+            --success: #22c55e;
+            --warning: #eab308;
+            --danger: #ef4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 20px; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #1f2439; flex-wrap: wrap; gap: 10px; }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo a { text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px; }
+        .logo h1 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 600; background: linear-gradient(90deg, #a855f7, #67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .badge { background: #1f2439; color: #67e8f9; padding: 4px 12px; border-radius: 9999px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; }
+        .btn { background: linear-gradient(90deg, #a855f7, #67e8f9); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3); }
+        .btn-secondary { background: #1f2439; color: var(--text); border: 1px solid #374151; }
+        .btn-danger { background: #ef4444; color: white; }
+        .card { background: var(--card); border: 1px solid #1f2439; border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat { background: #0f1326; border-radius: 12px; padding: 20px; text-align: center; }
+        .stat-value { font-size: 32px; font-weight: 700; color: #67e8f9; line-height: 1; }
+        .stat-label { font-size: 14px; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .node-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .node-card { background: #0f1326; border: 1px solid #1f2439; border-radius: 12px; padding: 18px; cursor: pointer; transition: all 0.2s ease; }
+        .node-card:hover { border-color: #a855f7; transform: translateY(-2px); }
+        .node-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .node-id { font-family: monospace; font-weight: 700; color: #67e8f9; font-size: 16px; }
+        .node-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .metric { font-size: 14px; }
+        .metric-label { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .rssi { font-weight: 700; }
+        .rssi.good { color: #22c55e; }
+        .rssi.ok { color: #eab308; }
+        .rssi.bad { color: #ef4444; }
+        .config-section { background: #0f1326; border: 1px solid #374151; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+        .form-group input { background: #1f2439; border: 1px solid #374151; color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 15px; }
+        .status { display: flex; align-items: center; gap: 8px; font-size: 15px; margin-bottom: 16px; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; }
+        .status-dot.connected { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: var(--card); border-radius: 16px; padding: 28px; max-width: 520px; width: 90%; border: 1px solid #1f2439; }
+        footer { margin-top: 40px; text-align: center; font-size: 13px; color: var(--text-muted); }
+        .warning { background: #3f2a1f; border: 1px solid #eab308; color: #fcd34d; padding: 12px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 20px; }
+        .info { background: #1a2f1f; border: 1px solid #22c55e; color: #86efac; padding: 12px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 20px; }
+        .pw-wrap { position: relative; }
+        .pw-wrap input { width: 100%; padding-right: 44px !important; }
+        .pw-eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 17px; color: #64748b; padding: 4px 6px; line-height: 1; }
+        .pw-eye:hover { color: #67e8f9; }
+        esp-web-install-button { --esp-tools-button-color: #a855f7; }
+    </style>
 </head>
 <body>
-<!-- Navbar -->
-<nav class="border-b border-white/10 bg-[#0a0c1f]/95 backdrop-blur-lg sticky top-0 z-50">
-<div class="max-w-7xl mx-auto px-6">
-<div class="flex items-center justify-between h-20">
-<div class="flex items-center gap-x-3">
-<svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
-<defs>
-<linearGradient id="plsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-<stop offset="0%" stop-color="#3b82f6"/>
-<stop offset="50%" stop-color="#c026d3"/>
-<stop offset="100%" stop-color="#ec4899"/>
-</defs>
-<path d="M50 5 L90 27.5 L90 72.5 L50 95 L10 72.5 L10 27.5 Z" fill="url(#plsGrad)" stroke="#fff" stroke-width="3"/>
-<polyline points="25,50 35,50 40,35 48,65 55,42 62,58 68,50 75,50" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-<div><span class="font-display text-3xl font-semibold tracking-tighter">PLSChat</span></div>
-</div>
-<div class="hidden md:flex items-center gap-x-8 text-sm font-medium">
-<a href="index.html" class="nav-link text-zinc-400 hover:text-white">Home</a>
-<a href="device-manager.html" class="nav-link text-zinc-400 hover:text-white">Device Manager</a>
-<a href="coverage-map.html" class="nav-link text-emerald-400 hover:text-emerald-300 font-medium">Coverage Map</a>
-<a href="flasher.html" class="nav-link text-zinc-400 hover:text-white">Web Flasher</a>
-</div>
-<div class="flex items-center gap-x-3">
-<a href="device-manager.html" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/20 hover:bg-white/5 transition-colors">
-<i class="fa-solid fa-plug mr-2"></i><span>Device Manager</span>
-</a>
-<button id="mobile-menu-btn" class="md:hidden w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-white">
-<i class="fa-solid fa-bars text-xl"></i>
-</button>
-</div>
-</div>
-</div>
-</nav>
-<div id="mobile-menu" class="hidden md:hidden border-b border-white/10 bg-[#0a0c1f]">
-<div class="px-6 py-4 flex flex-col gap-y-1 text-sm">
-<a href="index.html" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Home</a>
-<a href="device-manager.html" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Device Manager</a>
-<a href="coverage-map.html" class="py-2.5 px-4 text-emerald-400 hover:bg-white/5 rounded-2xl font-medium">Coverage Map</a>
-<a href="flasher.html" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Web Flasher</a>
-</div>
-</div>
-
-<div class="max-w-7xl mx-auto px-6 pt-8 pb-12">
-<div class="flex items-end justify-between mb-8">
-<div>
-<div class="inline-flex items-center gap-x-2 px-4 py-1.5 rounded-3xl bg-white/5 border border-white/10 text-xs font-medium tracking-[1.5px] mb-3">
-<div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-<span>LIVE NETWORK VISUALIZATION</span>
-</div>
-<h1 class="font-display text-5xl tracking-tighter">Network Monitor</h1>
-<p class="text-zinc-400 mt-2 text-lg">Real-time serial & mesh traffic analysis</p>
-</div>
-<div class="flex items-center gap-x-3">
-<button onclick="exportSession()" class="hidden md:inline-flex items-center gap-x-2 px-4 py-2 text-sm border border-white/20 hover:bg-white/5 rounded-2xl transition-colors">
-<i class="fa-solid fa-download"></i>
-<span>Export Session</span>
-</button>
-<a href="admin/monitor.html" class="hidden md:inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/20 hover:bg-white/5 transition-colors">
-<i class="fa-solid fa-shield-halved mr-2"></i> Admin Dashboard
-</a>
-</div>
-</div>
-
-<!-- Connection Controls -->
-<div class="card p-6 mb-6">
-<div class="flex flex-wrap items-center gap-3">
-<button id="connect-btn" onclick="connectSerial()" class="inline-flex items-center gap-x-2 px-6 py-3 bg-white text-[#0a0c1f] font-semibold rounded-2xl hover:bg-zinc-100 transition-all active:scale-[0.985]">
-<i class="fa-solid fa-plug"></i> <span>Connect to Node (Web Serial)</span>
-</button>
-<button id="disconnect-btn" onclick="disconnectSerial()" class="hidden inline-flex items-center gap-x-2 px-5 py-3 border border-white/20 hover:bg-white/5 rounded-2xl transition-colors">Disconnect</button>
-<button id="simulate-btn" onclick="toggleSimulateTraffic()" class="inline-flex items-center gap-x-2 px-5 py-3 border border-white/20 hover:bg-white/5 rounded-2xl transition-colors"><i id="simulate-btn-icon" class="fa-solid fa-play"></i> <span id="simulate-btn-label">Simulate Traffic</span></button>
-<button onclick="clearAll()" class="inline-flex items-center gap-x-2 px-5 py-3 border border-white/20 hover:bg-white/5 rounded-2xl transition-colors">Clear All</button>
-<button onclick="resetKnownRepeaters()" class="inline-flex items-center gap-x-2 px-5 py-3 border border-red-400/30 text-red-300 hover:bg-red-400/10 rounded-2xl transition-colors"><i class="fa-solid fa-trash"></i> <span>Reset Known Repeaters</span></button>
-</div>
-
-<!-- NEW: Optional password protection toggle -->
-<div class="mt-4 flex items-center gap-x-3 text-sm">
-<label class="flex items-center gap-x-2 cursor-pointer">
-<input type="checkbox" id="require-password-checkbox" class="accent-cyan-400 w-4 h-4">
-<span class="text-zinc-300">Require a passphrase before connecting</span>
-</label>
-<span class="text-[10px] px-2 py-0.5 rounded bg-white/5 text-zinc-400 border border-white/10">Local browser gate only — not verified by the device</span>
-</div>
-
-<div id="connected-device-badge" class="hidden mt-3 inline-flex items-center gap-x-2 px-3 py-1.5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 text-emerald-300 text-xs"></div>
-<p class="text-xs text-zinc-500 mt-3">Works in Chrome/Edge. Node must print verbose logs to serial. <strong class="text-red-300">Reset Known Repeaters</strong> permanently clears every saved/pinned repeater stored in this browser — including any left over from Simulate Traffic — and cannot be undone. <strong class="text-zinc-300">Only the device currently connected via Web Serial</strong> can be renamed, relocated, or published/removed from the public map — every other discovered repeater is view-only until you connect it directly.</p>
-</div>
-
-<div class="mb-4 px-1 text-xs text-zinc-500">
-Nodes appear when the connected device receives their packets or status over LoRa. Repeaters you've added or pinned stay listed even when offline.
-</div>
-
-<!-- Stats -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-<div class="card p-5"><div class="text-xs text-zinc-500">PACKETS</div><div id="stat-packets" class="stat-value">0</div></div>
-<div class="card p-5"><div class="text-xs text-zinc-500">UNIQUE NODES</div><div id="stat-nodes" class="stat-value">0</div></div>
-<div class="card p-5"><div class="text-xs text-zinc-500">AVG RSSI</div><div id="stat-avg-rssi" class="stat-value">--</div></div>
-<div class="card p-5"><div class="text-xs text-zinc-500">PACKETS/SEC</div><div id="stat-pps" class="stat-value">0</div></div>
-</div>
-
-<div class="grid lg:grid-cols-12 gap-6">
-<!-- Live Log -->
-<div class="lg:col-span-7 card p-6">
-<div class="flex items-center justify-between mb-4">
-<h3 class="font-semibold text-lg">Live Serial Log</h3>
-<div class="flex gap-2">
-<input type="text" id="filter-input" placeholder="Filter..." class="bg-[#0f1326] border border-white/10 rounded-xl px-4 py-2 text-sm w-48" oninput="filterLog()">
-<button onclick="copyLog()" class="px-4 py-2 text-sm border border-white/10 rounded-xl hover:bg-white/5">Copy</button>
-<button onclick="clearLog()" class="px-4 py-2 text-sm border border-white/10 rounded-xl hover:bg-white/5">Clear</button>
-</div>
-</div>
-<div id="log-container" class="log-container h-[380px] overflow-auto bg-black/30 p-4 rounded-2xl text-xs"></div>
-</div>
-
-<!-- Recent Packets + Discovered Nodes -->
-<div class="lg:col-span-5 space-y-6">
-<div class="card p-6">
-<div class="flex items-center justify-between mb-4">
-<h3 class="font-semibold text-lg">Recent Packets</h3>
-<div class="flex gap-2">
-<button onclick="clearPackets()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Clear</button>
-<button onclick="copyPackets(event)" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Copy</button>
-</div>
-</div>
-<div class="max-h-[200px] overflow-auto">
-<table class="packet-table w-full text-sm">
-<thead><tr><th class="text-left py-2">Time</th><th>From → To</th><th>Type</th><th>RSSI</th></tr></thead>
-<tbody id="packet-table-body" class="text-xs"></tbody>
-</table>
-</div>
-</div>
-
-<div class="card p-6">
-<div class="flex items-center justify-between mb-1">
-<h3 class="font-semibold text-lg">Discovered Nodes</h3>
-<div class="flex items-center gap-x-2">
-<span id="node-count-badge" class="text-xs px-3 py-1 bg-white/10 rounded-full">0</span>
-<button onclick="refreshNodesList()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Refresh</button>
-</div>
-</div>
-<div id="nodes-breakdown" class="text-[11px] text-zinc-500 mb-3">No nodes yet.</div>
-<div id="nodes-list" class="max-h-[200px] overflow-auto text-sm"></div>
-</div>
-</div>
-</div>
-
-<!-- Mesh Visualization / Map -->
-<div class="card p-6 mt-6">
-<div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-<h3 class="font-semibold text-lg">Mesh Visualization <span class="text-xs text-zinc-500">— see how repeaters connect</span></h3>
-<div class="flex items-center gap-2 flex-wrap">
-
-<div class="flex border border-white/10 rounded-xl overflow-hidden mr-1">
-<button id="view-network-btn" onclick="switchMeshView('network')" class="view-toggle-btn active text-xs px-3 py-1.5 hover:bg-white/5 transition-colors"><i class="fa-solid fa-diagram-project mr-1"></i>Network</button>
-<button id="view-map-btn" onclick="switchMeshView('map')" class="view-toggle-btn text-xs px-3 py-1.5 hover:bg-white/5 transition-colors"><i class="fa-solid fa-map-location-dot mr-1"></i>Map</button>
-</div>
-
-<div id="network-controls" class="flex gap-2">
-<button onclick="resetMeshLayout()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Reset</button>
-<button onclick="autoArrangeByRSSI()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Auto by RSSI</button>
-</div>
-
-<div id="map-controls" class="hidden flex gap-2 items-center flex-wrap relative">
-<div class="relative">
-<input type="text" id="repeater-search" placeholder="Search repeaters to place..." autocomplete="off"
-  class="bg-[#0f1326] border border-white/10 rounded-xl px-3 py-1.5 text-xs w-56 focus:outline-none focus:border-cyan-400/50"
-  oninput="handleRepeaterSearchInput()" onfocus="showRepeaterSearchDropdown()" onblur="hideRepeaterSearchDropdownDeferred()">
-<div id="repeater-search-dropdown" class="hidden absolute left-0 top-[calc(100%+6px)] w-72 max-h-60 overflow-auto bg-[#0a0c1f] border border-white/10 rounded-xl shadow-2xl z-[1500] text-xs"></div>
-</div>
-<div id="place-armed-badge" class="hidden items-center gap-2 text-xs px-3 py-1.5 rounded-xl border border-cyan-400/40 bg-cyan-400/10 text-cyan-300">
-<i class="fa-solid fa-location-crosshairs"></i>
-<span id="place-armed-label"></span>
-<button onclick="cancelPlacement()" class="text-cyan-300 hover:text-white ml-1 text-base leading-none">&times;</button>
-</div>
-<button onclick="centerMap()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Center</button>
-</div>
-
-</div>
-</div>
-
-<div id="mesh-visual" class="mesh-visual h-[600px] relative">
-<canvas id="mesh-canvas" class="w-full h-full rounded-2xl cursor-grab"></canvas>
-</div>
-<div id="map-visual" class="mesh-visual h-[600px] relative hidden">
-<div id="leaflet-map" class="w-full h-full rounded-2xl"></div>
-</div>
-
-<p id="network-caption" class="text-[11px] text-zinc-500 mt-2 text-center">Click a node for detailed stats • Drag to rearrange • Double-click to set custom label • Nodes appear when received by the connected device</p>
-<p id="map-caption" class="text-[11px] text-zinc-500 mt-2 text-center hidden">Click a placed repeater for stats • Drag a pin to nudge its position • Search above to place a new one • The dashed circle is an editable estimated range, not measured coverage</p>
-</div>
-</div>
-
-<!-- Node Detail Modal -->
-<div id="node-modal" onclick="if (event.target.id === 'node-modal') hideNodeModal()" class="hidden fixed inset-0 bg-black/70 z-[2000] flex items-center justify-center p-4">
-<div onclick="event.stopImmediatePropagation()" class="modal bg-[#0a0c1f] border border-white/10 rounded-3xl w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col">
-<div class="px-6 py-5 border-b border-white/10 flex items-center justify-between flex-shrink-0">
-<div>
-<div class="text-xs text-zinc-500">NODE DETAILS</div>
-<div id="modal-node-id" class="font-mono text-2xl font-semibold text-fuchsia-400"></div>
-<div id="modal-status" class="text-xs mt-1.5 flex items-center"></div>
-<div id="modal-lock-note" class="hidden text-[11px] text-amber-300/80 bg-amber-400/5 border border-amber-400/20 rounded-xl px-3 py-2 mt-2"><i class="fa-solid fa-lock mr-1"></i>View-only — connect this device directly via Web Serial to rename, relocate, or (un)publish it.</div>
-</div>
-<button onclick="hideNodeModal()" class="text-zinc-400 hover:text-white text-2xl leading-none">&times;</button>
-</div>
-<div class="p-6 space-y-5 overflow-y-auto flex-1">
-<div class="grid grid-cols-2 gap-4">
-<div class="bg-white/5 rounded-2xl p-4">
-<div class="text-xs text-zinc-500">BATTERY</div>
-<div id="modal-battery" class="text-3xl font-semibold mt-1">--</div>
-</div>
-<div class="bg-white/5 rounded-2xl p-4">
-<div class="text-xs text-zinc-500">LAST RSSI</div>
-<div id="modal-rssi" class="text-3xl font-semibold mt-1">-- dBm</div>
-</div>
-</div>
-<div class="grid grid-cols-2 gap-4">
-<div class="bg-white/5 rounded-2xl p-4">
-<div class="text-xs text-zinc-500">LAST SNR</div>
-<div id="modal-snr" class="text-3xl font-semibold mt-1">--</div>
-</div>
-<div class="bg-white/5 rounded-2xl p-4">
-<div class="text-xs text-zinc-500">PACKETS SEEN</div>
-<div id="modal-packets" class="text-3xl font-semibold mt-1">0</div>
-</div>
-</div>
-<div class="grid grid-cols-2 gap-4">
-<div class="bg-white/5 rounded-2xl p-4">
-<div class="text-xs text-zinc-500">PACKETS RELAYED</div>
-<div id="modal-relay" class="text-2xl font-semibold mt-1">--</div>
-</div>
-<div class="bg-white/5 rounded-2xl p-4">
-<div class="text-xs text-zinc-500">CONTACTS</div>
-<div id="modal-contacts" class="text-2xl font-semibold mt-1">--</div>
-</div>
-</div>
-
-<!-- RSSI History Chart -->
-<div class="bg-white/5 rounded-2xl p-4">
-<div class="text-xs text-zinc-500 mb-2">RSSI HISTORY (last 15 readings)</div>
-<canvas id="rssi-chart" class="mini-chart w-full" height="60"></canvas>
-</div>
-
-<div class="bg-white/5 rounded-2xl p-4">
-<div class="flex justify-between text-sm">
-<div>
-<div class="text-xs text-zinc-500">LAST SEEN</div>
-<div id="modal-last-seen" class="font-medium">--</div>
-</div>
-<div class="text-right">
-<div class="text-xs text-zinc-500">UPTIME</div>
-<div id="modal-uptime" class="font-medium text-emerald-400">--</div>
-</div>
-</div>
-</div>
-
-<div>
-<div class="text-xs text-zinc-500 mb-1.5">PACKET TYPES SEEN</div>
-<div id="modal-types" class="flex flex-wrap gap-2 text-xs"></div>
-</div>
-
-<div id="modal-range-box" class="bg-white/5 rounded-2xl p-4">
-<div class="flex items-center justify-between mb-2">
-<div class="text-xs text-zinc-500">TRANSMISSION RANGE (HALO ON MAP)</div>
-<label class="flex items-center gap-1.5 text-xs text-zinc-400 cursor-pointer">
-<input type="checkbox" id="modal-range-auto" onchange="toggleRangeAutoFromModal()" class="accent-cyan-400">
-<span>Auto by signal</span>
-</label>
-</div>
-<div class="flex items-center gap-2">
-<input type="number" id="modal-range-input" min="0.1" step="0.5" class="bg-[#0f1326] border border-white/10 rounded-xl px-3 py-2 text-sm w-24 focus:outline-none focus:border-cyan-400/50">
-<span class="text-xs text-zinc-500">km</span>
-<button id="modal-range-save-btn" onclick="saveRangeFromModal()" class="ml-auto text-xs px-4 py-2 border border-white/20 rounded-xl hover:bg-white/5">Save</button>
-</div>
-<div id="modal-range-hint" class="text-[10px] text-zinc-500 mt-2"></div>
-</div>
-
-<div class="pt-2 space-y-2">
-<button id="modal-edit-label-btn" onclick="editLabelFromModal()" class="w-full py-2.5 text-sm border border-white/20 hover:bg-white/5 rounded-2xl flex items-center justify-center gap-x-2">
-<i class="fa-solid fa-edit"></i> <span>Edit Custom Label</span>
-</button>
-<button id="modal-set-location-btn" onclick="setLocationFromModal()" class="w-full py-2.5 text-sm border border-white/20 hover:bg-white/5 rounded-2xl flex items-center justify-center gap-x-2">
-<i class="fa-solid fa-location-dot"></i> <span>Set / Move Location on Map</span>
-</button>
-</div>
-<div class="pt-1 space-y-2">
-<button id="modal-share-btn" onclick="shareToPublicMap()" class="w-full py-2.5 text-sm border border-emerald-400/40 text-emerald-300 hover:bg-emerald-400/10 rounded-2xl flex items-center justify-center gap-x-2">
-<i class="fa-solid fa-tower-broadcast"></i> <span id="modal-share-btn-label">Share to Public Coverage Map</span>
-</button>
-<button id="modal-unshare-btn" onclick="unshareFromPublicMap()" class="hidden w-full py-2.5 text-sm border border-red-400/30 text-red-300 hover:bg-red-400/10 rounded-2xl flex items-center justify-center gap-x-2">
-<i class="fa-solid fa-eye-slash"></i> <span>Remove from Public Map</span>
-</button>
-<div id="modal-share-hint" class="text-[10px] text-zinc-500 text-center"></div>
-</div>
-</div>
-<div class="px-6 py-4 bg-white/5 border-t border-white/10 text-xs text-zinc-500 flex items-start gap-x-2 flex-shrink-0">
-<i class="fa-solid fa-info-circle mt-0.5"></i>
-<div>
-This shows data reported by the node. Sensitive fields like PAIR_CODE are never displayed.
-</div>
-</div>
-</div>
-</div>
-
-<script>
-let port = null, reader = null, isConnected = false;
-let logLines = [], packets = [], nodes = new Map();
-let packetCount = 0, ppsInterval = null;
-let simulationActive = false, simulateIntervalId = null;
-let connectedDeviceId = null;
-let currentModalNodeId = null;
-let rssiChartCtx = null;
-let canvas, ctx;
-let meshNodes = [];
-let meshPositions = new Map();
-let draggedNode = null, dragOffsetX = 0, dragOffsetY = 0;
-const MAX_LOG_LINES = 300;
-const MAX_PACKETS = 50;
-const MAX_RSSI_HISTORY = 15;
-const MAX_MESH_NODES = 40;
-const DEFAULT_RANGE_KM = 5;
-
-const API_BASE = 'https://plschat-coverage-api.plschat.workers.dev';
-function getWriteKey() {
-  let key = localStorage.getItem('plschat_write_key');
-  if (!key) {
-    key = prompt('Enter Coverage Map Write Key:');
-    if (key) localStorage.setItem('plschat_write_key', key.trim());
-  }
-  return key || '';
-}
-
-const REGISTRY_KEY = 'plschat_known_repeaters';
-let registry = loadRegistry();
-let publishedRepeaters = new Map();
-const PUBLISHED_REFRESH_MS = 30000;
-
-let currentMeshView = 'network';
-let leafletMap = null;
-let haloLayerGroup = null;
-let markerLayerGroup = null;
-let mapMarkers = new Map();
-let mapHalos = new Map();
-let mapLines = [];
-let linkCounts = new Map();
-let placeMode = false;
-let placeTargetId = null;
-let justDraggedMarker = false;
-
-// ===== NEW: Optional password state =====
-let requirePasswordOnConnect = false;
-let devicePassword = null; // temporary for the session
-
-function loadRegistry() {
-  try {
-    const raw = localStorage.getItem(REGISTRY_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch (e) { return {}; }
-}
-function saveRegistry() {
-  try { localStorage.setItem(REGISTRY_KEY, JSON.stringify(registry)); } catch (e) {}
-}
-function registerKnownIfNeeded(id) {
-  if (simulationActive) return;
-  if (!registry[id]) {
-    registry[id] = { label: null, lat: null, lon: null, manuallyAdded: false, addedAt: new Date().toISOString() };
-    saveRegistry();
-  }
-}
-function applyRegistryToNodes() {
-  Object.keys(registry).forEach(id => {
-    if (!nodes.has(id)) {
-      const n = createNewNode(id, null);
-      nodes.set(id, n);
-    }
-    const n = nodes.get(id);
-    const r = registry[id];
-    if (r.label) n.customLabel = r.label;
-    n.lat = (r.lat !== undefined) ? r.lat : null;
-    n.lon = (r.lon !== undefined) ? r.lon : null;
-  });
-}
-
-function canEditNode(id) {
-  return !!id && id === connectedDeviceId;
-}
-function updateConnectedDeviceBadge() {
-  const badge = document.getElementById('connected-device-badge');
-  if (!badge) return;
-  if (connectedDeviceId) {
-    badge.classList.remove('hidden');
-    badge.innerHTML = `<i class="fa-solid fa-lock-open"></i> Editing unlocked for: <strong>${repeaterDisplayName(connectedDeviceId)}</strong>`;
-  } else {
-    badge.classList.add('hidden');
-    badge.innerHTML = '';
-  }
-}
-
-// ===== NEW: Password protection helpers =====
-function getRequirePasswordCheckbox() {
-  return document.getElementById('require-password-checkbox');
-}
-
-function promptForDevicePassword() {
-  return new Promise((resolve) => {
-    const pw = prompt('Enter the passphrase to continue connecting:');
-    resolve(pw ? pw.trim() : null);
-  });
-}
-
-async function connectSerial() {
-  if (!('serial' in navigator)) { alert("Web Serial only works in Chrome/Edge."); return; }
-  if (simulationActive) stopSimulateTraffic();
-
-  const checkbox = getRequirePasswordCheckbox();
-  requirePasswordOnConnect = checkbox ? checkbox.checked : false;
-
-  if (requirePasswordOnConnect) {
-    const pw = await promptForDevicePassword();
-    if (!pw) {
-      alert('Passphrase required. Connection cancelled.');
-      return;
-    }
-    devicePassword = pw; // store for this session
-  } else {
-    devicePassword = null;
-  }
-
-  connectedDeviceId = null;
-  updateConnectedDeviceBadge();
-  try {
-    port = await navigator.serial.requestPort();
-    await port.open({ baudRate: 115200 });
-    isConnected = true;
-    updateConnectionUI(true);
-    readSerialLoop();
-    if (ppsInterval) clearInterval(ppsInterval);
-    ppsInterval = setInterval(updatePPS, 1000);
-  } catch (err) { alert("Failed to connect: " + err.message); updateConnectionUI(false); }
-}
-
-function updateConnectionUI(connected) {
-  document.getElementById('connect-btn').style.display = connected ? 'none' : 'inline-flex';
-  document.getElementById('disconnect-btn').style.display = connected ? 'inline-flex' : 'none';
-}
-
-async function readSerialLoop() {
-  if (!port || !port.readable) return;
-  const decoder = new TextDecoder();
-  reader = port.readable.getReader();
-  let buffer = '';
-  try {
-    while (true) {
-      const { value, done } = await reader.read(); if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      let lines = buffer.split('\n'); buffer = lines.pop();
-      for (let line of lines) if (line.trim()) processSerialLine(line.trim());
-    }
-  } catch (e) {} finally { if (reader) { reader.releaseLock(); reader = null; } }
-}
-
-async function disconnectSerial() {
-  if (reader) { try { await reader.cancel(); } catch(e){} reader = null; }
-  if (port) { try { await port.close(); } catch(e){} port = null; }
-  isConnected = false; updateConnectionUI(false);
-  if (ppsInterval) { clearInterval(ppsInterval); ppsInterval = null; }
-  connectedDeviceId = null;
-  devicePassword = null; // clear password on disconnect
-  updateConnectedDeviceBadge();
-  if (leafletMap) updateMapMarkers();
-}
-
-function processSerialLine(line) {
-  const timestamp = new Date();
-  addToLog(line, timestamp);
-  const parsed = parsePacketLine(line, timestamp);
-  if (parsed) {
-    packets.unshift(parsed);
-    if (packets.length > MAX_PACKETS) packets.pop();
-    updatePacketTable();
-    updateNodeFromPacket(parsed);
-    recordLink(parsed);
-    refreshVisualization();
-  }
-  parseStatusBlock(line, timestamp);
-  packetCount++;
-  updateStats();
-}
-
-let statusBuffer = '';
-function parseStatusBlock(line, timestamp) {
-  if (line.includes('=== PLSCHAT_STATUS ===')) {
-    statusBuffer = line + '\n';
-    return;
-  }
-  if (statusBuffer.length > 0) {
-    statusBuffer += line + '\n';
-    if (line.includes('=== END_STATUS ===')) {
-      processFullStatusBlock(statusBuffer, timestamp);
-      statusBuffer = '';
-    }
-  }
-  parseIndividualStatusLine(line, timestamp);
-}
-
-function processFullStatusBlock(block, timestamp) {
-  const nodeIdMatch = block.match(/NODE_ID[:=]\s*([0-9A-Fa-f]+)/i);
-  if (!nodeIdMatch) return;
-  const nodeId = nodeIdMatch[1].toUpperCase();
-  if (!nodes.has(nodeId)) {
-    nodes.set(nodeId, createNewNode(nodeId, timestamp));
-  }
-  const node = nodes.get(nodeId);
-  node.lastSeen = timestamp;
-  node.online = true;
-  node.everHeard = true;
-  node.publishedOnly = false;
-  registerKnownIfNeeded(nodeId);
-
-  if (isConnected && connectedDeviceId === null) {
-    connectedDeviceId = nodeId;
-    addToLog(`[LOCAL] This browser is now linked to device ${nodeId} — only it can be renamed, relocated, or (un)published from here.`, timestamp);
-    updateConnectedDeviceBadge();
-    if (leafletMap) updateMapMarkers();
-  }
-
-  const batMatch = block.match(/BAT[:=]\s*([0-9]+)%/i);
-  if (batMatch) node.battery = parseInt(batMatch[1]);
-  const rssiMatch = block.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
-  if (rssiMatch) {
-    node.lastRssi = parseInt(rssiMatch[1]);
-    addToRssiHistory(node, node.lastRssi);
-  }
-  const snrMatch = block.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
-  if (snrMatch) node.lastSnr = parseFloat(snrMatch[1]);
-  const uptimeMatch = block.match(/UPTIME[:=]\s*([0-9hms ]+)/i);
-  if (uptimeMatch) node.uptime = uptimeMatch[1].trim();
-  const relayMatch = block.match(/PKT_RELAY[:=]\s*(\d+)/i);
-  if (relayMatch) node.relay = parseInt(relayMatch[1]);
-  const contactsMatch = block.match(/CONTACTS[:=]\s*(\d+)/i);
-  if (contactsMatch) node.contacts = parseInt(contactsMatch[1]);
-  const messagesMatch = block.match(/MESSAGES[:=]\s*(\d+)/i);
-  if (messagesMatch) node.messages = parseInt(messagesMatch[1]);
-
-  renderNodesList();
-  if (currentMeshView === 'map') updateMapMarkers();
-}
-
-function parseIndividualStatusLine(line, timestamp) {
-  const nodeIdMatch = line.match(/NODE_ID[:=]\s*([0-9A-Fa-f]+)/i);
-  if (!nodeIdMatch) return;
-  const nodeId = nodeIdMatch[1].toUpperCase();
-  if (!nodes.has(nodeId)) {
-    nodes.set(nodeId, createNewNode(nodeId, timestamp));
-  }
-  const node = nodes.get(nodeId);
-  node.lastSeen = timestamp;
-  node.online = true;
-  node.everHeard = true;
-  node.publishedOnly = false;
-  registerKnownIfNeeded(nodeId);
-
-  if (isConnected && connectedDeviceId === null) {
-    connectedDeviceId = nodeId;
-    addToLog(`[LOCAL] This browser is now linked to device ${nodeId} — only it can be renamed, relocated, or (un)published from here.`, timestamp);
-    updateConnectedDeviceBadge();
-    if (leafletMap) updateMapMarkers();
-  }
-
-  const batMatch = line.match(/BAT[:=]\s*([0-9]+)%/i);
-  if (batMatch) node.battery = parseInt(batMatch[1]);
-  const rssiMatch = line.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
-  if (rssiMatch) {
-    node.lastRssi = parseInt(rssiMatch[1]);
-    addToRssiHistory(node, node.lastRssi);
-  }
-  const snrMatch = line.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
-  if (snrMatch) node.lastSnr = parseFloat(snrMatch[1]);
-  const uptimeMatch = line.match(/UPTIME[:=]\s*([0-9hms ]+)/i);
-  if (uptimeMatch) node.uptime = uptimeMatch[1].trim();
-  const relayMatch = line.match(/PKT_RELAY[:=]\s*(\d+)/i);
-  if (relayMatch) node.relay = parseInt(relayMatch[1]);
-  const contactsMatch = line.match(/CONTACTS[:=]\s*(\d+)/i);
-  if (contactsMatch) node.contacts = parseInt(contactsMatch[1]);
-  const messagesMatch = line.match(/MESSAGES[:=]\s*(\d+)/i);
-  if (messagesMatch) node.messages = parseInt(messagesMatch[1]);
-
-  renderNodesList();
-  if (currentMeshView === 'map') updateMapMarkers();
-}
-
-function createNewNode(nodeId, timestamp) {
-  return {
-    id: nodeId,
-    firstSeen: timestamp,
-    lastSeen: timestamp,
-    packetCount: 0,
-    lastRssi: null,
-    lastSnr: null,
-    types: new Set(),
-    customLabel: null,
-    battery: null,
-    uptime: null,
-    relay: 0,
-    contacts: null,
-    messages: null,
-    rssiHistory: [],
-    online: timestamp !== null,
-    everHeard: timestamp !== null,
-    publishedOnly: false,
-    lastPublished: null,
-    lat: null,
-    lon: null
-  };
-}
-
-function addToRssiHistory(node, rssi) {
-  if (!node.rssiHistory) node.rssiHistory = [];
-  node.rssiHistory.push(rssi);
-  if (node.rssiHistory.length > MAX_RSSI_HISTORY) node.rssiHistory.shift();
-}
-
-function parsePacketLine(line, timestamp) {
-  const fromMatch = line.match(/(?:from|src|node)[=:]\s*([0-9A-Fa-fxX]+)/i) || line.match(/0x([0-9A-Fa-f]{4,8})/);
-  const toMatch = line.match(/(?:to|dst|dest)[=:]\s*([0-9A-Fa-fxX]+)/i);
-  const rssiMatch = line.match(/rssi[=:]\s*(-?\d+)/i) || line.match(/LORA_RSSI[:=]\s*(-?\d+)/i);
-  const snrMatch = line.match(/snr[=:]\s*(-?\d+\.?\d*)/i) || line.match(/LORA_SNR[:=]\s*(-?\d+\.?\d*)/i);
-  const typeMatch = line.match(/type[=:]\s*([A-Za-z0-9_]+)/i) || line.match(/\b(DATA|HELLO|ACK|BEACON)\b/i);
-  if (!fromMatch && !rssiMatch && !typeMatch) return null;
-  let from = fromMatch ? fromMatch[1].replace(/^0x/i, '').toUpperCase() : '????';
-  let to = toMatch ? toMatch[1].replace(/^0x/i, '').toUpperCase() : 'BCAST';
-  let rssi = rssiMatch ? parseInt(rssiMatch[1]) : null;
-  let snr = snrMatch ? parseFloat(snrMatch[1]) : null;
-  let type = typeMatch ? typeMatch[1].toUpperCase() : 'UNKNOWN';
-  if (type.includes('HELLO') || type.includes('BEACON')) type = 'HELLO';
-  if (type.includes('DATA') || type.includes('MSG')) type = 'DATA';
-  if (type.includes('ACK')) type = 'ACK';
-  return { timestamp, from, to, type, rssi, snr, raw: line };
-}
-
-function recordLink(parsed) {
-  if (!parsed.from || parsed.from === '????') return;
-  if (!parsed.to || parsed.to === 'BCAST') return;
-  const key = [parsed.from, parsed.to].sort().join('|');
-  const existing = linkCounts.get(key);
-  linkCounts.set(key, { count: (existing ? existing.count : 0) + 1, lastSeen: Date.now() });
-}
-
-function refreshVisualization() {
-  updateMeshVisualization();
-  if (currentMeshView === 'map' && leafletMap) updateMapMarkers();
-}
-
-function addToLog(line, timestamp) {
-  const container = document.getElementById('log-container');
-  const timeStr = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const div = document.createElement('div');
-  div.className = 'log-line';
-  let highlighted = line.replace(/(rssi[=:]\s*-?\d+)/gi, '<span class="highlight">$1</span>')
-    .replace(/((?:from|src|node)[=:]\s*[0-9A-Fa-fxX]+)/gi, '<span class="highlight">$1</span>')
-    .replace(/\b(DATA|HELLO|ACK|BEACON)\b/gi, '<span class="highlight">$1</span>');
-  div.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${highlighted}`;
-  container.appendChild(div);
-  logLines.push(div);
-  while (logLines.length > MAX_LOG_LINES) { const old = logLines.shift(); if (old && old.parentNode) old.parentNode.removeChild(old); }
-  container.scrollTop = container.scrollHeight;
-}
-
-function filterLog() {
-  const filter = document.getElementById('filter-input').value.toLowerCase().trim();
-  document.querySelectorAll('#log-container .log-line').forEach(line => {
-    line.style.display = (!filter || line.textContent.toLowerCase().includes(filter)) ? '' : 'none';
-  });
-}
-
-// ===== NEW: Clear log function =====
-function clearLog() {
-  document.getElementById('log-container').innerHTML = '';
-  logLines = [];
-}
-
-// ===== NEW: Copy packets function =====
-function copyPackets(evt) {
-  // Capture the button now, synchronously. window.event is cleared by the time
-  // the clipboard promise resolves, so referencing it inside .then() is unreliable.
-  const btn = (evt && evt.currentTarget) ? evt.currentTarget : null;
-  const text = packets.map(p => {
-    const time = p.timestamp.toLocaleTimeString();
-    return `[${time}] ${p.from} → ${p.to} | ${p.type} | RSSI: ${p.rssi || '-'}`;
-  }).join('\n');
-  navigator.clipboard.writeText(text).then(() => {
-    if (btn) {
-      btn.textContent = 'Copied!';
-      setTimeout(() => { btn.textContent = 'Copy'; }, 1200);
-    }
-  }).catch(() => alert('Copy failed'));
-}
-
-function updatePacketTable() {
-  const tbody = document.getElementById('packet-table-body');
-  tbody.innerHTML = '';
-  packets.forEach(p => {
-    const row = document.createElement('tr');
-    const time = p.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    let rssiClass = p.rssi > -70 ? 'good' : p.rssi > -90 ? 'ok' : 'bad';
-    let typeClass = p.type === 'DATA' ? 'type-data' : p.type === 'HELLO' ? 'type-hello' : 'type-ack';
-    row.innerHTML = `<td style="font-family:monospace;color:#64748b;font-size:12px">${time}</td>
-      <td><span class="node-id">${p.from}</span> <span style="color:#64748b">→</span> <span class="node-id">${p.to}</span></td>
-      <td><span class="packet-type ${typeClass}">${p.type}</span></td>
-      <td><span class="rssi ${rssiClass}">${p.rssi ? p.rssi + ' dBm' : '-'}</span></td>`;
-    tbody.appendChild(row);
-  });
-}
-
-function updateNodeFromPacket(parsed) {
-  if (!parsed.from || parsed.from === '????') return;
-  if (!nodes.has(parsed.from)) {
-    nodes.set(parsed.from, createNewNode(parsed.from, parsed.timestamp));
-  }
-  const node = nodes.get(parsed.from);
-  node.lastSeen = parsed.timestamp;
-  node.online = true;
-  node.everHeard = true;
-  node.publishedOnly = false;
-  node.packetCount++;
-  registerKnownIfNeeded(parsed.from);
-  if (parsed.rssi !== null) {
-    node.lastRssi = parsed.rssi;
-    addToRssiHistory(node, parsed.rssi);
-  }
-  if (parsed.snr !== null) node.lastSnr = parsed.snr;
-  node.types.add(parsed.type);
-  renderNodesList();
-}
-
-function renderNodesList() {
-  const container = document.getElementById('nodes-list');
-  const badge = document.getElementById('node-count-badge');
-  const breakdown = document.getElementById('nodes-breakdown');
-  badge.textContent = nodes.size;
-  if (breakdown) {
-    const heardCount = Array.from(nodes.values()).filter(n => n.everHeard).length;
-    const publishedCount = Array.from(nodes.values()).filter(n => n.publishedOnly).length;
-    if (nodes.size === 0) {
-      breakdown.textContent = 'No nodes yet.';
-    } else {
-      breakdown.innerHTML = `<span class="text-cyan-300">${heardCount} heard via LoRa</span>` +
-        (publishedCount > 0 ? ` &middot; <span class="text-purple-300">${publishedCount} published only (not heard by this device)</span>` : '');
-    }
-  }
-  if (nodes.size === 0) {
-    container.innerHTML = `<div style="padding:20px;color:#64748b;font-size:13px;text-align:center">No nodes seen yet.</div>`;
-    return;
-  }
-  let html = '';
-  Array.from(nodes.values()).sort((a, b) => {
-    const rank = (n) => n.online ? 0 : (n.publishedOnly ? 1 : 2);
-    const ra = rank(a), rb = rank(b);
-    if (ra !== rb) return ra - rb;
-    const at = a.lastSeen ? a.lastSeen.getTime() : (a.lastPublished && a.lastPublished.lastReportedAt ? new Date(a.lastPublished.lastReportedAt).getTime() : 0);
-    const bt = b.lastSeen ? b.lastSeen.getTime() : (b.lastPublished && b.lastPublished.lastReportedAt ? new Date(b.lastPublished.lastReportedAt).getTime() : 0);
-    return bt - at;
-  }).forEach(node => {
-    const timeAgo = node.lastSeen ? (() => {
-      const ago = Math.floor((Date.now() - node.lastSeen.getTime()) / 1000);
-      return ago < 60 ? ago + 's ago' : Math.floor(ago / 60) + 'm ago';
-    })() : null;
-    const publishedAgo = (node.lastPublished && node.lastPublished.lastReportedAt) ? (() => {
-      const ago = Math.floor((Date.now() - new Date(node.lastPublished.lastReportedAt).getTime()) / 1000);
-      return ago < 60 ? ago + 's ago' : Math.floor(ago / 60) + 'm ago';
-    })() : null;
-    const rssi = node.lastRssi ? `<span class="text-emerald-400">${node.lastRssi} dBm</span>` : '';
-    const bat = node.battery ? `<span class="text-emerald-400">${node.battery}%</span>` : '';
-    const dotClass = node.online ? 'online' : (node.publishedOnly ? 'published' : 'offline');
-    const dot = `<span class="status-dot ${dotClass}"></span>`;
-    const subline = node.online
-      ? `${node.packetCount} pkts • ${timeAgo}`
-      : (node.publishedOnly
-          ? `<i class="fa-solid fa-tower-broadcast"></i> published only • not heard by this device${publishedAgo ? ' • ' + publishedAgo : ''}`
-          : `${node.packetCount} pkts • ${timeAgo || 'never seen'}`);
-    html += `<div onclick="showNodeDetail('${node.id}')" style="padding:8px 10px;border-bottom:1px solid #1f2439;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-      <div style="display:flex;align-items:center">${dot}<div><div style="font-family:monospace;color:#67e8f9;font-weight:600">${node.customLabel || node.id}</div><div style="font-size:11px;color:#64748b">${subline}</div></div></div>
-      <div style="text-align:right;font-size:12px">${bat || rssi}</div>
-    </div>`;
-  });
-  container.innerHTML = html;
-}
-
-// ===== NEW: Refresh nodes list =====
-function refreshNodesList() {
-  renderNodesList();
-  fetchPublishedRepeaters();   // pull the latest published repeaters from the server, not just redraw
-  if (currentMeshView === 'map' && leafletMap) updateMapMarkers();
-}
-
-function updateStats() {
-  document.getElementById('stat-packets').textContent = packetCount;
-  const heardCount = Array.from(nodes.values()).filter(n => n.everHeard).length;
-  document.getElementById('stat-nodes').textContent = heardCount;
-  const recent = packets.filter(p => p.rssi !== null).slice(0, 20);
-  if (recent.length > 0) {
-    const avg = recent.reduce((s, p) => s + p.rssi, 0) / recent.length;
-    document.getElementById('stat-avg-rssi').textContent = avg.toFixed(0);
-  }
-}
-
-function updatePPS() {
-  const now = Date.now();
-  const recent = packets.filter(p => (now - p.timestamp.getTime()) < 5000);
-  document.getElementById('stat-pps').textContent = (recent.length / 5).toFixed(1);
-}
-
-/* ===================== NETWORK (canvas) VIEW ===================== */
-
-function initMeshCanvas() {
-  canvas = document.getElementById('mesh-canvas');
-  if (!canvas) return;
-  ctx = canvas.getContext('2d');
-  canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
-  canvas.addEventListener('mousedown', handleMeshMouseDown);
-  canvas.addEventListener('mousemove', handleMeshMouseMove);
-  canvas.addEventListener('mouseup', handleMeshMouseUp);
-  canvas.addEventListener('mouseleave', handleMeshMouseUp);
-  canvas.addEventListener('click', handleMeshClick);
-  canvas.addEventListener('dblclick', handleMeshDoubleClick);
-  window.addEventListener('resize', () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; });
-  setInterval(drawMesh, 1200);
-}
-
-function updateMeshVisualization() {
-  if (currentMeshView !== 'network' || !canvas) { meshNodes = buildMeshNodeList(); return; }
-  meshNodes = buildMeshNodeList();
-  drawMesh();
-}
-
-function buildMeshNodeList() {
-  const list = [];
-  const sorted = Array.from(nodes.values())
-    .sort((a, b) => b.packetCount - a.packetCount)
-    .slice(0, MAX_MESH_NODES);
-  sorted.forEach((node, i) => {
-    let pos = meshPositions.get(node.id);
-    if (!pos) {
-      const cx = canvas ? canvas.width / 2 : 150; const cy = canvas ? canvas.height / 2 : 150;
-      const angle = (i / sorted.length) * Math.PI * 2;
-      const dist = 80 + (node.lastRssi ? (node.lastRssi + 110) * 0.8 : 60);
-      pos = { x: cx + Math.cos(angle) * Math.min(dist, 140), y: cy + Math.sin(angle) * Math.min(dist, 100) };
-      meshPositions.set(node.id, pos);
-    }
-    list.push({ id: node.id, x: pos.x, y: pos.y, size: Math.max(10, Math.min(24, 10 + node.packetCount / 4)), lastSeen: node.lastSeen, lastRssi: node.lastRssi, customLabel: node.customLabel || null, online: node.online });
-  });
-  return list;
-}
-
-function drawMesh() {
-  if (!ctx || !canvas || currentMeshView !== 'network') return;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = 'rgba(103, 232, 249, 0.12)'; ctx.lineWidth = 1;
-  for (let i = 0; i < meshNodes.length; i++) {
-    for (let j = i + 1; j < meshNodes.length; j++) {
-      const a = meshNodes[i], b = meshNodes[j];
-      const dist = Math.hypot(a.x - b.x, a.y - b.y);
-      if (dist < 200) {
-        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-      }
-    }
-  }
-  meshNodes.forEach(node => {
-    const age = node.lastSeen ? (Date.now() - node.lastSeen.getTime()) / 1000 : Infinity;
-    const alpha = node.online ? Math.max(0.3, 1 - Math.min(age / 180, 0.75)) : 0.35;
-    const color = node.online ? '103, 232, 249' : '100, 116, 139';
-    ctx.shadowColor = node.online ? '#67e8f9' : 'transparent'; ctx.shadowBlur = node.online ? 10 : 0;
-    ctx.fillStyle = `rgba(${color}, ${alpha})`;
-    ctx.beginPath(); ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
-
-    ctx.fillStyle = '#c9d1d9'; ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'center';
-    const label = node.customLabel || (node.id.length > 6 ? node.id.substring(0, 6) : node.id);
-    ctx.fillText(label, node.x, node.y + node.size + 15);
-
-    if (node.lastRssi !== null) {
-      const norm = Math.max(0, Math.min(1, (node.lastRssi + 110) / 45));
-      ctx.strokeStyle = `rgba(103, 232, 249, ${0.2 + norm * 0.5})`; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(node.x, node.y, node.size + 4, 0, Math.PI * 2); ctx.stroke();
-    }
-  });
-}
-
-function getMousePos(e) {
-  const rect = canvas.getBoundingClientRect();
-  return { x: (e.clientX - rect.left) * (canvas.width / rect.width), y: (e.clientY - rect.top) * (canvas.height / rect.height) };
-}
-function handleMeshClick(e) {
-  const pos = getMousePos(e);
-  for (let node of meshNodes) {
-    const dx = pos.x - node.x; const dy = pos.y - node.y;
-    if (dx * dx + dy * dy < (node.size + 12) * (node.size + 12)) { showNodeDetail(node.id); return; }
-  }
-}
-function handleMeshMouseDown(e) { const pos = getMousePos(e); draggedNode = null; for (let node of meshNodes) { const dx = pos.x - node.x; const dy = pos.y - node.y; if (dx*dx + dy*dy < (node.size + 10)*(node.size + 10)) { draggedNode = node; dragOffsetX = dx; dragOffsetY = dy; break; } } }
-function handleMeshMouseMove(e) { if (!draggedNode) return; const pos = getMousePos(e); draggedNode.x = Math.max(30, Math.min(canvas.width-30, pos.x-dragOffsetX)); draggedNode.y = Math.max(30, Math.min(canvas.height-30, pos.y-dragOffsetY)); meshPositions.set(draggedNode.id, {x: draggedNode.x, y: draggedNode.y}); drawMesh(); }
-function handleMeshMouseUp(e) { draggedNode = null; }
-function handleMeshDoubleClick(e) {
-  const pos = getMousePos(e);
-  for (let node of meshNodes) {
-    const dx = pos.x - node.x; const dy = pos.y - node.y;
-    if (dx * dx + dy * dy < (node.size + 12) * (node.size + 12)) {
-      if (!canEditNode(node.id)) { alert('You can only rename the device currently connected to this browser via Web Serial. Connect to this device directly to rename it.'); return; }
-      const newLabel = prompt(`Set custom label for node ${node.id}:`, node.customLabel || '');
-      if (newLabel !== null) {
-        const clean = newLabel.trim() || null;
-        if (nodes.has(node.id)) nodes.get(node.id).customLabel = clean;
-        node.customLabel = clean;
-        if (!registry[node.id]) registry[node.id] = { label: null, lat: null, lon: null, manuallyAdded: false, addedAt: new Date().toISOString() };
-        registry[node.id].label = clean;
-        saveRegistry();
-        renderNodesList(); drawMesh();
-        if (leafletMap) updateMapMarkers();
-      }
-      return;
-    }
-  }
-}
-function resetMeshLayout() { meshPositions.clear(); updateMeshVisualization(); }
-function autoArrangeByRSSI() {
-  const cx = canvas.width / 2; const cy = canvas.height / 2;
-  meshNodes.forEach((node, i) => {
-    const dist = 65 + (node.lastRssi ? (node.lastRssi + 110) * 0.85 : 65);
-    const angle = (i / meshNodes.length) * Math.PI * 2;
-    node.x = Math.max(35, Math.min(canvas.width-35, cx + Math.cos(angle) * dist));
-    node.y = Math.max(35, Math.min(canvas.height-35, cy + Math.sin(angle) * dist * 0.7));
-    meshPositions.set(node.id, { x: node.x, y: node.y });
-  });
-  drawMesh();
-}
-
-/* ===================== MAP VIEW ===================== */
-
-function switchMeshView(view) {
-  currentMeshView = view;
-  const netBtn = document.getElementById('view-network-btn');
-  const mapBtn = document.getElementById('view-map-btn');
-  const netVis = document.getElementById('mesh-visual');
-  const mapVis = document.getElementById('map-visual');
-  const netControls = document.getElementById('network-controls');
-  const mapControls = document.getElementById('map-controls');
-  const netCaption = document.getElementById('network-caption');
-  const mapCaption = document.getElementById('map-caption');
-
-  if (view === 'network') {
-    netBtn.classList.add('active'); mapBtn.classList.remove('active');
-    netVis.classList.remove('hidden'); mapVis.classList.add('hidden');
-    netControls.classList.remove('hidden'); mapControls.classList.add('hidden');
-    netCaption.classList.remove('hidden'); mapCaption.classList.add('hidden');
-    updateMeshVisualization();
-  } else {
-    mapBtn.classList.add('active'); netBtn.classList.remove('active');
-    mapVis.classList.remove('hidden'); netVis.classList.add('hidden');
-    mapControls.classList.remove('hidden'); netControls.classList.add('hidden');
-    mapCaption.classList.remove('hidden'); netCaption.classList.add('hidden');
-    setTimeout(() => {
-      initMap();
-      if (leafletMap) leafletMap.invalidateSize();
-      updateMapMarkers();
-    }, 30);
-  }
-}
-
-function initMap() {
-  if (leafletMap) return;
-  leafletMap = L.map('leaflet-map', { zoomControl: true, attributionControl: true, worldCopyJump: true }).setView([20, 0], 2);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap, &copy; CARTO',
-    maxZoom: 20,
-    subdomains: 'abcd'
-  }).addTo(leafletMap);
-  haloLayerGroup = L.layerGroup().addTo(leafletMap);
-  markerLayerGroup = L.layerGroup().addTo(leafletMap);
-  leafletMap.on('click', handleLeafletClick);
-}
-
-function repeaterIcon(online, editable, publishedOnly) {
-  return L.divIcon({
-    className: '',
-    html: `<div class="repeater-marker ${online ? 'online' : 'offline'} ${editable ? '' : 'locked'} ${publishedOnly ? 'published-only' : ''}"></div>`,
-    iconSize: [16, 16],
-    iconAnchor: [8, 8]
-  });
-}
-
-function rssiToRangeKm(rssi) {
-  const minRssi = -120, maxRssi = -30;
-  const minKm = 1, maxKm = 10;
-  const clamped = Math.max(minRssi, Math.min(maxRssi, rssi));
-  const t = (clamped - minRssi) / (maxRssi - minRssi);
-  return minKm + t * (maxKm - minKm);
-}
-
-function getRangeKm(id) {
-  const r = registry[id];
-  const mode = (r && r.rangeMode) ? r.rangeMode : 'auto';
-  const node = nodes.get(id);
-  if (mode === 'manual') {
-    return (r && r.rangeKm) ? r.rangeKm : DEFAULT_RANGE_KM;
-  }
-  if (node && node.lastRssi !== null && node.lastRssi !== undefined) {
-    return rssiToRangeKm(node.lastRssi);
-  }
-  return (r && r.rangeKm) ? r.rangeKm : DEFAULT_RANGE_KM;
-}
-
-function haloStyle(online) {
-  return {
-    radius: 0,
-    color: online ? '#0891b2' : '#94a3b8',
-    weight: 1.5,
-    dashArray: '4,5',
-    fillColor: online ? '#0891b2' : '#94a3b8',
-    fillOpacity: 0.08,
-    opacity: 0.55,
-    interactive: false
-  };
-}
-
-function updateMapMarkers() {
-  if (!leafletMap) return;
-  const seenIds = new Set();
-  nodes.forEach((node, id) => {
-    const r = registry[id];
-    const lat = (r && r.lat !== null && r.lat !== undefined) ? r.lat : node.lat;
-    const lon = (r && r.lon !== null && r.lon !== undefined) ? r.lon : node.lon;
-    if (lat === null || lat === undefined || lon === null || lon === undefined) {
-      if (mapMarkers.has(id)) { markerLayerGroup.removeLayer(mapMarkers.get(id)); mapMarkers.delete(id); }
-      if (mapHalos.has(id)) { haloLayerGroup.removeLayer(mapHalos.get(id)); mapHalos.delete(id); }
-      return;
-    }
-    seenIds.add(id);
-    const label = node.customLabel || id;
-    const radiusM = getRangeKm(id) * 1000;
-
-    let halo = mapHalos.get(id);
-    if (!halo) {
-      halo = L.circle([lat, lon], { ...haloStyle(node.online), radius: radiusM }).addTo(haloLayerGroup);
-      mapHalos.set(id, halo);
-    } else {
-      halo.setLatLng([lat, lon]);
-      halo.setRadius(radiusM);
-      halo.setStyle(haloStyle(node.online));
-    }
-
-    let marker = mapMarkers.get(id);
-    if (!marker) {
-      marker = L.marker([lat, lon], { icon: repeaterIcon(node.online, canEditNode(id), node.publishedOnly), draggable: true }).addTo(markerLayerGroup);
-      if (!canEditNode(id)) marker.dragging.disable();
-      marker.on('click', () => { if (justDraggedMarker) { justDraggedMarker = false; return; } if (!placeMode) showNodeDetail(id); });
-      marker.on('drag', () => { const ll = marker.getLatLng(); halo.setLatLng(ll); drawMapLinks(); });
-      marker.on('dragend', () => {
-        if (!canEditNode(id)) return;
-        const ll = marker.getLatLng();
-        if (!registry[id]) registry[id] = { label: null, lat: null, lon: null, rangeKm: null, manuallyAdded: false, addedAt: new Date().toISOString() };
-        registry[id].lat = ll.lat; registry[id].lon = ll.lng;
-        saveRegistry();
-        node.lat = ll.lat; node.lon = ll.lng;
-        justDraggedMarker = true;
-        setTimeout(() => { justDraggedMarker = false; }, 250);
-      });
-      mapMarkers.set(id, marker);
-    } else {
-      marker.setLatLng([lat, lon]);
-      marker.setIcon(repeaterIcon(node.online, canEditNode(id), node.publishedOnly));
-      if (canEditNode(id)) marker.dragging.enable(); else marker.dragging.disable();
-    }
-    marker.unbindTooltip();
-    const tooltipLabel = label + (node.publishedOnly ? ' · published only' : '');
-    marker.bindTooltip(tooltipLabel, { permanent: true, direction: 'top', offset: [0, -8], className: 'repeater-tooltip' });
-  });
-  Array.from(mapMarkers.keys()).forEach(id => {
-    if (!seenIds.has(id)) { markerLayerGroup.removeLayer(mapMarkers.get(id)); mapMarkers.delete(id); }
-  });
-  Array.from(mapHalos.keys()).forEach(id => {
-    if (!seenIds.has(id)) { haloLayerGroup.removeLayer(mapHalos.get(id)); mapHalos.delete(id); }
-  });
-  drawMapLinks();
-}
-
-function drawMapLinks() {
-  if (!leafletMap) return;
-  mapLines.forEach(l => leafletMap.removeLayer(l));
-  mapLines = [];
-  linkCounts.forEach((info, key) => {
-    const [a, b] = key.split('|');
-    const ma = mapMarkers.get(a), mb = mapMarkers.get(b);
-    if (!ma || !mb) return;
-    const age = (Date.now() - info.lastSeen) / 1000;
-    const alpha = Math.max(0.12, 1 - Math.min(age / 300, 0.85));
-    const line = L.polyline([ma.getLatLng(), mb.getLatLng()], { color: '#67e8f9', weight: 2, opacity: alpha }).addTo(leafletMap);
-    mapLines.push(line);
-  });
-}
-
-function handleLeafletClick(e) {
-  if (!placeMode || !placeTargetId) return;
-  const id = placeTargetId;
-  if (!registry[id]) registry[id] = { label: null, lat: null, lon: null, manuallyAdded: false, addedAt: new Date().toISOString() };
-  registry[id].lat = e.latlng.lat;
-  registry[id].lon = e.latlng.lng;
-  saveRegistry();
-  const n = nodes.get(id);
-  if (n) { n.lat = e.latlng.lat; n.lon = e.latlng.lng; }
-  updateMapMarkers();
-  cancelPlacement();
-}
-
-function repeaterDisplayName(id) {
-  const n = nodes.get(id);
-  return (n && n.customLabel) ? n.customLabel : id;
-}
-
-function isPlaced(id) {
-  const r = registry[id];
-  return !!(r && r.lat !== null && r.lat !== undefined);
-}
-
-function showRepeaterSearchDropdown() {
-  renderRepeaterDropdown(document.getElementById('repeater-search').value.trim());
-}
-
-function hideRepeaterSearchDropdownDeferred() {
-  setTimeout(() => {
-    const dd = document.getElementById('repeater-search-dropdown');
-    if (dd) dd.classList.add('hidden');
-  }, 150);
-}
-
-function handleRepeaterSearchInput() {
-  renderRepeaterDropdown(document.getElementById('repeater-search').value.trim());
-}
-
-function renderRepeaterDropdown(filterText) {
-  const dd = document.getElementById('repeater-search-dropdown');
-  if (!dd) return;
-  const q = filterText.toLowerCase();
-  const matches = Array.from(nodes.keys())
-    .filter(id => !q || id.toLowerCase().includes(q) || repeaterDisplayName(id).toLowerCase().includes(q))
-    .sort((a, b) => {
-      const ap = isPlaced(a), bp = isPlaced(b);
-      if (ap !== bp) return ap ? 1 : -1;
-      return repeaterDisplayName(a).localeCompare(repeaterDisplayName(b));
-    });
-
-  let html = '';
-  if (matches.length === 0 && !q) {
-    html += `<div style="padding:14px 12px;color:#64748b;">No known repeaters yet — type a name below to add one.</div>`;
-  }
-  matches.forEach(id => {
-    const placed = isPlaced(id);
-    const name = repeaterDisplayName(id);
-    html += `<div class="repeater-option" onmousedown="selectRepeaterForPlacement('${id}')">
-      <span><span class="status-dot ${nodes.get(id).online ? 'online' : 'offline'}"></span>${name}${name !== id ? ` <span style="color:#64748b">(${id})</span>` : ''}</span>
-      <span style="color:${placed ? '#34d399' : '#64748b'};font-size:10px;white-space:nowrap;margin-left:8px;">${placed ? '✓ placed' : 'unplaced'}</span>
-    </div>`;
-  });
-  const exactMatch = q && Array.from(nodes.keys()).some(id => id.toLowerCase() === q || repeaterDisplayName(id).toLowerCase() === q);
-  if (q && !exactMatch) {
-    html += `<div class="repeater-option add-new" onmousedown="addAndArmRepeater('${q.replace(/'/g, "\\'")}')">
-      <span><i class="fa-solid fa-plus mr-2"></i>Add "${filterText}" as new repeater</span>
-    </div>`;
-  }
-  dd.innerHTML = html;
-  dd.classList.remove('hidden');
-}
-
-function selectRepeaterForPlacement(id) {
-  placeTargetId = id;
-  placeMode = true;
-  const badge = document.getElementById('place-armed-badge');
-  badge.classList.remove('hidden'); badge.classList.add('flex');
-  document.getElementById('place-armed-label').textContent = `Click the map to place: ${repeaterDisplayName(id)}`;
-  const search = document.getElementById('repeater-search');
-  search.value = ''; search.blur();
-  document.getElementById('repeater-search-dropdown').classList.add('hidden');
-  const mapVis = document.getElementById('map-visual');
-  if (mapVis) mapVis.classList.add('place-mode-active');
-}
-
-function cancelPlacement() {
-  placeMode = false;
-  placeTargetId = null;
-  const badge = document.getElementById('place-armed-badge');
-  badge.classList.add('hidden'); badge.classList.remove('flex');
-  const mapVis = document.getElementById('map-visual');
-  if (mapVis) mapVis.classList.remove('place-mode-active');
-}
-
-function addAndArmRepeater(rawText) {
-  const id = rawText.trim().toUpperCase().replace(/\s+/g, '-');
-  if (!id) return;
-  if (!nodes.has(id)) nodes.set(id, createNewNode(id, null));
-  if (!registry[id]) {
-    registry[id] = { label: null, lat: null, lon: null, manuallyAdded: true, addedAt: new Date().toISOString() };
-  } else {
-    registry[id].manuallyAdded = true;
-  }
-  saveRegistry();
-  renderNodesList();
-  updateMapMarkers();
-  selectRepeaterForPlacement(id);
-}
-
-function centerMap() {
-  if (!leafletMap) return;
-  const pts = Array.from(mapMarkers.values()).map(m => m.getLatLng());
-  if (pts.length === 0) { alert('No repeaters placed on the map yet.'); return; }
-  if (pts.length === 1) { leafletMap.setView(pts[0], 13); return; }
-  leafletMap.fitBounds(L.latLngBounds(pts), { padding: [40, 40] });
-}
-
-/* ===================== NODE DETAIL MODAL ===================== */
-
-function drawRSSIChart(history) {
-  const canvasEl = document.getElementById('rssi-chart');
-  if (!canvasEl || !history || history.length === 0) {
-    if (canvasEl) { const c = canvasEl.getContext('2d'); c.clearRect(0, 0, canvasEl.width, canvasEl.height); }
-    return;
-  }
-  const ctxChart = canvasEl.getContext('2d');
-  ctxChart.clearRect(0, 0, canvasEl.width, canvasEl.height);
-  const w = canvasEl.width; const h = canvasEl.height; const padding = 4;
-  const minVal = Math.min(...history, -120);
-  const maxVal = Math.max(...history, -50);
-  const range = maxVal - minVal || 1;
-  ctxChart.strokeStyle = '#67e8f9'; ctxChart.lineWidth = 2;
-  ctxChart.beginPath();
-  history.forEach((val, i) => {
-    const x = padding + (i / (history.length - 1)) * (w - padding * 2);
-    const y = h - padding - ((val - minVal) / range) * (h - padding * 2);
-    if (i === 0) ctxChart.moveTo(x, y); else ctxChart.lineTo(x, y);
-  });
-  ctxChart.stroke();
-  ctxChart.fillStyle = '#67e8f9';
-  history.forEach((val, i) => {
-    const x = padding + (i / (history.length - 1)) * (w - padding * 2);
-    const y = h - padding - ((val - minVal) / range) * (h - padding * 2);
-    ctxChart.beginPath(); ctxChart.arc(x, y, 2, 0, Math.PI * 2); ctxChart.fill();
-  });
-}
-
-function showNodeDetail(nodeId) {
-  const node = nodes.get(nodeId);
-  if (!node) return;
-  currentModalNodeId = nodeId;
-  document.getElementById('modal-node-id').textContent = node.customLabel || nodeId;
-  document.getElementById('modal-status').innerHTML = node.online
-    ? '<span class="status-dot online"></span><span class="text-emerald-400">Online — heard this session</span>'
-    : (node.publishedOnly
-        ? '<span class="status-dot published"></span><span class="text-purple-300">Published to Coverage Map — not yet heard by this device</span>'
-        : '<span class="status-dot offline"></span><span class="text-zinc-500">Offline — not heard this session</span>');
-  document.getElementById('modal-battery').innerHTML = node.battery !== null ? `${node.battery}<span class="text-base font-normal text-zinc-400">%</span>` : '--';
-  document.getElementById('modal-rssi').innerHTML = node.lastRssi !== null ? `${node.lastRssi} <span class="text-base font-normal text-zinc-400">dBm</span>` : '--';
-  document.getElementById('modal-snr').textContent = node.lastSnr !== null ? node.lastSnr.toFixed(1) : '--';
-  document.getElementById('modal-packets').textContent = node.packetCount;
-  document.getElementById('modal-relay').textContent = node.relay || '--';
-  document.getElementById('modal-contacts').textContent = node.contacts || '--';
-
-  const timeAgo = node.lastSeen ? (() => {
-    const ago = Math.floor((Date.now() - node.lastSeen.getTime()) / 1000);
-    return ago < 60 ? ago + 's ago' : Math.floor(ago / 60) + 'm ago';
-  })() : (node.publishedOnly ? 'Never heard — known only from the public Coverage Map' : 'Never (known repeater only)');
-  document.getElementById('modal-last-seen').textContent = timeAgo;
-  document.getElementById('modal-uptime').textContent = node.uptime || (node.firstSeen ? Math.floor((Date.now() - node.firstSeen.getTime()) / 60000) + 'm (session)' : '--');
-
-  const typesContainer = document.getElementById('modal-types');
-  typesContainer.innerHTML = '';
-  if (node.types.size > 0) {
-    node.types.forEach(type => {
-      const span = document.createElement('span');
-      span.className = `px-3 py-1 rounded-full text-xs ${type === 'DATA' ? 'bg-blue-900 text-blue-300' : type === 'HELLO' ? 'bg-emerald-900 text-emerald-300' : 'bg-amber-900 text-amber-300'}`;
-      span.textContent = type;
-      typesContainer.appendChild(span);
-    });
-  } else {
-    typesContainer.innerHTML = `<span class="text-xs text-zinc-500">No types recorded yet</span>`;
-  }
-
-  const rangeR = registry[nodeId];
-  document.getElementById('modal-range-auto').checked = !(rangeR && rangeR.rangeMode === 'manual');
-  toggleRangeAutoFromModal();
-
-  const isShared = !!(rangeR && rangeR.shared);
-  document.getElementById('modal-share-btn-label').textContent = isShared ? 'Update Public Listing' : 'Share to Public Coverage Map';
-  document.getElementById('modal-unshare-btn').classList.toggle('hidden', !isShared);
-  document.getElementById('modal-share-hint').textContent = isShared
-    ? 'Visible on the public Coverage Map. Updating refreshes its label, location, and latest readings.'
-    : 'Publishes this repeater\'s label, the location you placed, and its latest readings to everyone.';
-
-  const editable = canEditNode(nodeId);
-  document.getElementById('modal-lock-note').classList.toggle('hidden', editable);
-  ['modal-edit-label-btn', 'modal-set-location-btn', 'modal-range-save-btn', 'modal-share-btn', 'modal-unshare-btn'].forEach(btnId => {
-    const btn = document.getElementById(btnId);
-    if (!btn) return;
-    btn.classList.toggle('opacity-40', !editable);
-    btn.classList.toggle('pointer-events-none', !editable);
-    btn.title = editable ? '' : 'Connect this device directly via Web Serial to edit it.';
-  });
-
-  setTimeout(() => { drawRSSIChart(node.rssiHistory || []); }, 50);
-
-  document.getElementById('node-modal').classList.remove('hidden');
-  document.getElementById('node-modal').classList.add('flex');
-}
-
-function hideNodeModal() {
-  document.getElementById('node-modal').classList.remove('flex');
-  document.getElementById('node-modal').classList.add('hidden');
-  currentModalNodeId = null;
-}
-
-function editLabelFromModal() {
-  if (!currentModalNodeId) return;
-  if (!canEditNode(currentModalNodeId)) { alert('You can only rename the device currently connected to this browser via Web Serial. Connect to this device directly to rename it.'); return; }
-  const node = nodes.get(currentModalNodeId);
-  if (!node) return;
-  const newLabel = prompt(`Set custom label for node ${currentModalNodeId}:`, node.customLabel || '');
-  if (newLabel !== null) {
-    const clean = newLabel.trim() || null;
-    node.customLabel = clean;
-    if (!registry[currentModalNodeId]) registry[currentModalNodeId] = { label: null, lat: null, lon: null, manuallyAdded: false, addedAt: new Date().toISOString() };
-    registry[currentModalNodeId].label = clean;
-    saveRegistry();
-    const meshNode = meshNodes.find(n => n.id === currentModalNodeId);
-    if (meshNode) meshNode.customLabel = clean;
-    renderNodesList();
-    drawMesh();
-    if (leafletMap) updateMapMarkers();
-    const idToReopen = currentModalNodeId;
-    hideNodeModal();
-    setTimeout(() => showNodeDetail(idToReopen), 150);
-  }
-}
-
-function toggleRangeAutoFromModal() {
-  const id = currentModalNodeId;
-  const auto = document.getElementById('modal-range-auto').checked;
-  const input = document.getElementById('modal-range-input');
-  const hint = document.getElementById('modal-range-hint');
-  const r = id ? registry[id] : null;
-  const node = id ? nodes.get(id) : null;
-
-  if (auto) {
-    input.disabled = true;
-    input.classList.add('opacity-50');
-    if (node && node.lastRssi !== null && node.lastRssi !== undefined) {
-      input.value = rssiToRangeKm(node.lastRssi).toFixed(1);
-      hint.textContent = `Auto-estimated from last RSSI (${node.lastRssi} dBm) — a stronger signal draws a bigger circle. Heuristic only, not measured coverage, and it updates as new readings come in.`;
-    } else {
-      input.value = DEFAULT_RANGE_KM;
-      hint.textContent = `No signal reading yet for this repeater — showing a default estimate until it's heard.`;
-    }
-  } else {
-    input.disabled = false;
-    input.classList.remove('opacity-50');
-    input.value = (r && r.rangeKm) ? r.rangeKm : DEFAULT_RANGE_KM;
-    hint.textContent = `Manual value you set — fixed regardless of signal strength.`;
-  }
-}
-
-function setLocationFromModal() {
-  const id = currentModalNodeId;
-  if (!id) return;
-  if (!canEditNode(id)) { alert('You can only set or move the location of the device currently connected to this browser via Web Serial.'); return; }
-  hideNodeModal();
-  switchMeshView('map');
-  setTimeout(() => { selectRepeaterForPlacement(id); }, 80);
-}
-
-function saveRangeFromModal() {
-  const id = currentModalNodeId;
-  if (!id) return;
-  if (!canEditNode(id)) { alert('You can only change the transmission range of the device currently connected to this browser via Web Serial.'); return; }
-  if (!registry[id]) registry[id] = { label: null, lat: null, lon: null, rangeKm: null, rangeMode: 'auto', manuallyAdded: false, addedAt: new Date().toISOString() };
-  const auto = document.getElementById('modal-range-auto').checked;
-  if (auto) {
-    registry[id].rangeMode = 'auto';
-  } else {
-    const val = parseFloat(document.getElementById('modal-range-input').value);
-    if (!val || val <= 0) { alert('Enter a range greater than 0 km.'); return; }
-    registry[id].rangeMode = 'manual';
-    registry[id].rangeKm = val;
-  }
-  saveRegistry();
-  if (leafletMap) updateMapMarkers();
-}
-
-async function shareToPublicMap() {
-  const id = currentModalNodeId;
-  if (!id) return;
-  if (!canEditNode(id)) { alert('You can only publish the device currently connected to this browser via Web Serial to the public Coverage Map.'); return; }
-  const node = nodes.get(id);
-  if (!node) return;
-  const r = registry[id];
-
-  if (!r || r.lat === null || r.lat === undefined) {
-    alert('Place this repeater on the map first (Set / Move Location on Map), then share it.');
-    return;
-  }
-  if (API_BASE.includes('REPLACE-ME')) {
-    alert('The Coverage API isn\'t configured yet — set API_BASE and WRITE_KEY near the top of this page\'s script (see DEPLOY.md) before sharing.');
-    return;
-  }
-
-  const already = !!r.shared;
-  const confirmed = confirm(
-    (already ? 'Update' : 'Publish') + ` "${repeaterDisplayName(id)}" on the public Coverage Map?\n\n` +
-    'This will make its label, the location you placed, and its latest battery/signal readings visible to anyone who visits coverage-map.html.'
-  );
-  if (!confirmed) return;
-
-  const payload = {
-    label: node.customLabel || id,
-    lat: r.lat,
-    lon: r.lon,
-    rangeKm: getRangeKm(id),
-    rangeMode: (r.rangeMode === 'manual') ? 'manual' : 'auto',
-    lastBattery: node.battery,
-    lastRssi: node.lastRssi,
-    lastSnr: node.lastSnr,
-    lastMessages: node.messages
-  };
-
-  try {
-    const res = await fetch(`${API_BASE}/api/repeaters/${encodeURIComponent(id)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Write-Key': getWriteKey() },
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error('Server responded ' + res.status);
-    r.shared = true;
-    saveRegistry();
-    showNodeDetail(id);
-    fetchPublishedRepeaters();
-    alert('Published. It should appear on coverage-map.html within a few seconds.');
-  } catch (e) {
-    alert('Could not publish: ' + e.message);
-  }
-}
-
-async function unshareFromPublicMap() {
-  const id = currentModalNodeId;
-  if (!id) return;
-  if (!canEditNode(id)) { alert('You can only remove the device currently connected to this browser via Web Serial from the public Coverage Map.'); return; }
-  if (!confirm(`Remove "${repeaterDisplayName(id)}" from the public Coverage Map?`)) return;
-  if (API_BASE.includes('REPLACE-ME')) {
-    alert('The Coverage API isn\'t configured yet — see DEPLOY.md.');
-    return;
-  }
-  try {
-    const res = await fetch(`${API_BASE}/api/repeaters/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-      headers: { 'X-Write-Key': getWriteKey() }
-    });
-    if (!res.ok) throw new Error('Server responded ' + res.status);
-    if (registry[id]) { registry[id].shared = false; saveRegistry(); }
-    showNodeDetail(id);
-    fetchPublishedRepeaters();
-  } catch (e) {
-    alert('Could not remove: ' + e.message);
-  }
-}
-
-/* ===================== PUBLISHED REPEATERS BRIDGE ===================== */
-
-async function fetchPublishedRepeaters() {
-  if (API_BASE.includes('REPLACE-ME')) return;
-  try {
-    const res = await fetch(`${API_BASE}/api/repeaters`);
-    if (!res.ok) throw new Error('Server responded ' + res.status);
-    const data = await res.json();
-    publishedRepeaters.clear();
-    (data.repeaters || []).forEach(r => publishedRepeaters.set(r.id, r));
-    mergePublishedRepeaters();
-  } catch (e) {
-    console.warn('Could not fetch published repeaters:', e.message);
-  }
-}
-
-function mergePublishedRepeaters() {
-  publishedRepeaters.forEach((r, id) => {
-    let node = nodes.get(id);
-    if (!node) {
-      node = createNewNode(id, null);
-      nodes.set(id, node);
-    }
-    node.lastPublished = r;
-    node.publishedOnly = !node.everHeard;
-    if (node.lat === null || node.lat === undefined) node.lat = r.lat;
-    if (node.lon === null || node.lon === undefined) node.lon = r.lon;
-    if (!node.customLabel && r.label) node.customLabel = r.label;
-  });
-  renderNodesList();
-  if (currentMeshView === 'map' && leafletMap) updateMapMarkers();
-}
-
-/* ===================== EXPORT / SIMULATE / CLEAR ===================== */
-
-function exportSession() {
-  const data = {
-    exportedAt: new Date().toISOString(),
-    nodes: Array.from(nodes.entries()).map(([id, n]) => ({
-      id, ...n, types: Array.from(n.types || []), rssiHistory: n.rssiHistory || []
-    })),
-    packets: packets.slice(0, 100),
-    knownRepeaters: registry
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `plschat-monitor-${new Date().toISOString().slice(0,19)}.json`;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-function toggleSimulateTraffic() {
-  if (simulationActive) stopSimulateTraffic(); else startSimulateTraffic();
-}
-
-function startSimulateTraffic() {
-  if (simulationActive) return;
-  simulationActive = true;
-  const icon = document.getElementById('simulate-btn-icon');
-  const label = document.getElementById('simulate-btn-label');
-  if (icon) icon.className = 'fa-solid fa-stop';
-  if (label) label.textContent = 'Stop Simulation';
-
-  const sample = ['A1B2', 'C3D4', '1122', '3344', 'E5F6'];
-  connectedDeviceId = sample[0];
-  updateConnectedDeviceBadge();
-  const types = ['DATA', 'HELLO', 'ACK'];
-  simulateIntervalId = setInterval(() => {
-    const from = sample[Math.floor(Math.random()*sample.length)];
-    let to = sample[Math.floor(Math.random()*sample.length)]; if (to === from) to = sample[(sample.indexOf(from)+1) % sample.length];
-    const rssi = Math.floor(Math.random()*45) - 115;
-    processSerialLine(`[SIM] RX from=${from} to=${to} type=${types[Math.floor(Math.random()*types.length)]} rssi=${rssi}`);
-    if (Math.random() < 0.35) {
-      const bat = 65 + Math.floor(Math.random()*35);
-      const snr = (Math.random() * 8 - 2).toFixed(1);
-      const relay = Math.floor(Math.random() * 20);
-      const contacts = 2 + Math.floor(Math.random() * 5);
-      processSerialLine(`=== PLSCHAT_STATUS ===`);
-      processSerialLine(`NODE_ID:${from}`);
-      processSerialLine(`BAT:${bat}%`);
-      processSerialLine(`LORA_RSSI:${rssi}`);
-      processSerialLine(`LORA_SNR:${snr}`);
-      processSerialLine(`UPTIME:04h12m`);
-      processSerialLine(`PKT_RELAY:${relay}`);
-      processSerialLine(`CONTACTS:${contacts}`);
-      processSerialLine(`MESSAGES:18`);
-      processSerialLine(`=== END_STATUS ===`);
-    }
-  }, 650);
-}
-
-function stopSimulateTraffic() {
-  if (simulateIntervalId) { clearInterval(simulateIntervalId); simulateIntervalId = null; }
-  simulationActive = false;
-  connectedDeviceId = null;
-  updateConnectedDeviceBadge();
-  if (leafletMap) updateMapMarkers();
-  const icon = document.getElementById('simulate-btn-icon');
-  const label = document.getElementById('simulate-btn-label');
-  if (icon) icon.className = 'fa-solid fa-play';
-  if (label) label.textContent = 'Simulate Traffic';
-}
-
-function clearAll() {
-  document.getElementById('log-container').innerHTML = '';
-  logLines = []; packets = []; document.getElementById('packet-table-body').innerHTML = '';
-  nodes.clear();
-  linkCounts.clear();
-  applyRegistryToNodes();
-  mergePublishedRepeaters();
-  renderNodesList();
-  cancelPlacement();
-  document.getElementById('node-count-badge').textContent = nodes.size;
-  packetCount = 0;
-  document.getElementById('stat-packets').textContent = '0';
-  updateStats();
-  document.getElementById('stat-avg-rssi').textContent = '--';
-  if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-  meshNodes = [];
-  if (leafletMap) updateMapMarkers();
-}
-
-function resetKnownRepeaters() {
-  if (!confirm('This permanently removes every known/pinned repeater stored in this browser — including saved labels, map locations, and any leftover entries from Simulate Traffic. This cannot be undone. Continue?')) return;
-  if (simulationActive) stopSimulateTraffic();
-  registry = {};
-  try { localStorage.removeItem(REGISTRY_KEY); } catch (e) {}
-  clearAll();
-}
-
-function clearPackets() { packets = []; document.getElementById('packet-table-body').innerHTML = ''; }
-
-function copyLog() {
-  const text = Array.from(document.querySelectorAll('#log-container .log-line')).map(el => el.textContent).join('\n');
-  navigator.clipboard.writeText(text).then(() => alert('Log copied'));
-}
-
-function init() {
-  // Restore password checkbox state from localStorage if desired (optional enhancement)
-  const checkbox = getRequirePasswordCheckbox();
-  if (checkbox) {
-    const saved = localStorage.getItem('plschat_require_password');
-    if (saved === 'true') checkbox.checked = true;
-    checkbox.addEventListener('change', () => {
-      localStorage.setItem('plschat_require_password', checkbox.checked);
-    });
-  }
-
-  document.getElementById('filter-input').addEventListener('keydown', e => { if (e.key === 'Escape') { document.getElementById('filter-input').value = ''; filterLog(); } });
-  applyRegistryToNodes();
-  renderNodesList();
-  initMeshCanvas();
-  updateMeshVisualization();
-  fetchPublishedRepeaters();
-  setInterval(fetchPublishedRepeaters, PUBLISHED_REFRESH_MS);
-  setTimeout(() => {
-    const log = document.getElementById('log-container');
-    if (log.children.length === 0) {
-      log.innerHTML = `<div style="padding:40px 20px;text-align:center;color:#64748b;font-size:13px">Click <strong>Connect to Node</strong> or <strong>Simulate Traffic</strong> to start.</div>`;
-    }
-  }, 1200);
-  console.log('%c[PLSChat Monitor] Updated with Clear/Copy/Refresh buttons + optional password toggle.', 'color:#22c55e');
-}
-window.onload = init;
-</script>
+
+    <!-- Login Gate (inner layer — sits behind Cloudflare Access) -->
+    <div id="login-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,12,31,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;">
+        <div style="background:#12152b;border:1px solid #374151;border-radius:16px;padding:40px;width:100%;max-width:380px;text-align:center;">
+            <div id="login-form">
+                <h2 style="margin-bottom:8px;color:#67e8f9;">Admin Access</h2>
+                <p style="color:#64748b;margin-bottom:24px;font-size:15px;">Enter password to access the remote monitor</p>
+                <div class="pw-wrap" style="margin-bottom:16px;">
+                    <input type="password" id="admin-password" placeholder="Password"
+                           style="width:100%;padding:14px;background:#0f1326;border:1px solid #374151;color:#c9d1d9;border-radius:10px;font-size:16px;">
+                    <button type="button" class="pw-eye" onclick="togglePw('admin-password',this)" title="Show password">&#128065;</button>
+                </div>
+                <button onclick="checkAdminPassword()" id="login-btn" class="btn" style="width:100%;padding:14px;font-size:16px;">Login</button>
+                <div id="login-error" style="color:#ef4444;margin-top:12px;font-size:14px;display:none;">Incorrect password</div>
+                <p style="color:#374151;margin-top:18px;font-size:12px;">Reset the password from the <strong>Change Admin Password</strong> panel once logged in.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <a href="../index.html">
+                    <div>
+                        <h1>PLSChat</h1>
+                        <div style="font-size:14px;color:#67e8f9;margin-top:-6px;">ADMIN MONITOR</div>
+                    </div>
+                </a>
+                <div class="badge">SECURE • SERIAL</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn btn-secondary" onclick="location.reload()" title="Reload the page — you stay logged in for this tab">&#8635; Refresh</button>
+                <button id="release-serial-btn" class="btn btn-secondary" onclick="releaseSerialPort()" title="Free the USB serial port so another section (or the flasher) can use it">&#128268; Release Serial</button>
+                <button class="btn btn-secondary" onclick="lockAdmin()" title="Lock this page — password required again">&#128274; Lock</button>
+                <a href="../index.html" class="btn btn-secondary">&#8592; Back to Site</a>
+            </div>
+        </header>
+
+        <div class="info">
+            <strong>Protected by Cloudflare Access</strong> — only your email (via one-time PIN) can load this page, and this admin password is a second factor behind that. Sensitive actions are also independently checked by the Worker.
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             CHANGE ADMIN PASSWORD
+        ═══════════════════════════════════════════════════════════ -->
+        <div class="card" id="change-pw-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                <h3>&#128273; Change Admin Password</h3>
+                <span style="font-size:13px;color:#64748b;">Verified server-side &bull; stored hashed in KV</span>
+            </div>
+            <p style="color:#8b949e;font-size:14px;margin-bottom:16px;">
+                Rotates the inner admin password. Requires your current password. The new one is hashed by the Worker and stored in KV — it is never sent back or logged.
+            </p>
+            <div class="config-grid">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <div class="pw-wrap">
+                        <input type="password" id="cp-current" placeholder="Current password">
+                        <button type="button" class="pw-eye" onclick="togglePw('cp-current',this)" title="Show password">&#128065;</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>New Password (min 10 chars)</label>
+                    <div class="pw-wrap">
+                        <input type="password" id="cp-new" placeholder="New password">
+                        <button type="button" class="pw-eye" onclick="togglePw('cp-new',this)" title="Show password">&#128065;</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <div class="pw-wrap">
+                        <input type="password" id="cp-confirm" placeholder="Re-enter new password">
+                        <button type="button" class="pw-eye" onclick="togglePw('cp-confirm',this)" title="Show password">&#128065;</button>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                <button class="btn" id="cp-btn" onclick="changeAdminPassword()">Update Password</button>
+                <div id="cp-status" style="font-size:14px;color:#64748b;font-family:monospace;min-height:18px;"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             FIRMWARE FLASHER (company / v007)
+        ═══════════════════════════════════════════════════════════ -->
+        <div class="card" id="flasher-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                <h3>&#127981; Company Firmware — v007</h3>
+                <span style="font-size:13px;color:#64748b;">Tamper-enabled build &bull; ESP32-S3</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                <button class="btn btn-secondary" onclick="location.reload()" style="padding:8px 14px;font-size:14px;" title="Reload the page">&#8635; Refresh</button>
+                <button class="btn btn-secondary" onclick="releaseSerialPort(true, this)" style="padding:8px 14px;font-size:14px;" title="Free the USB serial port so another section (or the flasher) can use it">&#128268; Release Serial</button>
+            </div>
+            <p style="color:#8b949e;font-size:14px;margin-bottom:16px;">
+                Flash the v007 firmware to a company device. Hold the <strong>BOOT button</strong> on the Heltec while clicking Connect in the installer.
+                After flashing, provision it with <code style="color:#67e8f9;">COMPANY:ON</code> over serial to enable the tamper module.
+            </p>
+            <esp-web-install-button manifest="/manifest-v007.json?v=3"></esp-web-install-button>
+            <p style="color:#64748b;font-size:12px;margin-top:14px;">
+                <i>Note:</i> this flashes whatever <code>/manifest-v007.json</code> points to. Once a device has secure boot + flash encryption enabled (Release mode), it can no longer be reflashed here — that's expected. Clicking Connect automatically releases the Licence Manager's serial connection first, so you don't need to refresh between sections.
+            </p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             COMPANY MODE / TAMPER ACTIVATION
+        ═══════════════════════════════════════════════════════════ -->
+        <div class="card" id="company-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                <h3>&#128274; Company Mode &amp; Tamper</h3>
+                <span style="font-size:13px;color:#64748b;">Serial &bull; v007 &bull; persisted to NVS</span>
+            </div>
+            <p style="color:#8b949e;font-size:14px;margin-bottom:16px;">
+                Fresh v007 devices ship with the tamper module <strong>off</strong> (<code style="color:#67e8f9;">companyDevice = false</code>). Enabling Company Mode sends the exact command <code style="color:#67e8f9;">COMPANY:ON</code> over serial, which arms the case-lid / USB tamper watch and saves the flag to NVS so it survives reboots. Use <strong>Disable</strong> (<code style="color:#67e8f9;">COMPANY:OFF</code>) to turn it back off.
+            </p>
+            <div class="warning">
+                Only enable this on <strong>owner-deployed company units</strong>. With tamper armed, opening the case (or, if VBUS-trip is on, attaching USB) will lock or wipe that device's own keys per its policy. Set the tamper policy first if you need WIPE vs LOCK.
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                <button class="btn" onclick="setCompanyMode(true)">&#128274; Enable Company Mode (COMPANY:ON)</button>
+                <button class="btn btn-secondary" onclick="setCompanyMode(false)">Disable (COMPANY:OFF)</button>
+            </div>
+            <div id="company-status" style="font-size:14px;color:#64748b;margin-top:12px;font-family:monospace;min-height:18px;word-break:break-all;"></div>
+            <p style="color:#64748b;font-size:12px;margin-top:12px;">
+                Uses the same USB serial port as the Licence Manager. If nothing is connected yet, your browser will prompt you to pick the device. Watch for <code style="color:#22c55e;">COMPANY_OK</code> in the status line above.
+            </p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             LICENCE MANAGER
+        ═══════════════════════════════════════════════════════════ -->
+        <div class="card" id="licence-manager-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+                <h3>&#128273; Licence Manager</h3>
+                <span style="font-size:13px;color:#64748b;">Ed25519 signed &#8226; stored in Worker KV</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                <button class="btn btn-secondary" onclick="location.reload()" style="padding:8px 14px;font-size:14px;" title="Reload the page">&#8635; Refresh</button>
+                <button class="btn btn-secondary" onclick="releaseSerialPort(true, this)" style="padding:8px 14px;font-size:14px;" title="Free the USB serial port so another section (or the flasher) can use it">&#128268; Release Serial</button>
+            </div>
+
+            <!-- Write Key -->
+            <div class="config-section" style="margin-bottom:16px;">
+                <div class="form-group">
+                    <label>Worker Write Key (required to sign licences)</label>
+                    <div class="pw-wrap">
+                        <input type="password" id="lic-write-key" placeholder="Your WRITE_KEY secret"
+                               style="width:100%;padding:10px;background:#0a0c1f;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
+                        <button type="button" class="pw-eye" onclick="togglePw('lic-write-key',this)" title="Show key">&#128065;</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 1: Device MAC -->
+            <div class="config-section" style="margin-bottom:16px;">
+                <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Step 1 — Device MAC</div>
+                <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+                    <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0;">
+                        <label>MAC Address</label>
+                        <input type="text" id="lic-mac" placeholder="90:70:69:83:E6:1C"
+                               style="width:100%;padding:10px;background:#0a0c1f;border:1px solid #374151;color:#c9d1d9;border-radius:8px;font-family:monospace;">
+                    </div>
+                    <button onclick="licDetectDevice()" class="btn btn-secondary" style="padding:10px 18px;white-space:nowrap;">
+                        &#128268; Auto-detect via USB
+                    </button>
+                    <button onclick="licCheckExisting()" class="btn btn-secondary" style="padding:10px 18px;white-space:nowrap;">
+                        &#128269; Check for existing licence
+                    </button>
+                </div>
+                <div id="lic-detect-status" style="font-size:14px;color:#64748b;margin-top:8px;font-family:monospace;min-height:18px;"></div>
+                <!-- Existing-licence readout (populated on auto-detect) -->
+                <div id="lic-existing" style="display:none;border:1px solid;border-radius:10px;padding:12px 16px;margin-top:12px;font-size:14px;"></div>
+                <!-- Backend purchase check (survives re-flash) -->
+                <div id="lic-backend" style="display:none;border:1px solid;border-radius:10px;padding:12px 16px;margin-top:10px;font-size:14px;"></div>
+            </div>
+
+            <!-- Step 2: Tier -->
+            <div class="config-section" style="margin-bottom:16px;">
+                <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Step 2 — Licence Type</div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <div id="lic-btn-yearly" onclick="licSelectTier('yearly')"
+                         style="flex:1;min-width:140px;padding:14px;background:#0a0c1f;border:2px solid #22d3ee;border-radius:10px;cursor:pointer;text-align:center;transition:.2s;">
+                        <div style="font-size:1.2em;font-weight:700;color:#22d3ee;">20 PLSC</div>
+                        <div style="font-size:.8em;color:#94a3b8;margin-top:3px;">Yearly</div>
+                    </div>
+                    <div id="lic-btn-lifetime" onclick="licSelectTier('lifetime')"
+                         style="flex:1;min-width:140px;padding:14px;background:#0a0c1f;border:2px solid #374151;border-radius:10px;cursor:pointer;text-align:center;transition:.2s;">
+                        <div id="lic-lifetime-price" style="font-size:1.2em;font-weight:700;color:#94a3b8;">100 PLSC</div>
+                        <div style="font-size:.8em;color:#94a3b8;margin-top:3px;">Lifetime (10 yr)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Generate & Send -->
+            <div class="config-section">
+                <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Step 3 — Generate &amp; Send</div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button onclick="licGenerate()" class="btn" style="flex:1;">
+                        &#9889; Generate Signed Licence
+                    </button>
+                    <button onclick="licSendToDevice()" class="btn" id="lic-send-btn"
+                            style="flex:1;background:linear-gradient(90deg,#22c55e,#16a34a);opacity:.4;cursor:not-allowed;" disabled>
+                        &#128225; Send to Device via Serial
+                    </button>
+                </div>
+                <div id="lic-status" style="font-size:14px;color:#64748b;margin-top:10px;font-family:monospace;min-height:18px;"></div>
+                <div id="lic-result" style="display:none;background:#0a0c1f;border:1px solid #22c55e;border-radius:8px;padding:12px;margin-top:10px;font-family:monospace;font-size:.8em;word-break:break-all;color:#22c55e;"></div>
+            </div>
+
+            <!-- Step 4: Re-provision (paste an existing licence) -->
+            <div class="config-section" style="margin-top:16px;">
+                <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Step 4 — Re-provision a re-flashed device</div>
+                <p style="color:#8b949e;font-size:13px;margin-bottom:12px;">
+                    Flashing wipes the licence off a device, but the purchase still stands for that MAC. Paste the device's existing licence string here (or let <strong>Check for existing licence</strong> load it) and send it straight back — no new licence, no double charge.
+                </p>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label>Existing licence string (<code style="color:#67e8f9;">v1|MAC|expiry|tier|sig</code>)</label>
+                    <textarea id="lic-paste" rows="3" placeholder="v1|90:70:69:83:E6:1C|1782000000|yearly|a1b2c3..."
+                              style="width:100%;padding:10px;background:#0a0c1f;border:1px solid #374151;color:#c9d1d9;border-radius:8px;font-family:monospace;font-size:.8em;resize:vertical;word-break:break-all;"></textarea>
+                </div>
+                <button onclick="licSendPasted()" class="btn" id="lic-paste-send-btn"
+                        style="background:linear-gradient(90deg,#22c55e,#16a34a);">
+                    &#128225; Send Pasted Licence to Device
+                </button>
+                <div id="lic-paste-status" style="font-size:14px;color:#64748b;margin-top:10px;font-family:monospace;min-height:18px;word-break:break-all;"></div>
+            </div>
+
+            <!-- Session history -->
+            <div style="font-size:13px;color:#64748b;margin-top:16px;">
+                <strong style="color:#8b949e;">Session history:</strong>
+                <div id="lic-history" style="margin-top:6px;">None generated yet.</div>
+            </div>
+        </div>
+
+        <footer>PLSChat Admin Monitor &bull; For authorized maintainers only</footer>
+    </div>
+
+
+    <script>
+        const WORKER_URL = 'https://plschat-coverage-api.plschat.workers.dev';
+
+        // ═══════════════════════════════════════════════════════════
+        //  ADMIN AUTH — verified server-side by the Worker (/admin/login,
+        //  constant-time compare). On success a flag is kept in
+        //  sessionStorage for THIS TAB ONLY, so a refresh doesn't log you
+        //  out; closing the tab (or the Lock button) clears it. This
+        //  overlay is a convenience gate — every sensitive action is still
+        //  independently verified server-side (Write Key / current
+        //  password), and Cloudflare Access sits in front of everything.
+        // ═══════════════════════════════════════════════════════════
+        let adminAuthed = false;
+        // How long a successful login stays valid across refreshes WITHOUT
+        // re-entering the password. 0 = require the password on every page
+        // load / refresh (this is what fixes "it never asks for my PW").
+        // Set to e.g. 15 to stay logged in for 15 minutes of refreshes,
+        // then re-prompt — handy now that each section has its own Refresh.
+        const ADMIN_REMEMBER_MINUTES = 0;
+
+        function togglePw(id, btn) {
+            const el = document.getElementById(id);
+            const show = el.type === 'password';
+            el.type = show ? 'text' : 'password';
+            btn.innerHTML = show ? '&#128584;' : '&#128065;';
+            btn.title = show ? 'Hide password' : 'Show password';
+        }
+
+        async function checkAdminPassword() {
+            const input = document.getElementById('admin-password').value;
+            const err = document.getElementById('login-error');
+            const btn = document.getElementById('login-btn');
+            err.style.display = 'none';
+            if (!input) return;
+            btn.disabled = true; btn.textContent = 'Checking...';
+            try {
+                const res = await fetch(WORKER_URL + '/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: input })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.ok) {
+                    adminAuthed = true;
+                    try { sessionStorage.setItem('plschat_admin_session', '1'); sessionStorage.setItem('plschat_admin_ts', String(Date.now())); } catch(e) {}
+                    document.getElementById('admin-password').value = '';
+                    document.getElementById('login-overlay').style.display = 'none';
+                } else {
+                    err.textContent = data.error || 'Incorrect password';
+                    err.style.display = 'block';
+                    setTimeout(() => err.style.display = 'none', 3000);
+                }
+            } catch (e) {
+                err.textContent = 'Cannot reach server — check your connection';
+                err.style.display = 'block';
+            }
+            btn.disabled = false; btn.textContent = 'Login';
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        //  CHANGE ADMIN PASSWORD — POSTs { current, next } to the Worker.
+        //  Worker verifies `current`, hashes `next`, stores it in KV.
+        // ═══════════════════════════════════════════════════════════
+        async function changeAdminPassword() {
+            const cur  = document.getElementById('cp-current').value;
+            const next = document.getElementById('cp-new').value;
+            const conf = document.getElementById('cp-confirm').value;
+            const el   = document.getElementById('cp-status');
+            const btn  = document.getElementById('cp-btn');
+
+            el.style.color = '#ef4444';
+            if (!cur || !next)          { el.textContent = 'Fill in current and new password.'; return; }
+            if (next.length < 10)       { el.textContent = 'New password must be at least 10 characters.'; return; }
+            if (next !== conf)          { el.textContent = 'New passwords do not match.'; return; }
+            if (next === cur)           { el.textContent = 'New password must differ from the current one.'; return; }
+
+            btn.disabled = true; btn.textContent = 'Updating...';
+            el.style.color = '#64748b'; el.textContent = 'Submitting...';
+            try {
+                const res = await fetch(WORKER_URL + '/admin/password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ current: cur, next: next })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.ok) {
+                    el.style.color = '#22c55e';
+                    el.textContent = 'Password updated — use the new one next login.';
+                    document.getElementById('cp-current').value = '';
+                    document.getElementById('cp-new').value = '';
+                    document.getElementById('cp-confirm').value = '';
+                } else {
+                    el.style.color = '#ef4444';
+                    el.textContent = 'Error: ' + (data.error || ('HTTP ' + res.status));
+                }
+            } catch (e) {
+                el.style.color = '#ef4444';
+                el.textContent = 'Network error: ' + e.message;
+            }
+            btn.disabled = false; btn.textContent = 'Update Password';
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        //  LICENCE MANAGER
+        // ═══════════════════════════════════════════════════════════
+        let licTier = 'yearly';
+        let licCurrentLicence = '';
+        let licSerialPort = null;
+        let activeSerialReader = null;   // any in-flight response reader, so Release can free it
+        let licHistory = [];
+
+        function licSelectTier(t) {
+            licTier = t;
+            const y = document.getElementById('lic-btn-yearly');
+            const l = document.getElementById('lic-btn-lifetime');
+            y.style.borderColor = t==='yearly' ? '#22d3ee' : '#374151';
+            y.querySelector('div').style.color = t==='yearly' ? '#22d3ee' : '#94a3b8';
+            l.style.borderColor = t==='lifetime' ? '#22d3ee' : '#374151';
+            document.getElementById('lic-lifetime-price').style.color = t==='lifetime' ? '#22d3ee' : '#94a3b8';
+        }
+
+        // Reads the device status block over serial, capturing BOTH the MAC
+        // and the licence status the firmware reports (LICENSED:YES / :NO).
+        async function licDetectDevice() {
+            const el = document.getElementById('lic-detect-status');
+            const banner = document.getElementById('lic-existing');
+            el.style.color = '#64748b';
+            el.textContent = 'Connecting to device...';
+            if (banner) banner.style.display = 'none';
+
+            let reader = null;
+            try {
+                licSerialPort = await navigator.serial.requestPort();
+                await licSerialPort.open({ baudRate: 115200 });
+                reader = licSerialPort.readable.getReader();
+                activeSerialReader = reader;
+
+                let buf = '';
+                let stop = false;
+                const finish = () => { if (!stop) { stop = true; try { reader.cancel(); } catch(e){} } };
+                const timeout = setTimeout(finish, 12000);
+
+                while (!stop) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    buf += new TextDecoder().decode(value);
+                    // Stop once we have a full status block, or a MAC plus a licence line.
+                    const haveMac = /MAC:([0-9A-Fa-f:]{17})/.test(buf);
+                    const haveLic = /LICEN[SC]ED:(YES|NO)/i.test(buf);
+                    if (buf.includes('END_STATUS') || (haveMac && haveLic)) {
+                        clearTimeout(timeout);
+                        finish();
+                    }
+                }
+                try { reader.releaseLock(); } catch(e) {}
+                activeSerialReader = null;
+
+                const m = buf.match(/MAC:([0-9A-Fa-f:]{17})/);
+                if (!m) {
+                    el.style.color = '#ef4444';
+                    el.textContent = 'Connected, but no MAC seen — reset the device and retry.';
+                    return;
+                }
+                const mac = m[1].toUpperCase();
+                document.getElementById('lic-mac').value = mac;
+                el.style.color = '#22c55e';
+                el.textContent = 'MAC detected: ' + mac + ' — serial port ready';
+
+                const licensed = /LICEN[SC]ED:YES/i.test(buf);
+                showExistingLicence(mac, licensed, buf);
+
+                // Also ask the backend whether this MAC already has a purchased
+                // licence — this is the part that survives a re-flash.
+                const backend = await licLookupExisting(mac);
+                showBackendLicence(backend, mac);
+            } catch(e) {
+                try { if (reader) reader.releaseLock(); } catch(_) {}
+                el.style.color = '#ef4444';
+                el.textContent = e.message + ' — if another section or the flasher is holding the USB port, click \"Release Serial\" in the top bar (or unplug/replug), then retry.';
+            }
+        }
+
+        // Renders the "already licensed / not licensed" readout from the
+        // firmware's own status block. If the firmware also prints an
+        // expiry/tier line, we surface it; otherwise we just show the state.
+        function showExistingLicence(mac, licensed, buf) {
+            const banner = document.getElementById('lic-existing');
+            if (!banner) return;
+
+            let extra = '';
+            const exp = buf.match(/(?:EXPIRY|EXPIRES|LICEN[SC]E_EXPIRY)[:=]\s*(\d{9,})/i);
+            if (exp) {
+                const d = new Date(parseInt(exp[1], 10) * 1000);
+                if (!isNaN(d.getTime())) {
+                    extra += ' &bull; expires ' + d.toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
+                }
+            }
+            const tierM = buf.match(/TIER[:=]\s*([A-Za-z]+)/i);
+            if (tierM) extra += ' &bull; ' + tierM[1].toLowerCase();
+
+            banner.style.display = 'block';
+            if (licensed) {
+                banner.style.background = '#0f2e1a';
+                banner.style.borderColor = '#22c55e';
+                banner.style.color = '#86efac';
+                banner.innerHTML =
+                    '<strong>&#9989; This device is already licensed.</strong> ' +
+                    '<span style="font-family:monospace;color:#67e8f9;">' + mac + '</span>' + extra +
+                    '<div style="color:#64748b;font-size:13px;margin-top:6px;">Generating &amp; sending a new licence will overwrite the one currently on this device.</div>';
+            } else {
+                banner.style.background = '#3f2a1f';
+                banner.style.borderColor = '#eab308';
+                banner.style.color = '#fcd34d';
+                banner.innerHTML =
+                    '<strong>No licence on this device yet.</strong> ' +
+                    '<span style="font-family:monospace;color:#67e8f9;">' + mac + '</span>' +
+                    '<div style="color:#64748b;font-size:13px;margin-top:6px;">Pick a tier below, then Generate and Send.</div>';
+            }
+        }
+
+        // Checks the Worker for a licence already issued/purchased for this MAC.
+        // This is what survives a re-flash: the device itself reports LICENSED:NO
+        // after flashing, but the purchase record lives server-side. Requires the
+        // Write Key, and needs a matching Worker route: POST /admin/licence/lookup.
+        async function licLookupExisting(mac) {
+            const writeKey = document.getElementById('lic-write-key').value.trim();
+            if (!writeKey) return { needKey: true };
+            try {
+                const res = await fetch(WORKER_URL + '/admin/licence/lookup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Write-Key': writeKey },
+                    body: JSON.stringify({ mac })
+                });
+                if (res.status === 404 || res.status === 501) return { unsupported: true };
+                if (res.status === 401 || res.status === 403) return { unauthorized: true };
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.found && data.licence) return { found: true, ...data };
+                return { found: false };
+            } catch (e) {
+                return { error: e.message };
+            }
+        }
+
+        // Renders the backend purchase-check result under Step 1 and, when a
+        // licence is found, loads it into the Step 4 re-provision box.
+        function showBackendLicence(result, mac) {
+            const box = document.getElementById('lic-backend');
+            if (!box) return;
+            const neutral = () => { box.style.background='#0f1326'; box.style.borderColor='#374151'; box.style.color='#8b949e'; };
+            box.style.display = 'block';
+
+            if (result.found) {
+                let extra = '';
+                if (result.tier) extra += ' &bull; ' + String(result.tier).toLowerCase();
+                if (result.expiry) {
+                    const d = new Date(result.expiry * 1000);
+                    if (!isNaN(d.getTime())) extra += ' &bull; expires ' + d.toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
+                }
+                box.style.background='#0f2e1a'; box.style.borderColor='#22c55e'; box.style.color='#86efac';
+                box.innerHTML =
+                    '<strong>&#128179; A purchased licence exists for this MAC.</strong>' + extra +
+                    '<div style="color:#64748b;font-size:13px;margin-top:6px;">Loaded into the re-provision box (Step 4) — just click <em>Send Pasted Licence to Device</em> to restore it. No new purchase needed.</div>';
+                const paste = document.getElementById('lic-paste');
+                if (paste && !paste.value.trim()) paste.value = result.licence;
+                return;
+            }
+            if (result.needKey) {
+                neutral();
+                box.innerHTML = 'Enter your <strong>Write Key</strong> above, then Check again to see whether this MAC already has a purchased licence.';
+                return;
+            }
+            if (result.unsupported) {
+                neutral();
+                box.innerHTML = 'Backend licence lookup isn\'t live yet (the Worker has no <code>/admin/licence/lookup</code> route). You can still paste the licence into Step 4 and send it.';
+                return;
+            }
+            if (result.unauthorized) {
+                box.style.background='#3f2a1f'; box.style.borderColor='#eab308'; box.style.color='#fcd34d';
+                box.innerHTML = 'Write Key was rejected by the Worker — double-check it, then Check again.';
+                return;
+            }
+            if (result.error) {
+                neutral();
+                box.innerHTML = 'Couldn\'t reach the backend to check for an existing licence (' + result.error + '). You can still paste one into Step 4.';
+                return;
+            }
+            neutral();
+            box.innerHTML = 'No purchased licence found on the server for <span style="font-family:monospace;color:#67e8f9;">' + (mac || '') + '</span>. If this is a new device, generate one in Step 3.';
+        }
+
+        // Manual backend check using whatever MAC is in the field (no serial needed).
+        async function licCheckExisting() {
+            const mac = document.getElementById('lic-mac').value.trim().toUpperCase();
+            const box = document.getElementById('lic-backend');
+            if (!mac || mac.length !== 17) {
+                if (box) { box.style.display='block'; box.style.background='#3f2a1f'; box.style.borderColor='#eab308'; box.style.color='#fcd34d'; box.innerHTML='Enter or auto-detect a valid MAC first.'; }
+                return;
+            }
+            if (box) { box.style.display='block'; box.style.background='#0f1326'; box.style.borderColor='#374151'; box.style.color='#8b949e'; box.innerHTML='Checking the server for an existing licence...'; }
+            const backend = await licLookupExisting(mac);
+            showBackendLicence(backend, mac);
+        }
+
+        async function licGenerate() {
+            const writeKey = document.getElementById('lic-write-key').value.trim();
+            const mac = document.getElementById('lic-mac').value.trim().toUpperCase();
+            const el = document.getElementById('lic-status');
+            const box = document.getElementById('lic-result');
+            const btn = document.getElementById('lic-send-btn');
+
+            if (!writeKey) { el.style.color='#ef4444'; el.textContent='Enter your Write Key first.'; return; }
+            if (!mac || mac.length !== 17) { el.style.color='#ef4444'; el.textContent='Enter or auto-detect a valid MAC first.'; return; }
+
+            el.style.color='#64748b'; el.textContent='Requesting signed licence from Worker...';
+            box.style.display='none'; licCurrentLicence='';
+            btn.disabled=true; btn.style.opacity='.4'; btn.style.cursor='not-allowed';
+
+            try {
+                const res = await fetch(WORKER_URL + '/admin/licence/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Write-Key': writeKey },
+                    body: JSON.stringify({ mac, tier: licTier })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.licence) {
+                    el.style.color='#ef4444';
+                    el.textContent='Error: ' + (data.error || 'Worker returned an error');
+                    return;
+                }
+
+                licCurrentLicence = data.licence;
+                const exp = new Date(data.expiry * 1000).toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
+                el.style.color='#22c55e';
+                el.textContent='Licence generated — expires ' + exp + ' (copied to clipboard)';
+                box.textContent = data.licence;
+                box.style.display = 'block';
+                btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer';
+
+                try { await navigator.clipboard.writeText(data.licence); } catch {}
+
+                licHistory.unshift({ mac, tier: licTier, exp, time: new Date().toLocaleTimeString() });
+                document.getElementById('lic-history').innerHTML = licHistory.slice(0,5).map(h =>
+                    '<div style="padding:4px 0;border-bottom:1px solid #1f2439;font-size:13px;">' +
+                    '<span style="color:#67e8f9;font-family:monospace;">' + h.mac + '</span> &bull; ' +
+                    '<span style="color:#a855f7;">' + h.tier + '</span> &bull; expires ' + h.exp +
+                    '<span style="float:right;color:#374151;">' + h.time + '</span></div>'
+                ).join('');
+
+            } catch(e) {
+                el.style.color='#ef4444';
+                el.textContent='Network error: ' + e.message;
+            }
+        }
+
+        // Shared serial write + response read, used by both "Send to Device"
+        // (freshly generated) and "Send Pasted Licence" (re-flashed device).
+        async function licWriteLicenceToDevice(licence, el) {
+            if (!licence) return;
+            try {
+                if (!licSerialPort || !licSerialPort.writable) {
+                    licSerialPort = await navigator.serial.requestPort();
+                    await licSerialPort.open({ baudRate: 115200 });
+                }
+                el.style.color='#64748b';
+                el.textContent='Sending licence to device...';
+                const writer = licSerialPort.writable.getWriter();
+                await writer.write(new TextEncoder().encode('LICENSE:' + licence + '\n'));
+                writer.releaseLock();
+                el.textContent='Sent — waiting for device response...';
+                setTimeout(async () => {
+                    let reader = null;
+                    try {
+                        reader = licSerialPort.readable.getReader();
+                        activeSerialReader = reader;
+                        let buf = '';
+                        const timeout = setTimeout(() => reader.cancel(), 5000);
+                        while (true) {
+                            const { value, done } = await reader.read();
+                            if (done) break;
+                            buf += new TextDecoder().decode(value);
+                            if (buf.includes('LICENCE_OK')) {
+                                clearTimeout(timeout); reader.cancel();
+                                el.style.color='#22c55e';
+                                el.textContent='Device accepted the licence! LICENSED:YES';
+                                break;
+                            }
+                            if (buf.includes('LICENCE_INVALID')) {
+                                clearTimeout(timeout); reader.cancel();
+                                el.style.color='#ef4444';
+                                el.textContent='Device rejected the licence — MAC mismatch or signature error.';
+                                break;
+                            }
+                        }
+                    } catch(e) {
+                        el.style.color='#ef4444';
+                        el.textContent='Could not read device response: ' + e.message;
+                    } finally {
+                        if (reader) { try { reader.releaseLock(); } catch(_) {} }
+                        if (activeSerialReader === reader) activeSerialReader = null;
+                    }
+                }, 600);
+            } catch(e) {
+                el.style.color='#ef4444';
+                el.textContent='Serial error: ' + e.message + ' — if another section or the flasher is holding the USB port, click \"Release Serial\" in the top bar (or unplug/replug), then retry.';
+            }
+        }
+
+        async function licSendToDevice() {
+            if (!licCurrentLicence) return;
+            licWriteLicenceToDevice(licCurrentLicence, document.getElementById('lic-status'));
+        }
+
+        // Send a licence pasted into the Step 4 box (re-flashed device flow).
+        async function licSendPasted() {
+            const el = document.getElementById('lic-paste-status');
+            const raw = document.getElementById('lic-paste').value.trim();
+            if (!raw) { el.style.color='#ef4444'; el.textContent='Paste a licence string first.'; return; }
+            // Light client-side sanity check — the device still verifies the signature.
+            const parts = raw.split('|');
+            if (parts[0] !== 'v1' || parts.length < 5) {
+                el.style.color='#ef4444';
+                el.textContent='That doesn\'t look like a v1 licence (expected v1|MAC|expiry|tier|sig).';
+                return;
+            }
+            // Warn (don't block) if the licence MAC differs from the detected/entered MAC.
+            const licMac = (parts[1] || '').toUpperCase();
+            const fieldMac = document.getElementById('lic-mac').value.trim().toUpperCase();
+            if (fieldMac && licMac && fieldMac !== licMac) {
+                if (!confirm('Heads up: this licence is for ' + licMac + ', but the MAC field shows ' + fieldMac + '.\n\nA device only accepts a licence issued for its own MAC. Send anyway?')) {
+                    el.style.color='#64748b'; el.textContent='Cancelled — MAC mismatch.';
+                    return;
+                }
+            }
+            licWriteLicenceToDevice(raw, el);
+        }
+        // ═══════════════════════════════════════════════════════════
+
+        // ── Company / tamper mode ───────────────────────────────
+        // Sends the EXACT command the v007 firmware matches (it trims the line
+        // but is case-sensitive): COMPANY:ON enables companyDevice + arms the
+        // tamper watch; COMPANY:OFF disables it. Device replies COMPANY_OK.
+        async function setCompanyMode(enable) {
+            const el = document.getElementById('company-status');
+            const cmd = enable ? 'COMPANY:ON' : 'COMPANY:OFF';
+            try {
+                if (!licSerialPort || !licSerialPort.writable) {
+                    licSerialPort = await navigator.serial.requestPort();
+                    await licSerialPort.open({ baudRate: 115200 });
+                }
+                el.style.color = '#64748b';
+                el.textContent = 'Sending ' + cmd + ' ...';
+                const writer = licSerialPort.writable.getWriter();
+                await writer.write(new TextEncoder().encode(cmd + '\n'));
+                writer.releaseLock();
+                el.textContent = 'Sent ' + cmd + ' — waiting for device...';
+                setTimeout(async () => {
+                    let reader = null;
+                    try {
+                        reader = licSerialPort.readable.getReader();
+                        activeSerialReader = reader;
+                        let buf = '';
+                        const timeout = setTimeout(() => reader.cancel(), 5000);
+                        while (true) {
+                            const { value, done } = await reader.read();
+                            if (done) break;
+                            buf += new TextDecoder().decode(value);
+                            if (buf.includes('COMPANY_OK')) {
+                                clearTimeout(timeout); reader.cancel();
+                                el.style.color = '#22c55e';
+                                el.textContent = enable
+                                    ? 'Company mode ENABLED — tamper armed (COMPANY_OK). Set tamper policy next if needed.'
+                                    : 'Company mode DISABLED (COMPANY_OK).';
+                                break;
+                            }
+                        }
+                    } catch(e) {
+                        el.style.color = '#ef4444';
+                        el.textContent = 'Could not read device response: ' + e.message;
+                    } finally {
+                        if (reader) { try { reader.releaseLock(); } catch(_) {} }
+                        if (activeSerialReader === reader) activeSerialReader = null;
+                    }
+                }, 600);
+            } catch(e) {
+                el.style.color = '#ef4444';
+                el.textContent = 'Serial error: ' + e.message + ' — if another section or the flasher is holding the USB port, click \"Release Serial\" in the top bar (or unplug/replug), then retry.';
+            }
+        }
+
+        // Re-lock the page (clears the tab session; password required again).
+        function lockAdmin() {
+            try { sessionStorage.removeItem('plschat_admin_session'); sessionStorage.removeItem('plschat_admin_ts'); } catch(e) {}
+            adminAuthed = false;
+            document.getElementById('admin-password').value = '';
+            document.getElementById('login-overlay').style.display = 'flex';
+        }
+
+        // Free the USB serial port so another section (or the web flasher)
+        // can claim it — no full page refresh needed. Cancels any in-flight
+        // response reader first, since a locked reader blocks port.close().
+        async function releaseSerialPort(showFeedback = true, btnEl = null) {
+            try {
+                if (activeSerialReader) {
+                    try { await activeSerialReader.cancel(); } catch(e) {}
+                    try { activeSerialReader.releaseLock(); } catch(e) {}
+                    activeSerialReader = null;
+                }
+                if (licSerialPort) {
+                    try { await licSerialPort.close(); } catch(e) {}
+                }
+            } finally {
+                licSerialPort = null;
+                if (showFeedback) {
+                    const b = btnEl || document.getElementById('release-serial-btn');
+                    if (b) { const t = b.innerHTML; b.innerHTML = '&#10003; Port released'; setTimeout(() => { b.innerHTML = t; }, 1500); }
+                }
+            }
+        }
+
+        function init() {
+            // Same-tab session: skip the login overlay ONLY if a login is still
+            // inside the remember window. With ADMIN_REMEMBER_MINUTES = 0 this is
+            // never true, so the password is required on every load / refresh.
+            try {
+                const ok = sessionStorage.getItem('plschat_admin_session') === '1';
+                const ts = parseInt(sessionStorage.getItem('plschat_admin_ts') || '0', 10);
+                const fresh = ADMIN_REMEMBER_MINUTES > 0 && ok && (Date.now() - ts) < ADMIN_REMEMBER_MINUTES * 60000;
+                if (fresh) {
+                    adminAuthed = true;
+                    document.getElementById('login-overlay').style.display = 'none';
+                } else {
+                    sessionStorage.removeItem('plschat_admin_session');
+                    sessionStorage.removeItem('plschat_admin_ts');
+                }
+            } catch(e) {}
+            // The web flasher needs exclusive USB access — release our serial
+            // handle automatically the moment its Connect button is clicked.
+            const flashBtn = document.querySelector('esp-web-install-button');
+            if (flashBtn) flashBtn.addEventListener('click', () => releaseSerialPort(false), true);
+
+            document.getElementById('admin-password').addEventListener('keydown', function(e) { if(e.key==='Enter') checkAdminPassword(); });
+            document.getElementById('cp-confirm').addEventListener('keydown', function(e) { if(e.key==='Enter') changeAdminPassword(); });
+        }
+
+        window.onload = init;
+    </script>
 </body>
 </html>
