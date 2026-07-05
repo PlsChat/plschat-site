@@ -2,6 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- Host guard (belt-and-braces on top of the Pages _middleware redirect):
+         this admin page must only run on the Access-protected apex. If it is
+         ever loaded via the raw Cloudflare Pages URL, a preview URL, or any
+         other host, bounce to plschat.net before the panel is usable. -->
+    <script>
+    (function () {
+        var ALLOWED = ['plschat.net', 'www.plschat.net', 'localhost', '127.0.0.1'];
+        if (ALLOWED.indexOf(location.hostname) === -1) {
+            location.replace('https://plschat.net' + location.pathname + location.search + location.hash);
+        }
+    })();
+    </script>
     <!-- Favicons -->
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
