@@ -1,14 +1,16 @@
 {
   "name": "PLSChat Firmware",
-  "version": "2.49",
+  "version": "2.50",
+  "new_install_prompt_erase": true,
+  "reset-on-install": true,
   "builds": [
     {
       "chipFamily": "ESP32-S3",
       "parts": [
-        { "path": "https://raw.githubusercontent.com/PlsChat/plschat-site/main/firmware/bootloader.bin", "offset": 0 },
-        { "path": "https://raw.githubusercontent.com/PlsChat/plschat-site/main/firmware/partitions.bin", "offset": 32768 },
-        { "path": "https://raw.githubusercontent.com/PlsChat/plschat-site/main/firmware/boot_app0.bin", "offset": 57344 },
-        { "path": "https://raw.githubusercontent.com/PlsChat/plschat-site/main/firmware/plschat-firmware.bin", "offset": 65536 }
+        { "path": "bootloader.bin?v=250", "offset": 0 },
+        { "path": "partitions.bin?v=250", "offset": 32768 },
+        { "path": "boot_app0.bin?v=250", "offset": 57344 },
+        { "path": "PLSChat.ino.bin?v=250", "offset": 65536 }
       ]
     }
   ]
