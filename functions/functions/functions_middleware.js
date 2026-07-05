@@ -1,4 +1,3 @@
-
 // Cloudflare Pages Functions middleware — runs on the edge for EVERY request
 // to this Pages deployment, regardless of which hostname routed to it.
 //
@@ -14,8 +13,9 @@
 // and are served normally. Because it keys on ".pages.dev" it never touches the
 // apex, so there's no redirect loop and nothing else can break.
 //
-// Deploy: commit this file to  functions/_middleware.js  on main. Cloudflare
-// Pages auto-detects the functions/ directory and runs it on the next build.
+// Deploy: this file MUST live at  functions/_middleware.js  (one functions
+// folder, filename starts with an underscore). Cloudflare Pages auto-detects
+// the functions/ directory and runs it site-wide on the next build.
 
 export async function onRequest(context) {
   const { request, next } = context;
