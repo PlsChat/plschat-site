@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher foreground: a rounded chat bubble with a tail, drawn inside the
+     adaptive-icon safe zone (the middle ~66dp of the 108dp canvas). Placeholder
+     mark in the PLSChat accent magenta; swap for the real logo art if desired. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#c026d3"
+        android:pathData="M34,34 h40 a10,10 0 0 1 10,10 v22 a10,10 0 0 1 -10,10 h-24 l-14,12 v-12 h-2 a10,10 0 0 1 -10,-10 v-22 a10,10 0 0 1 10,-10 z"/>
+    <path
+        android:fillColor="#0a0c1f"
+        android:pathData="M46,52 h16 v4 h-16 z M46,60 h24 v4 h-24 z"/>
+</vector>

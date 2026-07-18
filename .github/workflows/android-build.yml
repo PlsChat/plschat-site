@@ -38,6 +38,13 @@ jobs:
         run: |
           sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
+      # The repo intentionally ships the Gradle wrapper scripts but NOT the
+      # binary gradle-wrapper.jar (keeps the repo text-only). GitHub's runners
+      # have Gradle preinstalled, so we generate the wrapper jar here, pinned to
+      # a version compatible with Android Gradle Plugin 8.5.2.
+      - name: Generate Gradle wrapper
+        run: gradle wrapper --gradle-version 8.7
+
       - name: Decode signing keystore (if configured)
         if: ${{ env.HAS_SIGNING == 'true' }}
         env:
