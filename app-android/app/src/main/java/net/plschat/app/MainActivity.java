@@ -19,6 +19,8 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -52,6 +54,13 @@ public class MainActivity extends Activity {
     private ConnectivityManager cm;
     private ConnectivityManager.NetworkCallback activeCallback;
     private Network boundNetwork;
+
+    // A freshly-bound Wi-Fi link is often not route-ready for a second or two,
+    // so the first page load can fail transiently. Retry a few times before
+    // declaring the device unreachable, instead of tearing the connection down.
+    private int loadRetries = 0;
+    private static final int MAX_LOAD_RETRIES = 5;
+    private static final long RETRY_DELAY_MS = 1200L;
 
     private FrameLayout root;
     private WebView web;
@@ -110,10 +119,32 @@ public class MainActivity extends Activity {
                 return false; // keep all navigation inside the device UI
             }
             @Override
-            public void onReceivedError(WebView v, int errorCode, String description, String failingUrl) {
-                if (failingUrl != null && failingUrl.startsWith(DEVICE_URL)) {
+            public void onPageFinished(WebView v, String url) {
+                // Reached the device UI — clear the retry budget for later reloads.
+                if (url != null && url.startsWith("http://192.168.4.1")) {
+                    loadRetries = 0;
+                }
+            }
+            @Override
+            public void onReceivedError(WebView v, WebResourceRequest request, WebResourceError error) {
+                // Ignore sub-resource failures (e.g. a missing favicon); only the
+                // main page failing to reach the device counts.
+                if (request == null || !request.isForMainFrame()) return;
+                String u = request.getUrl() != null ? request.getUrl().toString() : "";
+                if (!u.startsWith("http://192.168.4.1")) return;
+
+                if (boundNetwork != null && loadRetries < MAX_LOAD_RETRIES) {
+                    loadRetries++;
+                    // Give the link another moment, then try the device again.
+                    ui.postDelayed(() -> {
+                        if (boundNetwork != null) web.loadUrl(DEVICE_URL);
+                    }, RETRY_DELAY_MS);
+                } else {
+                    CharSequence desc = (error != null) ? error.getDescription() : null;
+                    int code = (error != null) ? error.getErrorCode() : 0;
                     showPanel("Couldn't reach the device at 192.168.4.1.\n"
-                            + "Make sure it's powered on and try connecting again.");
+                            + "Make sure it's powered on and try connecting again."
+                            + (desc != null ? "\n\n(" + code + ": " + desc + ")" : ""));
                 }
             }
         });
@@ -386,7 +417,11 @@ public class MainActivity extends Activity {
         panel.setVisibility(View.GONE);
         topBar.setVisibility(View.VISIBLE);
         web.setVisibility(View.VISIBLE);
-        web.loadUrl(DEVICE_URL);
+        loadRetries = 0;
+        // Let the freshly-bound link settle (DHCP/routes) before the first load.
+        ui.postDelayed(() -> {
+            if (boundNetwork != null) web.loadUrl(DEVICE_URL);
+        }, 700L);
     }
 
     private void clearCallback() {
