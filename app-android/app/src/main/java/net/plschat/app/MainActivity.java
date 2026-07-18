@@ -62,6 +62,11 @@ public class MainActivity extends Activity {
     private static final int MAX_LOAD_RETRIES = 5;
     private static final long RETRY_DELAY_MS = 1200L;
 
+    // Set once a direct HTTP probe (bound explicitly to the PLSChat network)
+    // has confirmed the device answers at 192.168.4.1. Lets us tell "device
+    // unreachable" apart from "device reachable, but WebView won't load it".
+    private volatile boolean routeConfirmed = false;
+
     private FrameLayout root;
     private WebView web;
     private LinearLayout panel;
@@ -142,9 +147,12 @@ public class MainActivity extends Activity {
                 } else {
                     CharSequence desc = (error != null) ? error.getDescription() : null;
                     int code = (error != null) ? error.getErrorCode() : 0;
-                    showPanel("Couldn't reach the device at 192.168.4.1.\n"
-                            + "Make sure it's powered on and try connecting again."
-                            + (desc != null ? "\n\n(" + code + ": " + desc + ")" : ""));
+                    String extra = routeConfirmed
+                            ? "\n\nThe device WAS reachable from the app, but the in-app browser "
+                              + "couldn't load it — this is a WebView routing issue, not the device."
+                            : "\n\nMake sure it's powered on and try connecting again.";
+                    showPanel("Couldn't reach the device at 192.168.4.1."
+                            + (desc != null ? "\n(" + code + ": " + desc + ")" : "") + extra);
                 }
             }
         });
@@ -413,15 +421,58 @@ public class MainActivity extends Activity {
         if (!ok) {
             Toast.makeText(this, "Could not bind to the network", Toast.LENGTH_SHORT).show();
         }
-        busy(false, null);
-        panel.setVisibility(View.GONE);
-        topBar.setVisibility(View.VISIBLE);
-        web.setVisibility(View.VISIBLE);
-        loadRetries = 0;
-        // Let the freshly-bound link settle (DHCP/routes) before the first load.
-        ui.postDelayed(() -> {
-            if (boundNetwork != null) web.loadUrl(DEVICE_URL);
-        }, 700L);
+        // Keep the panel up with a progress note while we verify the device is
+        // actually reachable, instead of dropping into a silent blank WebView.
+        busy(true, "Contacting device at 192.168.4.1…");
+        probeDeviceThenLoad(network);
+    }
+
+    /**
+     * Directly probe http://192.168.4.1/ over the *bound* network object (which
+     * pins the socket to the PLSChat link regardless of WebView quirks). If it
+     * answers, reveal the WebView and load it. If not, report the exact failure
+     * so we can tell an unreachable device apart from a WebView routing problem.
+     */
+    private void probeDeviceThenLoad(final Network network) {
+        routeConfirmed = false;
+        new Thread(() -> {
+            Exception err = null;
+            int code = -1;
+            for (int i = 0; i < 5 && !isFinishing(); i++) {
+                try {
+                    java.net.HttpURLConnection c =
+                            (java.net.HttpURLConnection) network.openConnection(new java.net.URL(DEVICE_URL));
+                    c.setConnectTimeout(6000);
+                    c.setReadTimeout(6000);
+                    c.setInstanceFollowRedirects(false);
+                    code = c.getResponseCode();   // any HTTP reply means it's reachable
+                    c.disconnect();
+                    err = null;
+                    break;
+                } catch (Exception e) {
+                    err = e;
+                    try { Thread.sleep(1200); } catch (InterruptedException ignored) {}
+                }
+            }
+            final Exception ferr = err;
+            ui.post(() -> {
+                if (network != boundNetwork) return;   // superseded by a newer attempt
+                if (ferr == null) {
+                    routeConfirmed = true;
+                    busy(false, null);
+                    panel.setVisibility(View.GONE);
+                    topBar.setVisibility(View.VISIBLE);
+                    web.setVisibility(View.VISIBLE);
+                    loadRetries = 0;
+                    web.loadUrl(DEVICE_URL);
+                } else {
+                    String msg = ferr.getClass().getSimpleName()
+                            + (ferr.getMessage() != null ? ": " + ferr.getMessage() : "");
+                    showPanel("Joined the Wi-Fi, but the device didn't answer at 192.168.4.1.\n\n("
+                            + msg + ")\n\nCheck the PLSChat device is powered on and its screen shows the hotspot.");
+                }
+            });
+        }).start();
     }
 
     private void clearCallback() {
