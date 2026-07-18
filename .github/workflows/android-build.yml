@@ -84,15 +84,31 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin main
-          git checkout -B main origin/main
-          git add -f PLSChat.apk
-          if git diff --cached --quiet; then
-            echo "APK unchanged, nothing to commit."
-          else
+          # Preserve the freshly built APK across checkouts (checking out main
+          # would otherwise restore the previously committed copy).
+          cp PLSChat.apk "$RUNNER_TEMP/PLSChat.apk"
+          # Retry to survive a race with a concurrent push to main (e.g. a
+          # source commit landing at the same time). The release is published
+          # separately, so this bookkeeping step should never fail the run.
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git checkout -B main origin/main
+            cp "$RUNNER_TEMP/PLSChat.apk" PLSChat.apk
+            git add -f PLSChat.apk
+            if git diff --cached --quiet; then
+              echo "APK unchanged, nothing to commit."
+              exit 0
+            fi
             git commit -m "Publish PLSChat Android APK [skip ci]"
-            git push origin HEAD:main
-          fi
+            if git push origin HEAD:main; then
+              echo "Published APK to site root (attempt $attempt)."
+              exit 0
+            fi
+            echo "main moved under us; retrying ($attempt)…"
+            sleep 3
+          done
+          echo "Could not publish APK to site root after 5 attempts." >&2
+          exit 1
 
       # Also attach the APK to a GitHub Release when you push a version tag.
       # always() so a hiccup in the commit-to-root step can't skip the release.
