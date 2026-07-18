@@ -196,6 +196,35 @@
       </ol>
     </div>
 
+    <div class="card">
+      <h2>Connect to your device</h2>
+      <ol>
+        <li>Power on your PLSChat device and wait for its hotspot — its screen shows <code>192.168.4.1</code>.</li>
+        <li>In the app, tap <strong>Connect automatically</strong> and approve Android's
+          &ldquo;connect to this network?&rdquo; prompt. (Or join the hotspot in Android
+          Settings first, then tap <strong>I've already joined it in Settings</strong>.)</li>
+        <li>The device's chat interface opens right inside the app.</li>
+      </ol>
+    </div>
+
+    <div class="card" style="border-left-color:#f0b429">
+      <h2 style="color:#f0b429">Using a VPN, Tor or Orbot?</h2>
+      <p>A PLSChat device is a <strong>local</strong> device with no internet, so a VPN or
+        Tor (Orbot) <strong>cannot reach it</strong> — traffic sent through the tunnel will
+        never find <code>192.168.4.1</code>. You'll see &ldquo;couldn't reach the device&rdquo;
+        or &ldquo;cannot bind to network&rdquo;.</p>
+      <p><strong>Keep your VPN on, but let PLSChat go direct:</strong></p>
+      <ol>
+        <li><strong>Exclude PLSChat</strong> from the VPN/Orbot. In Orbot's per-app mode,
+          make sure PLSChat is <em>not</em> selected to route through Tor (excluded apps
+          connect directly).</li>
+        <li>On GrapheneOS, also turn off <strong>Settings → Network &amp; internet → VPN →
+          (gear) → &ldquo;Block connections without VPN&rdquo;</strong>, which otherwise
+          blocks the app's direct connection.</li>
+      </ol>
+      <p>Or simply switch the VPN off while using PLSChat — everything else stays protected.</p>
+    </div>
+
     <div class="card graphene">
       <h2><svg style="width:20px;height:20px;vertical-align:-3px;margin-right:6px"><use href="#graphene"/></svg>Made for GrapheneOS</h2>
       <p>On GrapheneOS and modern stock Android, a Wi-Fi network with no internet —

@@ -90,8 +90,12 @@ public class MainActivity extends Activity {
         buildTopBar();
         buildPanel();
 
-        root.addView(web, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        // Sit the device UI *below* the top bar (not behind it) so the bar
+        // doesn't cover the top of the web UI.
+        FrameLayout.LayoutParams webLp = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        webLp.topMargin = dp(46);
+        root.addView(web, webLp);
         FrameLayout.LayoutParams tbLp = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(46));
         root.addView(topBar, tbLp);
@@ -419,7 +423,12 @@ public class MainActivity extends Activity {
             ok = ConnectivityManager.setProcessDefaultNetwork(network);
         }
         if (!ok) {
-            Toast.makeText(this, "Could not bind to the network", Toast.LENGTH_SHORT).show();
+            // Binding away from the default network fails when a VPN owns the
+            // routing (e.g. Tor/Orbot). That's the usual cause here.
+            showPanel("Couldn't route to the PLSChat device.\n\n"
+                    + "This usually means a VPN or Tor (Orbot) is active — it can't reach a "
+                    + "local device. Turn the VPN off, or set it to NOT route PLSChat, then try again.");
+            return;
         }
         // Keep the panel up with a progress note while we verify the device is
         // actually reachable, instead of dropping into a silent blank WebView.
@@ -468,8 +477,10 @@ public class MainActivity extends Activity {
                 } else {
                     String msg = ferr.getClass().getSimpleName()
                             + (ferr.getMessage() != null ? ": " + ferr.getMessage() : "");
-                    showPanel("Joined the Wi-Fi, but the device didn't answer at 192.168.4.1.\n\n("
-                            + msg + ")\n\nCheck the PLSChat device is powered on and its screen shows the hotspot.");
+                    showPanel("Joined the Wi-Fi, but couldn't reach the device at 192.168.4.1.\n(" + msg + ")\n\n"
+                            + "If you use a VPN or Tor (Orbot), it blocks access to local devices — "
+                            + "turn it off, or set it to NOT route PLSChat, then try again.\n\n"
+                            + "Otherwise, check the PLSChat device is powered on and showing its hotspot.");
                 }
             });
         }).start();
