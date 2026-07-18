@@ -1,0 +1,57 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'net.plschat.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "net.plschat.app"
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+        resConfigs "en"
+    }
+
+    // Release signing is driven by environment variables so no secrets live in
+    // the repo. In CI the workflow writes the keystore to app/plschat-release.jks
+    // and provides the passwords via GitHub Secrets. If no keystore is present
+    // (e.g. a local dev build) the release build falls back to the debug key so
+    // it still produces an installable APK.
+    def ksFile = file("plschat-release.jks")
+    def ksPass = System.getenv("PLSCHAT_STORE_PASSWORD") ?: (project.findProperty("PLSCHAT_STORE_PASSWORD") ?: "")
+    def ksAlias = System.getenv("PLSCHAT_KEY_ALIAS") ?: (project.findProperty("PLSCHAT_KEY_ALIAS") ?: "plschat")
+    def ksKeyPass = System.getenv("PLSCHAT_KEY_PASSWORD") ?: (project.findProperty("PLSCHAT_KEY_PASSWORD") ?: "")
+    def hasReleaseKey = ksFile.exists() && !ksPass.isEmpty()
+
+    signingConfigs {
+        if (hasReleaseKey) {
+            release {
+                storeFile ksFile
+                storePassword ksPass
+                keyAlias ksAlias
+                keyPassword ksKeyPass
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig hasReleaseKey ? signingConfigs.release : signingConfigs.debug
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Intentionally dependency-free: uses only the Android framework so the
+    // build is small, fast, and resilient. No AndroidX / Material required.
+}
