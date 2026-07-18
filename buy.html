@@ -68,6 +68,7 @@
 
     /* TX HASH INPUT */
     .tx-box { display: none; margin-top: 14px; }
+    .verify-status { display: none; font-size: 13px; color: #94a3b8; margin-top: 12px; text-align: center; line-height: 1.5; }
     .tx-label { font-size: 12px; color: #64748b; margin-bottom: 6px; }
     .tx-input { width: 100%; padding: 11px 14px; background: #0f1326; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #c9d1d9; font-size: 13px; font-family: monospace; }
 
@@ -202,6 +203,7 @@
     <button class="btn btn-primary btn-gap" onclick="verifyPayment()" id="verify-btn">
       <i class="fa-solid fa-circle-check"></i> Verify &amp; Generate Licence
     </button>
+    <div class="verify-status" id="verify-status"></div>
 
     <!-- Success -->
     <div class="success-box" id="success-box">
@@ -352,62 +354,131 @@
       txHash = hash;
       document.getElementById('tx-hash').value = hash;
       document.getElementById('tx-box').style.display = 'block';
-      alert(`✅ Transaction sent!\n\nTX: ${hash}\n\nNow click "Verify & Generate Licence".`);
+      // Auto-start verification and poll through the confirmation wait — no need
+      // to make the user click Verify or watch for the exact confirmation moment.
+      verifyPayment();
     } catch(e) {
       if (e.code !== 4001) alert('Transaction failed: ' + e.message);
     }
   }
 
   // ── Verify & issue ───────────────────────────────────────────────────────
+  // Errors that just mean "not ready yet" — keep waiting and retry.
+  // Everything else is a genuine problem and stops immediately.
+  const VERIFY_RETRYABLE = new Set([
+    'insufficient_confirmations', // mined, but not yet 5 blocks deep
+    'tx_not_found',               // still pending / a node hasn't indexed it yet
+    'rpc_unavailable',            // a node blipped or rate-limited
+    'rpc_disagreement'            // transient timing mismatch between the two nodes
+  ]);
+
+  function friendlyVerifyError(reason) {
+    switch (reason) {
+      case 'no_plsc_transfer_to_treasury':
+        return 'No PLSC payment to the treasury was found in that transaction. Make sure you sent PLSC to the treasury address.';
+      case 'insufficient_amount':
+        return 'The payment is less than the licence price. Please send the full amount.';
+      case 'tx_failed':
+        return 'That transaction failed on-chain — no payment was made.';
+      case 'tx_already_used':
+        return 'That transaction has already been used to issue a licence.';
+      case 'invalid tier':
+        return 'Invalid licence tier selected.';
+      case 'server_not_configured':
+      case 'treasury_not_configured':
+        return 'The licence server is temporarily unavailable. Please try again shortly.';
+      default:
+        return reason || 'Verification failed. Please try again in a moment.';
+    }
+  }
+
+  let verifyPolling = false;
+
   async function verifyPayment() {
-    const hash = document.getElementById('tx-hash').value.trim() || txHash;
+    const hash = (document.getElementById('tx-hash').value.trim() || txHash);
     if (!hash)        { alert('Paste the transaction hash first.'); return; }
     if (!selectedMac) { alert('Connect your device first.'); return; }
+    if (verifyPolling) return;            // ignore double-clicks while already waiting
+    verifyPolling = true;
 
-    const btn = document.getElementById('verify-btn');
+    const btn    = document.getElementById('verify-btn');
+    const status = document.getElementById('verify-status');
+    const started  = Date.now();
+    const MAX_WAIT = 4 * 60 * 1000;       // stop polling after 4 minutes
+    const INTERVAL = 4000;                // re-check every 4 seconds
+
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying…';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Waiting for confirmations…';
 
-    try {
-      const res  = await fetch(`${WORKER}/licence/purchase`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ txHash: hash, mac: selectedMac, tier: selectedTier })
-      });
-      const data = await res.json();
+    function showWaiting() {
+      const secs = Math.floor((Date.now() - started) / 1000);
+      status.style.display = 'block';
+      status.textContent = 'Payment seen on-chain — waiting for it to confirm (a few block confirmations, usually under a minute)… ' + secs + 's';
+    }
+    function stopWith(msg) {
+      verifyPolling = false;
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Verify &amp; Generate Licence';
+      status.style.display = 'none';
+      if (msg) alert('❌ ' + msg);
+    }
 
-      if (!res.ok || !data.licence) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Verify &amp; Generate Licence';
-        alert('❌ ' + (data.error || 'Verification failed. Transaction may not be confirmed yet — wait a minute and try again.'));
+    showWaiting();
+
+    while (true) {
+      let res = null, data = {};
+      try {
+        res  = await fetch(`${WORKER}/licence/purchase`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ txHash: hash, mac: selectedMac, tier: selectedTier })
+        });
+        data = await res.json();
+      } catch(e) {
+        data = { error: 'rpc_unavailable' };   // network blip — treat as retryable
+      }
+
+      // Success ──────────────────────────────────────────────────────────
+      if (res && res.ok && data.licence) {
+        verifyPolling = false;
+        try {
+          const store = JSON.parse(localStorage.getItem('licenses') || '{}');
+          store[selectedMac] = data.licence;
+          localStorage.setItem('licenses', JSON.stringify(store));
+        } catch(e) {}
+
+        const exp = new Date(data.expiry * 1000).toLocaleDateString('en-GB',
+          { year:'numeric', month:'long', day:'numeric' });
+        document.getElementById('s-mac').textContent    = selectedMac;
+        document.getElementById('s-tier').textContent   = data.tier === 'lifetime' ? 'Lifetime (10 years)' : 'Yearly';
+        document.getElementById('s-expiry').textContent = exp;
+        document.getElementById('s-key').textContent    = data.licence;
+        document.getElementById('success-box').style.display = 'block';
+        document.getElementById('tx-box').style.display      = 'none';
+        status.style.display = 'none';
+        btn.style.display = 'none';
+
+        await checkLicenceStatus(selectedMac);
         return;
       }
 
-      // Save to localStorage for flasher page
-      try {
-        const store = JSON.parse(localStorage.getItem('licenses') || '{}');
-        store[selectedMac] = data.licence;
-        localStorage.setItem('licenses', JSON.stringify(store));
-      } catch(e) {}
+      const reason = data.error || 'unknown_error';
 
-      // Show success
-      const exp = new Date(data.expiry * 1000).toLocaleDateString('en-GB',
-        { year:'numeric', month:'long', day:'numeric' });
-      document.getElementById('s-mac').textContent    = selectedMac;
-      document.getElementById('s-tier').textContent   = data.tier === 'lifetime' ? 'Lifetime (10 years)' : 'Yearly';
-      document.getElementById('s-expiry').textContent = exp;
-      document.getElementById('s-key').textContent    = data.licence;
-      document.getElementById('success-box').style.display = 'block';
-      document.getElementById('tx-box').style.display      = 'none';
-      btn.style.display = 'none';
+      // Genuine, non-transient failure — stop and explain.
+      if (!VERIFY_RETRYABLE.has(reason)) {
+        stopWith(friendlyVerifyError(reason));
+        return;
+      }
 
-      // Also re-check the device status badge
-      await checkLicenceStatus(selectedMac);
+      // Gave it long enough — let the user retry manually.
+      if (Date.now() - started > MAX_WAIT) {
+        stopWith('Still waiting for confirmations after a few minutes. Your payment is safe — press Verify again shortly.');
+        return;
+      }
 
-    } catch(e) {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Verify &amp; Generate Licence';
-      alert('Network error: ' + e.message);
+      // Not ready yet — keep waiting.
+      showWaiting();
+      await new Promise(r => setTimeout(r, INTERVAL));
     }
   }
 
