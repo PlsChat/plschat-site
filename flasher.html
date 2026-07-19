@@ -140,8 +140,8 @@
     <div class="card-head">
       <div class="card-icon purple"><i class="fa-solid fa-microchip"></i></div>
       <div>
-        <div class="card-title">Flash Firmware</div>
-        <div class="card-sub">Erase the device first for best results.</div>
+        <div class="card-title">Flash Heltec V4 Firmware</div>
+        <div class="card-sub">For Heltec WiFi LoRa 32 V4 boards. Erase first for best results.</div>
       </div>
     </div>
 
@@ -158,6 +158,31 @@
     </esp-web-install-button>
 
     <p class="boot-note">Hold the <strong>BOOT button</strong> on your Heltec V4 while clicking Connect.</p>
+  </div>
+
+  <!-- FLASH KEY FOB (XIAO ESP32-S3) -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon cyan"><i class="fa-solid fa-key"></i></div>
+      <div>
+        <div class="card-title">Flash Key Fob Firmware</div>
+        <div class="card-sub">For PLSChat key fob devices (XIAO ESP32-S3). Erase first for best results.</div>
+      </div>
+    </div>
+
+    <esp-web-install-button manifest="manifest-xiao.json" erase-first>
+      <button slot="activate" class="erase-btn" style="width:100%;padding:16px;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(90deg,#a855f7,#ec4899);color:#fff;margin-bottom:12px">
+        <i class="fa-solid fa-upload"></i> Erase Key Fob First (Recommended)
+      </button>
+    </esp-web-install-button>
+
+    <esp-web-install-button manifest="manifest-xiao.json">
+      <button slot="activate" class="flash-btn" style="width:100%;padding:16px;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(90deg,#22d3ee,#06b6d4);color:#0f172a">
+        <i class="fa-solid fa-bolt"></i> Flash Key Fob Firmware
+      </button>
+    </esp-web-install-button>
+
+    <p class="boot-note">On the XIAO: hold <strong>BOOT (B)</strong>, tap <strong>RESET (R)</strong>, then release BOOT before clicking Connect.</p>
   </div>
 
   <!-- SEND / RECOVER LICENCE -->
