@@ -265,7 +265,7 @@ Nodes appear when the connected device receives their packets or status over LoR
 <div class="text-xs text-zinc-500">NODE DETAILS</div>
 <div id="modal-node-id" class="font-mono text-2xl font-semibold text-fuchsia-400"></div>
 <div id="modal-status" class="text-xs mt-1.5 flex items-center"></div>
-<div id="modal-lock-note" class="hidden text-[11px] text-amber-300/80 bg-amber-400/5 border border-amber-400/20 rounded-xl px-3 py-2 mt-2"><i class="fa-solid fa-lock mr-1"></i>View-only — connect this device directly via Web Serial to rename or relocate it on your local view.</div>
+<div id="modal-lock-note" class="hidden text-[11px] text-amber-300/80 bg-amber-400/5 border border-amber-400/20 rounded-xl px-3 py-2 mt-2"><i class="fa-solid fa-lock mr-1"></i>View-only — connect this device directly over USB serial to rename, relocate, or publish it.</div>
 </div>
 <button onclick="hideNodeModal()" class="text-zinc-400 hover:text-white text-2xl leading-none">&times;</button>
 </div>
@@ -349,8 +349,14 @@ Nodes appear when the connected device receives their packets or status over LoR
 <i class="fa-solid fa-location-dot"></i> <span>Set / Move Location on Map</span>
 </button>
 </div>
-<div class="pt-1">
-<div class="text-[10px] text-zinc-500 text-center leading-relaxed"><i class="fa-solid fa-tower-broadcast mr-1"></i>Repeaters appear on the public Coverage Map automatically when they report in — there's nothing to publish from here.</div>
+<div class="pt-1 space-y-2">
+<button id="modal-share-btn" onclick="shareToPublicMap()" class="w-full py-2.5 text-sm border border-emerald-400/40 text-emerald-300 hover:bg-emerald-400/10 rounded-2xl flex items-center justify-center gap-x-2">
+<i class="fa-solid fa-tower-broadcast"></i> <span id="modal-share-btn-label">Publish to Public Coverage Map</span>
+</button>
+<button id="modal-unshare-btn" onclick="unshareFromPublicMap()" class="hidden w-full py-2.5 text-sm border border-red-400/30 text-red-300 hover:bg-red-400/10 rounded-2xl flex items-center justify-center gap-x-2">
+<i class="fa-solid fa-eye-slash"></i> <span>Remove from Public Map</span>
+</button>
+<div id="modal-share-hint" class="text-[10px] text-zinc-500 text-center"></div>
 </div>
 </div>
 <div class="px-6 py-4 bg-white/5 border-t border-white/10 text-xs text-zinc-500 flex items-start gap-x-2 flex-shrink-0">
@@ -381,12 +387,6 @@ const MAX_MESH_NODES = 40;
 const DEFAULT_RANGE_KM = 5;
 
 const API_BASE = 'https://plschat-coverage-api.plschat.workers.dev';
-function getWriteKey() {
-  // Publishing from the browser is disabled on this public page — no write key
-  // is ever requested, stored, or sent. Repeaters are added to the Coverage Map
-  // server-side when they report in.
-  return '';
-}
 
 const REGISTRY_KEY = 'plschat_known_repeaters';
 let registry = loadRegistry();
@@ -577,7 +577,7 @@ function processFullStatusBlock(block, timestamp) {
 
   if (isConnected && connectedDeviceId === null) {
     connectedDeviceId = nodeId;
-    addToLog(`[LOCAL] This browser is now linked to device ${nodeId} — only it can be renamed or relocated on your local view.`, timestamp);
+    addToLog(`[LOCAL] This browser is now linked to device ${nodeId} — only it can be renamed, relocated, or published to the Coverage Map.`, timestamp);
     updateConnectedDeviceBadge();
     if (leafletMap) updateMapMarkers();
   }
@@ -599,6 +599,10 @@ function processFullStatusBlock(block, timestamp) {
   if (contactsMatch) node.contacts = parseInt(contactsMatch[1]);
   const messagesMatch = block.match(/MESSAGES[:=]\s*(\d+)/i);
   if (messagesMatch) node.messages = parseInt(messagesMatch[1]);
+  const macMatch = block.match(/^MAC[:=]\s*([0-9A-Fa-f:]{11,})/im);
+  if (macMatch) node.mac = macMatch[1].toUpperCase();
+  const licMatch = block.match(/^LICEN[SC]E[:=]\s*(v1\|[^\r\n]+)/im);
+  if (licMatch) node.licence = licMatch[1].trim();
 
   renderNodesList();
   if (currentMeshView === 'map') updateMapMarkers();
@@ -620,7 +624,7 @@ function parseIndividualStatusLine(line, timestamp) {
 
   if (isConnected && connectedDeviceId === null) {
     connectedDeviceId = nodeId;
-    addToLog(`[LOCAL] This browser is now linked to device ${nodeId} — only it can be renamed or relocated on your local view.`, timestamp);
+    addToLog(`[LOCAL] This browser is now linked to device ${nodeId} — only it can be renamed, relocated, or published to the Coverage Map.`, timestamp);
     updateConnectedDeviceBadge();
     if (leafletMap) updateMapMarkers();
   }
@@ -642,6 +646,10 @@ function parseIndividualStatusLine(line, timestamp) {
   if (contactsMatch) node.contacts = parseInt(contactsMatch[1]);
   const messagesMatch = line.match(/MESSAGES[:=]\s*(\d+)/i);
   if (messagesMatch) node.messages = parseInt(messagesMatch[1]);
+  const macMatch = line.match(/^MAC[:=]\s*([0-9A-Fa-f:]{11,})/i);
+  if (macMatch) node.mac = macMatch[1].toUpperCase();
+  const licMatch = line.match(/^LICEN[SC]E[:=]\s*(v1\|.+)$/i);
+  if (licMatch) node.licence = licMatch[1].trim();
 
   renderNodesList();
   if (currentMeshView === 'map') updateMapMarkers();
@@ -668,7 +676,9 @@ function createNewNode(nodeId, timestamp) {
     publishedOnly: false,
     lastPublished: null,
     lat: null,
-    lon: null
+    lon: null,
+    mac: null,
+    licence: null
   };
 }
 
@@ -1345,7 +1355,28 @@ function showNodeDetail(nodeId) {
 
   const editable = canEditNode(nodeId);
   document.getElementById('modal-lock-note').classList.toggle('hidden', editable);
-  ['modal-edit-label-btn', 'modal-set-location-btn', 'modal-range-save-btn'].forEach(btnId => {
+
+  // Publish controls: only the USB-connected device can publish/remove itself,
+  // and only if it has actually reported a licence over serial.
+  const isShared = !!(rangeR && rangeR.shared);
+  const hasLicence = !!(node && node.licence);
+  const shareBtn = document.getElementById('modal-share-btn');
+  const unshareBtn = document.getElementById('modal-unshare-btn');
+  const shareHint = document.getElementById('modal-share-hint');
+  document.getElementById('modal-share-btn-label').textContent = isShared ? 'Update Public Listing' : 'Publish to Public Coverage Map';
+  shareBtn.classList.toggle('hidden', !editable);
+  unshareBtn.classList.toggle('hidden', !(editable && isShared));
+  if (!editable) {
+    shareHint.textContent = '';
+  } else if (!hasLicence) {
+    shareHint.textContent = 'Waiting for this device to report its licence over serial (STATUS → LICENSED:YES). Publishing is signed by the device itself — no keys are entered here.';
+  } else {
+    shareHint.textContent = isShared
+      ? 'Live on the public Coverage Map. Publishing is authorised by this device\u2019s own signed licence — no write key is used.'
+      : 'Publishes this repeater\u2019s label, the location you placed, and its latest readings — authorised by the device\u2019s own signed licence.';
+  }
+
+  ['modal-edit-label-btn', 'modal-set-location-btn', 'modal-range-save-btn', 'modal-share-btn', 'modal-unshare-btn'].forEach(btnId => {
     const btn = document.getElementById(btnId);
     if (!btn) return;
     btn.classList.toggle('opacity-40', !editable);
@@ -1441,16 +1472,91 @@ function saveRangeFromModal() {
   if (leafletMap) updateMapMarkers();
 }
 
-// Publishing to the public Coverage Map from the browser has been removed on
-// this public page: it required a Coverage Map write key in the browser, which
-// we no longer expose. Repeaters are added to the map server-side when they
-// report in. These stubs remain only so any stray reference stays inert.
+// Publish / remove the CONNECTED device on the public Coverage Map.
+// Authorisation is the device's own Ed25519 licence (read over serial via
+// STATUS → LICENCE:...). The Worker verifies the signature and only ever
+// writes the MAC named inside that licence. No write key is ever used here,
+// and only the device physically connected over USB serial can be published.
 async function shareToPublicMap() {
-  alert('Publishing from this page has been turned off. Repeaters appear on the public Coverage Map automatically when they report in.');
+  const id = currentModalNodeId;
+  if (!id) return;
+  if (!canEditNode(id)) { alert('You can only publish the device currently connected to this browser over USB serial.'); return; }
+  const node = nodes.get(id);
+  if (!node) return;
+  const licence = node.licence;
+  if (!licence) {
+    alert('This device hasn\'t reported a licence over serial yet.\n\nMake sure it\'s licensed (its STATUS should show LICENSED:YES), wait for the next status update, then try again.');
+    return;
+  }
+  const r = registry[id];
+  if (!r || r.lat === null || r.lat === undefined) {
+    alert('Place this repeater on the map first (Set / Move Location on Map), then publish it.');
+    return;
+  }
+  if (API_BASE.includes('REPLACE-ME')) { alert('The Coverage API isn\'t configured yet.'); return; }
+
+  const already = !!r.shared;
+  const confirmed = confirm(
+    (already ? 'Update' : 'Publish') + ` "${repeaterDisplayName(id)}" on the public Coverage Map?\n\n` +
+    'This publishes its label, the location you placed, and its latest battery/signal readings. ' +
+    'Only this device — the one connected over USB — can do this, and it\u2019s authorised by the device\u2019s own signed licence.'
+  );
+  if (!confirmed) return;
+
+  const payload = {
+    licence,
+    nodeId: id,
+    label: node.customLabel || id,
+    lat: r.lat,
+    lon: r.lon,
+    rangeKm: getRangeKm(id),
+    rangeMode: (r.rangeMode === 'manual') ? 'manual' : 'auto',
+    lastBattery: node.battery,
+    lastRssi: node.lastRssi,
+    lastSnr: node.lastSnr,
+    lastMessages: node.messages
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/api/repeaters/self`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || ('Server responded ' + res.status));
+    r.shared = true;
+    saveRegistry();
+    showNodeDetail(id);
+    fetchPublishedRepeaters();
+    alert('Published. It should appear on the Coverage Map within a few seconds.');
+  } catch (e) {
+    alert('Could not publish: ' + e.message);
+  }
 }
 
 async function unshareFromPublicMap() {
-  alert('Removing from the public Coverage Map is handled server-side and is not available from this page.');
+  const id = currentModalNodeId;
+  if (!id) return;
+  if (!canEditNode(id)) { alert('You can only remove the device currently connected to this browser over USB serial.'); return; }
+  const node = nodes.get(id);
+  const licence = node && node.licence;
+  if (!licence) { alert('This device hasn\'t reported a licence over serial yet, so it can\'t be removed from here.'); return; }
+  if (!confirm(`Remove "${repeaterDisplayName(id)}" from the public Coverage Map?`)) return;
+  try {
+    const res = await fetch(`${API_BASE}/api/repeaters/self`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ licence })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || ('Server responded ' + res.status));
+    if (registry[id]) { registry[id].shared = false; saveRegistry(); }
+    showNodeDetail(id);
+    fetchPublishedRepeaters();
+  } catch (e) {
+    alert('Could not remove: ' + e.message);
+  }
 }
 
 /* ===================== PUBLISHED REPEATERS BRIDGE ===================== */
@@ -1461,8 +1567,9 @@ async function fetchPublishedRepeaters() {
     const res = await fetch(`${API_BASE}/api/repeaters`);
     if (!res.ok) throw new Error('Server responded ' + res.status);
     const data = await res.json();
+    const list = Array.isArray(data) ? data : (data.repeaters || []);
     publishedRepeaters.clear();
-    (data.repeaters || []).forEach(r => publishedRepeaters.set(r.id, r));
+    list.forEach(r => { if (r && r.id != null) publishedRepeaters.set(String(r.id).toUpperCase(), r); });
     mergePublishedRepeaters();
   } catch (e) {
     console.warn('Could not fetch published repeaters:', e.message);
