@@ -350,7 +350,7 @@ void initRadio() {
    *   radio.setRfSwitchTable(rfswitch_pins, rfswitch_table);
    * -------------------------------------------------------------------- */
 
-  radio.setDio1Action(onDio1);
+  radio.setIrqAction(onDio1);   // LR11x0: IRQ line (was setDio1Action on SX126x)
   radio.startReceive();
   radioReady = true;
   Serial.println("[LoRa] ready");
