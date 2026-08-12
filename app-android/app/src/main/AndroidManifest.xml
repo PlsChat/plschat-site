@@ -1,13 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- ============================ Wi-Fi path ============================ -->
     <!-- Needed to discover, request and bind to the PLSChat Wi-Fi hotspot and
-         to load the device UI over that (internet-less) link. -->
+         to load the device UI over that (internet-less) link. Used by the
+         original Graphene/Heltec flow in MainActivity. -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+
+    <!-- ========================= Bluetooth path ========================== -->
+    <!-- Used by BleActivity to talk to a SenseCAP T1000-E flashed with the
+         PLSChat tracker firmware over its Nordic UART BLE service.
+
+         Android 12 (API 31)+ uses the split BLUETOOTH_SCAN / BLUETOOTH_CONNECT
+         runtime permissions. neverForLocation tells the OS we do NOT derive
+         physical location from BLE scans, so we don't need location access on
+         new devices. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"
+        tools:targetApi="s"/>
+
+    <!-- Legacy Bluetooth permissions for Android 8-11 (API 26-30). On those
+         versions a BLE *scan* also requires fine location to be granted at
+         runtime, so we declare it but cap it below API 31. -->
+    <uses-permission android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:maxSdkVersion="30"/>
+
+    <!-- The app is useful without BLE (Wi-Fi devices), so BLE is optional. -->
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false"/>
 
     <application
         android:allowBackup="true"
@@ -18,6 +48,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/Theme.PLSChat">
 
+        <!-- Default entry point: Wi-Fi (Graphene / Heltec) device flow. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -27,5 +58,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <!-- SenseCAP T1000-E (Bluetooth) flow. Launched from a link on the
+             MainActivity connect panel; not a separate launcher icon. -->
+        <activity
+            android:name=".BleActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout"/>
     </application>
 </manifest>
