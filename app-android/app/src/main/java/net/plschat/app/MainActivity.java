@@ -1,6 +1,7 @@
 package net.plschat.app;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.net.ConnectivityManager;
@@ -250,6 +251,14 @@ public class MainActivity extends Activity {
         Button current = secondaryButton("I've already joined it in Settings");
         current.setOnClickListener(v -> bindToCurrentWifi());
         panel.addView(current, fieldLp());
+
+        // Alternate transport: a SenseCAP T1000-E tracker has no Wi-Fi and is
+        // reached over Bluetooth instead. Hand off to BleActivity for that.
+        Button tracker = flatButton("Using a SenseCAP tracker? Connect over Bluetooth →");
+        tracker.setOnClickListener(v -> startActivity(new Intent(this, BleActivity.class)));
+        LinearLayout.LayoutParams trLp = fieldLp();
+        trLp.topMargin = dp(18);
+        panel.addView(tracker, trLp);
 
         spinner = new ProgressBar(this);
         spinner.setVisibility(View.GONE);
