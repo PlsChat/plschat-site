@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Favicons -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#0a0c1f">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PLSChat • T1000-E Firmware</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap');
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #0a0c1f; color: #c9d1d9; margin: 0; padding: 0; min-height: 100vh; }
+
+    /* NAV */
+    nav { background: rgba(10,12,31,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); position: sticky; top: 0; z-index: 50; }
+    .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 72px; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; background: linear-gradient(90deg,#a855f7,#67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-links { display: flex; gap: 28px; align-items: center; font-size: 14px; font-weight: 500; }
+    .nav-links a { color: #8b949e; text-decoration: none; transition: color .15s; }
+    .nav-links a:hover { color: #c9d1d9; }
+    .nav-links a.active { color: #22d3ee; }
+    .nav-cta { padding: 9px 20px; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #c9d1d9 !important; font-weight: 600 !important; font-size: 14px; display: flex; align-items: center; gap: 7px; }
+    .nav-cta:hover { background: rgba(255,255,255,0.06) !important; }
+
+    /* HERO */
+    .hero { max-width: 680px; margin: 0 auto; text-align: center; padding: 60px 24px 40px; }
+    .chip { display: inline-block; padding: 5px 16px; border: 1px solid rgba(255,255,255,0.15); border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 24px; }
+    .hero h1 { font-family: 'Space Grotesk', sans-serif; font-size: 52px; font-weight: 600; letter-spacing: -1.5px; color: #f0f6fc; margin: 0 0 16px; }
+    .hero p { font-size: 17px; color: #8b949e; line-height: 1.65; margin: 0 0 28px; }
+
+    /* CARDS */
+    .cards { max-width: 700px; margin: 0 auto; padding: 0 24px 80px; }
+    .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 32px; margin-bottom: 20px; }
+    .card-head { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .card-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .card-icon.purple { background: rgba(168,85,247,0.15); color: #a855f7; }
+    .card-icon.cyan   { background: rgba(34,211,238,0.12); color: #22d3ee; }
+    .card-icon.pink   { background: rgba(236,72,153,0.12); color: #ec4899; }
+    .card-title { font-size: 20px; font-weight: 700; color: #f0f6fc; margin: 0 0 4px; }
+    .card-sub   { font-size: 13px; color: #64748b; margin: 0; }
+
+    /* DOWNLOAD BUTTON */
+    a.dl-btn { width: 100%; padding: 16px; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: opacity .2s, transform .15s; background: linear-gradient(90deg,#22d3ee,#06b6d4); color: #0f172a; text-decoration: none; }
+    a.dl-btn:hover { opacity: .92; transform: translateY(-1px); }
+    .dl-meta { text-align: center; font-size: 13px; color: #64748b; margin-top: 14px; }
+    .dl-meta strong { color: #c9d1d9; }
+
+    /* STEPS */
+    .step { display: flex; gap: 14px; margin-bottom: 18px; }
+    .step:last-child { margin-bottom: 0; }
+    .step-n { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#a855f7,#3b82f6); color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .step p { font-size: 14px; color: #c9d1d9; line-height: 1.55; margin: 0; }
+    .step p .sub { display: block; font-size: 12.5px; color: #64748b; margin-top: 3px; }
+    code { background: #0f1326; padding: 2px 7px; border-radius: 5px; font-family: monospace; font-size: 13px; color: #67e8f9; }
+
+    /* NOTES */
+    .note-list { margin: 0; padding: 0; list-style: none; }
+    .note-list li { display: flex; gap: 12px; font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 12px; }
+    .note-list li:last-child { margin-bottom: 0; }
+    .note-list i { color: #a855f7; margin-top: 4px; flex-shrink: 0; }
+
+    /* APP LINK */
+    .app-box { margin-top: 18px; background: rgba(34,211,238,0.05); border: 1px solid rgba(34,211,238,0.15); border-radius: 14px; padding: 18px; font-size: 14px; color: #94a3b8; line-height: 1.6; }
+    .app-box strong { color: #c9d1d9; }
+    .app-box a { color: #22d3ee; font-weight: 600; text-decoration: none; }
+    .app-box a:hover { text-decoration: underline; }
+
+    .footer-link { text-align: center; margin-top: 4px; }
+    .footer-link a { color: #a855f7; font-size: 15px; font-weight: 600; text-decoration: none; }
+    .footer-link a:hover { color: #c084fc; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#3b82f6"/><stop offset="50%" stop-color="#c026d3"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs>
+        <path d="M50 5 L90 27.5 L90 72.5 L50 95 L10 72.5 L10 27.5 Z" fill="url(#pg)" stroke="#fff" stroke-width="3"/>
+        <polyline points="25,50 35,50 40,35 48,65 55,42 62,58 68,50 75,50" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="logo-text">PLSChat</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="flasher.html">Web Flasher</a>
+      <a href="device-manager.html">Device Manager</a>
+      <a href="coverage-map.html">Coverage Map</a>
+      <a href="monitor.html">Network Monitor</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="chip">SENSECAP T1000-E &middot; BLUETOOTH TRACKER</div>
+  <h1>T1000-E Firmware</h1>
+  <p>Put PLSChat on your SenseCAP T1000-E tracker. No flasher tool, no drivers &mdash; the tracker shows up as a USB drive and you drag one file onto it.</p>
+</div>
+
+<div class="cards">
+
+  <!-- DOWNLOAD -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon cyan"><i class="fa-solid fa-download"></i></div>
+      <div>
+        <p class="card-title">1 &middot; Download the firmware</p>
+        <p class="card-sub">One .uf2 file &mdash; this is everything the tracker needs</p>
+      </div>
+    </div>
+    <a class="dl-btn" href="firmware/plschat_t1000e_v0_1.uf2" download>
+      <i class="fa-solid fa-download"></i> Download plschat_t1000e_v0_1.uf2
+    </a>
+    <p class="dl-meta"><strong>v0.1</strong> &middot; 868&nbsp;MHz &middot; public channel &middot; compatible with the Heltec&nbsp;/&nbsp;XIAO mesh</p>
+  </div>
+
+  <!-- FLASH STEPS -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon purple"><i class="fa-solid fa-usb"></i></div>
+      <div>
+        <p class="card-title">2 &middot; Drag it onto the tracker</p>
+        <p class="card-sub">Uses the tracker's built-in drag-and-drop (UF2) bootloader</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">1</div>
+      <p>Attach the magnetic USB cable that came with the T1000-E and plug it into your computer.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">2</div>
+      <p>Double-press the tracker's button.
+        <span class="sub">The LED lights and a USB drive called <code>T1000-E</code> appears on your computer &mdash; that's DFU mode.</span></p>
+    </div>
+    <div class="step">
+      <div class="step-n">3</div>
+      <p>Drag <code>plschat_t1000e_v0_1.uf2</code> onto the <code>T1000-E</code> drive.
+        <span class="sub">It copies for a few seconds, the drive disappears and the tracker reboots into PLSChat. That's it.</span></p>
+    </div>
+    <div class="step">
+      <div class="step-n">4</div>
+      <p>Open the PLSChat Android app and tap <strong>&ldquo;Using a SenseCAP tracker? Connect over Bluetooth&rdquo;</strong>.
+        <span class="sub">The app finds the tracker (it advertises as <code>PLSChat-T1000</code>) and opens the public-channel chat.</span></p>
+    </div>
+    <div class="app-box">
+      <strong>Need the app?</strong> The Android app with Bluetooth support is built from this repo &mdash; see <a href="https://github.com/PlsChat/plschat-site/blob/main/app-android/BLUETOOTH.md">app-android/BLUETOOTH.md</a> for how the two transports fit together.
+    </div>
+  </div>
+
+  <!-- GOOD TO KNOW -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon pink"><i class="fa-solid fa-circle-info"></i></div>
+      <div>
+        <p class="card-title">Good to know</p>
+        <p class="card-sub">v0.1 is an early build &mdash; here's exactly where it stands</p>
+      </div>
+    </div>
+    <ul class="note-list">
+      <li><i class="fa-solid fa-tower-broadcast"></i><span><strong>Public channel only for now.</strong> Messages are byte-compatible with the Heltec fleet's public channel. Contacts and Rooms need a firmware update and are greyed out in the app until then.</span></li>
+      <li><i class="fa-solid fa-flask"></i><span><strong>Not yet field-proven.</strong> This build compiles and runs, but radio range against the Heltec fleet hasn't been confirmed on real hardware yet. If you flash one, a range check against a Heltec is the single most useful test you can do.</span></li>
+      <li><i class="fa-solid fa-rotate-left"></i><span><strong>Fully reversible.</strong> The bootloader is untouched &mdash; double-press the button any time to get the <code>T1000-E</code> drive back and drag on any other firmware (including Meshtastic or Seeed's original).</span></li>
+      <li><i class="fa-solid fa-battery-half"></i><span><strong>Battery note.</strong> v0.1 beacons every 60 seconds so other nodes can see it &mdash; fine for testing, tuned down in a later release.</span></li>
+    </ul>
+  </div>
+
+  <div class="footer-link">
+    <a href="flasher.html"><i class="fa-solid fa-bolt"></i> Have a Heltec or XIAO instead? Use the Web Flasher &rarr;</a>
+  </div>
+
+</div>
+
+</body>
+</html>
