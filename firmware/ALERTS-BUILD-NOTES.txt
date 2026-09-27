@@ -1,0 +1,36 @@
+PLSChat message alerts - build notes (firmware v2.53)
+=============================================================
+
+FILES
+  PLSChat_v2_53.ino       Heltec V4 personal   (was v2.51)
+  PLSChat_v2_53_XIAO.ino  XIAO ESP32-S3        (was v2.52)
+  Each needs PLSChatLicence.h in the same folder as before
+
+PINS
+                 Buzzer      Motor signal   Motor power
+  Heltec V4      GPIO47      GPIO48         3V3
+  XIAO S3        D0 (GPIO1)  D1 (GPIO2)     3V3
+  LED            built-in on both boards (no wiring)
+
+BUZZER (PS1240)
+  pin -> 100R resistor -> buzzer leg 1
+  buzzer leg 2 -> GND
+
+VIBRATION MOTOR (via PN2222)
+  3V3 -------- motor red (+)
+  motor black (-) -- PN2222 collector
+  PN2222 emitter --- GND
+  signal pin -- 1k resistor -- PN2222 base
+  1N4148 across the motor: stripe (cathode) to 3V3 side, other end to motor (-)
+  PN2222 (flat face towards you, legs down): E  B  C  (left to right) - check the
+  datasheet printed on the Pi Hut page, some makers differ.
+  Optional: 10k from base to GND if the motor twitches at power-up.
+
+TEST
+  Web UI -> Settings -> "Message alerts" -> Test alert (fires everything fitted)
+  or type  ALERT:TEST  in the serial monitor.
+
+BEHAVIOUR
+  Private / room message: 3 rising beeps + 3 buzzes + 3 flashes
+  Public message: off by default (switch on in Settings)
+  Until you read it: LED blips every 15 s; cleared by opening the chat or the button.
