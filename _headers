@@ -1,0 +1,10 @@
+# Cloudflare Pages security headers (applies to static files served from this repo)
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), payment=(), geolocation=(self), serial=(self), usb=(self), bluetooth=(self)
+
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
