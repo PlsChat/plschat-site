@@ -61,10 +61,10 @@
 <body class="bg-[#0a0c1f] text-zinc-200">
   <!-- Navbar -->
   <nav class="border-b border-white/10 bg-[#0a0c1f]/95 backdrop-blur-lg sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="flex items-center justify-between h-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="flex items-center justify-between h-20 gap-x-3 sm:gap-x-6">
         <!-- Logo + Brand -->
-        <div class="flex items-center gap-x-3">
+        <div class="flex items-center gap-x-3 flex-shrink-0">
           <!-- PLS Logo SVG (hexagon + heartbeat line, subtle pink/purple gradient) -->
           <svg width="38" height="38" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
             <defs>
@@ -80,12 +80,12 @@
             <polyline points="25,50 35,50 40,35 48,65 55,42 62,58 68,50 75,50" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <div>
-            <span class="font-display text-3xl font-semibold tracking-tighter">PLSChat</span>
+            <span class="font-display text-2xl sm:text-3xl font-semibold tracking-tighter whitespace-nowrap">PLSChat</span>
           </div>
         </div>
 
         <!-- Desktop Nav -->
-        <div class="hidden md:flex items-center gap-x-9 text-sm font-medium">
+        <div class="hidden xl:flex items-center gap-x-5 text-[13px] font-medium whitespace-nowrap">
           <a href="#what" class="nav-link text-zinc-400 hover:text-white">What is it?</a>
           <a href="#capabilities" class="nav-link text-zinc-400 hover:text-white">Capabilities</a>
           <a href="#limitations" class="nav-link text-zinc-400 hover:text-white">Realistic Limits</a>
@@ -96,19 +96,19 @@
         </div>
 
         <!-- CTAs -->
-        <div class="flex items-center gap-x-3">
+        <div class="flex items-center gap-x-2 sm:gap-x-3 flex-shrink-0 whitespace-nowrap">
           <a href="flasher.html" 
-             class="hidden sm:inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-2xl border border-white/20 hover:bg-white/5 transition-colors">
+             class="hidden sm:inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-2xl border border-white/20 hover:bg-white/5 transition-colors">
             <i class="fa-solid fa-microchip mr-2"></i>
             <span>Web Flasher</span>
           </a>
           <a href="device-manager.html" 
-             class="inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold bg-white text-[#0a0c1f] rounded-2xl hover:bg-zinc-100 transition-all active:scale-[0.985]">
+             class="inline-flex items-center justify-center px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-white text-[#0a0c1f] rounded-2xl hover:bg-zinc-100 transition-all active:scale-[0.985]">
             <i class="fa-solid fa-plug mr-2"></i>
             <span class="font-bold">Device Manager</span>
           </a>
           
-          <button id="mobile-menu-btn" class="md:hidden w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-white">
+          <button id="mobile-menu-btn" class="xl:hidden w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-white">
             <i class="fa-solid fa-bars text-xl"></i>
           </button>
         </div>
@@ -117,7 +117,7 @@
   </nav>
 
   <!-- Mobile Menu -->
-  <div id="mobile-menu" class="hidden md:hidden border-b border-white/10 bg-[#0a0c1f]">
+  <div id="mobile-menu" class="hidden xl:hidden border-b border-white/10 bg-[#0a0c1f]">
     <div class="px-6 py-4 flex flex-col gap-y-1 text-sm">
       <a href="#what" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">What is it?</a>
       <a href="#capabilities" class="py-2.5 px-4 hover:bg-white/5 rounded-2xl">Capabilities</a>
