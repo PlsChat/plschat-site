@@ -186,7 +186,7 @@
                 Flash the v007 firmware to a company device. Hold the <strong>BOOT button</strong> on the Heltec while clicking Connect in the installer.
                 After flashing, provision it with <code style="color:#67e8f9;">COMPANY:ON</code> over serial to enable the tamper module.
             </p>
-            <esp-web-install-button manifest="/admin/fw/manifest-v007.json?v=4"></esp-web-install-button>
+            <esp-web-install-button manifest="/admin/fw/manifest-v007.json?v=7"></esp-web-install-button>
             <p style="color:#64748b;font-size:12px;margin-top:14px;">
                 <i>Note:</i> the company firmware is served from a private store (<code>/admin/fw/</code>, Cloudflare Access only) — it is not in the public repo. Once a device has secure boot + flash encryption enabled (Release mode), it can no longer be reflashed here — that's expected. Clicking Connect automatically releases the Licence Manager's serial connection first, so you don't need to refresh between sections.
             </p>
@@ -213,6 +213,36 @@
             <div id="company-status" style="font-size:14px;color:#64748b;margin-top:12px;font-family:monospace;min-height:18px;word-break:break-all;"></div>
             <p style="color:#64748b;font-size:12px;margin-top:12px;">
                 Uses the same USB serial port as the Licence Manager. If nothing is connected yet, your browser will prompt you to pick the device. Watch for <code style="color:#22c55e;">COMPANY_OK</code> in the status line above.
+            </p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             NETWORK RADIO POWER  (server-signed broadcast command)
+        ═══════════════════════════════════════════════════════════ -->
+        <div class="card" id="netpower-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                <h3>&#128225; Network Radio Power</h3>
+                <span style="font-size:13px;color:#64748b;">Server-signed &bull; v007.7+ &bull; Ed25519</span>
+            </div>
+            <p style="color:#8b949e;font-size:14px;margin-bottom:16px;">
+                Sets the LoRa transmit power on company nodes across the mesh. The Worker signs the command with the company key; the <strong>connected</strong> device broadcasts it over serial and every company repeater relays &amp; applies it. Leave <em>Target</em> blank to address <strong>all</strong> company nodes, or enter one node ID (8 hex) to change just one.
+            </p>
+            <div class="config-section" style="margin-bottom:16px;">
+                <label style="display:block;font-size:13px;color:#94a3b8;margin-bottom:6px;">Target node ID (blank = all company nodes)</label>
+                <input type="text" id="np-target" placeholder="e.g. 69857210 — or leave blank for all"
+                    style="width:100%;padding:10px;border-radius:8px;border:1px solid #374151;background:#0b1020;color:#e5e7eb;font-family:monospace;" maxlength="8">
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                <button class="btn" onclick="netPowerSend(22)" style="background:#7f1d1d;border-color:#b91c1c;">&#9888; Max (22 dBm)</button>
+                <button class="btn" onclick="netPowerSend(14)">Legal (14 dBm)</button>
+                <button class="btn btn-secondary" onclick="netPowerSend(10)">Low (10 dBm)</button>
+            </div>
+            <div class="warning" style="margin-top:14px;">
+                <strong>Max (22 dBm) is above the UK 868 MHz limit (25 mW ERP / 14 dBm)</strong> with the stock antenna. Only use Max in a genuinely enclosed / attenuated deployment where the radiated power at the antenna stays legal. <strong>Legal (14 dBm)</strong> is the safe default.
+            </div>
+            <div id="np-status" style="font-size:14px;color:#64748b;margin-top:12px;font-family:monospace;min-height:18px;word-break:break-all;white-space:pre-wrap;"></div>
+            <p style="color:#64748b;font-size:12px;margin-top:12px;">
+                Requires your <strong>Write Key</strong> (entered in the Licence Manager below). Uses the same USB serial port — connect a company node first. Watch for <code style="color:#22c55e;">ADMIN_ACK</code> lines confirming which repeaters applied the change.
             </p>
         </div>
 
@@ -812,6 +842,97 @@
             } catch(e) {
                 el.style.color = '#ef4444';
                 el.textContent = 'Serial error: ' + e.message + ' — if another section or the flasher is holding the USB port, click \"Release Serial\" in the top bar (or unplug/replug), then retry.';
+            }
+        }
+
+        // Signed network TX-power command. The Worker signs a 14-byte body with the
+        // company Ed25519 key; we broadcast it as ADMIN:<hex> over serial and the
+        // firmware relays + applies it, replying ADMIN_SENT / ADMIN_ACK (or ADMIN_ERR).
+        async function netPowerSend(dbm) {
+            const el = document.getElementById('np-status');
+            const writeKey = document.getElementById('lic-write-key').value.trim();
+            if (!writeKey) {
+                el.style.color = '#ef4444';
+                el.textContent = 'Enter your Write Key in the Licence Manager below first.';
+                return;
+            }
+            let target = document.getElementById('np-target').value.trim();
+            if (target && !/^[0-9A-Fa-f]{8}$/.test(target)) {
+                el.style.color = '#ef4444';
+                el.textContent = 'Target must be 8 hex characters (a node ID), or blank for all nodes.';
+                return;
+            }
+            if (dbm === 22 && !confirm('Max (22 dBm) is above the UK 868 MHz legal limit with the stock antenna. Only continue if this deployment keeps the radiated power legal. Send Max power?')) {
+                return;
+            }
+            try {
+                el.style.color = '#64748b';
+                el.textContent = 'Requesting signed command from server...';
+                const res = await fetch(WORKER_URL + '/admin/command/sign', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Write-Key': writeKey },
+                    body: JSON.stringify({ cmd: 'txpower', value: dbm, target: target || null })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.ok || !data.hex) {
+                    el.style.color = '#ef4444';
+                    el.textContent = 'Signing failed: ' + (data.error || ('HTTP ' + res.status));
+                    return;
+                }
+                if (!licSerialPort || !licSerialPort.writable) {
+                    licSerialPort = await navigator.serial.requestPort();
+                    await licSerialPort.open({ baudRate: 115200 });
+                }
+                const writer = licSerialPort.writable.getWriter();
+                await writer.write(new TextEncoder().encode('ADMIN:' + data.hex + '\n'));
+                writer.releaseLock();
+                const scope = target ? ('node ' + target.toUpperCase()) : 'ALL company nodes';
+                el.style.color = '#64748b';
+                el.textContent = 'Sent set-power ' + dbm + ' dBm (seq ' + data.seq + ') to ' + scope + ' — waiting for ACKs...';
+                setTimeout(async () => {
+                    let reader = null;
+                    try {
+                        reader = licSerialPort.readable.getReader();
+                        activeSerialReader = reader;
+                        let buf = '', acks = [];
+                        const timeout = setTimeout(() => reader.cancel(), 30000);
+                        while (true) {
+                            const { value, done } = await reader.read();
+                            if (done) break;
+                            buf += new TextDecoder().decode(value);
+                            let nl;
+                            while ((nl = buf.indexOf('\n')) >= 0) {
+                                const ln = buf.slice(0, nl).trim();
+                                buf = buf.slice(nl + 1);
+                                if (ln.startsWith('ADMIN_ERR')) {
+                                    clearTimeout(timeout); reader.cancel();
+                                    el.style.color = '#ef4444';
+                                    el.textContent = 'Device rejected the command: ' + ln;
+                                    return;
+                                }
+                                if (ln.startsWith('ADMIN_ACK') || ln.startsWith('ADMIN_SENT')) {
+                                    acks.push(ln);
+                                    el.style.color = '#22c55e';
+                                    el.textContent = 'Applied — ' + acks.length + ' node(s) reported:\n' + acks.join('\n');
+                                }
+                            }
+                        }
+                        clearTimeout(timeout);
+                        if (!acks.length) {
+                            el.style.color = '#eab308';
+                            el.textContent = 'Command broadcast, but no ACK seen in 30s. The connected node still applied it; distant repeaters may ACK later or be out of range.';
+                        }
+                    } catch (e) {
+                        el.style.color = '#ef4444';
+                        el.textContent = 'Could not read device response: ' + e.message;
+                    } finally {
+                        if (reader) { try { reader.releaseLock(); } catch(_) {} }
+                        if (activeSerialReader === reader) activeSerialReader = null;
+                    }
+                }, 600);
+            } catch (e) {
+                el.style.color = '#ef4444';
+                el.textContent = 'Error: ' + e.message + ' — if another section or the flasher holds the USB port, click "Release Serial" up top, then retry.';
             }
         }
 
