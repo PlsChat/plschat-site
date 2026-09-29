@@ -963,7 +963,7 @@ let meshW = 0, meshH = 0, meshDpr = 1, meshHoverId = null, meshPulses = [], mesh
 const MESH_COLORS = {
   local:     { core: '#34d399', glow: '52, 211, 153' },   // USB-connected device
   online:    { core: '#22d3ee', glow: '34, 211, 238' },   // heard this session
-  published: { core: '#a78bfa', glow: '167, 139, 250' },  // on the public map only
+  published: { core: '#fbbf24', glow: '251, 191, 36' },   // on the public map only (amber — distinct from grey offline)
   offline:   { core: '#64748b', glow: '100, 116, 139' }
 };
 function meshKind(n) { return n.isLocal ? 'local' : n.online ? 'online' : n.publishedOnly ? 'published' : 'offline'; }
@@ -1070,14 +1070,36 @@ function drawMesh() {
   const now = performance.now(), t = now / 1000;
   ctx.setTransform(meshDpr, 0, 0, meshDpr, 0, 0);
 
-  // Background: deep gradient, twinkling stars, faint grid
+  // Background: deep gradient + twinkling stars + a radar centred on your device
   const bg = ctx.createRadialGradient(meshW / 2, meshH / 2, 20, meshW / 2, meshH / 2, Math.max(meshW, meshH) * 0.75);
-  bg.addColorStop(0, '#111a33'); bg.addColorStop(1, '#070a17');
+  bg.addColorStop(0, '#0f1b2e'); bg.addColorStop(1, '#060913');
   ctx.fillStyle = bg; ctx.fillRect(0, 0, meshW, meshH);
-  meshStars.forEach(s => { ctx.fillStyle = `rgba(148,163,184,${0.15 + 0.25 * (0.5 + 0.5 * Math.sin(t * 0.8 + s.p))})`; ctx.fillRect(s.x, s.y, s.r, s.r); });
-  ctx.strokeStyle = 'rgba(103,232,249,0.035)'; ctx.lineWidth = 1;
-  for (let x = 0; x < meshW; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, meshH); ctx.stroke(); }
-  for (let y = 0; y < meshH; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(meshW, y); ctx.stroke(); }
+  meshStars.forEach(s => { ctx.fillStyle = `rgba(148,163,184,${0.12 + 0.22 * (0.5 + 0.5 * Math.sin(t * 0.8 + s.p))})`; ctx.fillRect(s.x, s.y, s.r, s.r); });
+  const rc = meshNodes.find(n => n.kind === 'local') || { x: meshW / 2, y: meshH / 2 };
+  const rMax = Math.hypot(Math.max(rc.x, meshW - rc.x), Math.max(rc.y, meshH - rc.y));
+  const sweepA = (t * 0.9) % (Math.PI * 2);           // one revolution every ~7 s
+  // range rings + cross-hairs
+  ctx.lineWidth = 1;
+  for (let r = 70; r < rMax; r += 70) {
+    ctx.strokeStyle = `rgba(52,211,153,${r % 140 === 0 ? 0.10 : 0.06})`;
+    ctx.beginPath(); ctx.arc(rc.x, rc.y, r, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(52,211,153,0.05)';
+  ctx.beginPath(); ctx.moveTo(rc.x - rMax, rc.y); ctx.lineTo(rc.x + rMax, rc.y); ctx.moveTo(rc.x, rc.y - rMax); ctx.lineTo(rc.x, rc.y + rMax); ctx.stroke();
+  // rotating sweep with a fading tail
+  if (ctx.createConicGradient) {
+    const cg = ctx.createConicGradient(sweepA - Math.PI / 2.2, rc.x, rc.y);
+    cg.addColorStop(0, 'rgba(52,211,153,0)'); cg.addColorStop(0.75, 'rgba(52,211,153,0.03)'); cg.addColorStop(0.998, 'rgba(52,211,153,0.24)'); cg.addColorStop(1, 'rgba(52,211,153,0)');
+    ctx.fillStyle = cg; ctx.beginPath(); ctx.moveTo(rc.x, rc.y); ctx.arc(rc.x, rc.y, rMax, sweepA - Math.PI / 2.2, sweepA); ctx.closePath(); ctx.fill();
+  }
+  ctx.strokeStyle = 'rgba(110,231,183,0.35)'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(rc.x, rc.y); ctx.lineTo(rc.x + Math.cos(sweepA) * rMax, rc.y + Math.sin(sweepA) * rMax); ctx.stroke();
+  // nodes flash briefly as the sweep passes them
+  meshNodes.forEach(n => {
+    if (n.kind === 'local') return;
+    let d = sweepA - Math.atan2(n.y - rc.y, n.x - rc.x); d = ((d % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    n._sweep = d < 0.9 ? 1 - d / 0.9 : 0;
+  });
 
   if (meshNodes.length === 0) {
     ctx.fillStyle = 'rgba(148,163,184,0.7)'; ctx.font = '13px Inter, sans-serif'; ctx.textAlign = 'center';
@@ -1134,7 +1156,8 @@ function drawMesh() {
     const x = node.x, y = node.y + bob, s = node.size, on = hl === node.id;
     // halo
     const halo = ctx.createRadialGradient(x, y, s * 0.4, x, y, s * 3.2);
-    halo.addColorStop(0, `rgba(${col.glow},${live ? 0.35 : 0.12})`); halo.addColorStop(1, `rgba(${col.glow},0)`);
+    const swp = node._sweep || 0;
+    halo.addColorStop(0, `rgba(${col.glow},${(live ? 0.35 : 0.14) + swp * 0.45})`); halo.addColorStop(1, `rgba(${col.glow},0)`);
     ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(x, y, s * 3.2, 0, Math.PI * 2); ctx.fill();
     // beacon ripple for live nodes
     if (live) {
@@ -1146,7 +1169,8 @@ function drawMesh() {
     const core = ctx.createRadialGradient(x - s * 0.35, y - s * 0.35, s * 0.1, x, y, s);
     core.addColorStop(0, '#ffffff'); core.addColorStop(0.25, col.core); core.addColorStop(1, `rgba(${col.glow},0.35)`);
     ctx.fillStyle = core; ctx.beginPath(); ctx.arc(x, y, s * (on ? 1.15 : 1), 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = `rgba(${col.glow},0.9)`; ctx.lineWidth = on ? 2.5 : 1.5; ctx.stroke();
+    if (node.kind === 'offline') { ctx.setLineDash([2, 3]); ctx.strokeStyle = `rgba(${col.glow},0.7)`; } else ctx.strokeStyle = `rgba(${col.glow},0.9)`;
+    ctx.lineWidth = on ? 2.5 : 1.5; ctx.stroke(); ctx.setLineDash([]);
     // signal arc (RSSI)
     if (node.lastRssi !== null && node.lastRssi !== undefined) {
       const norm = Math.max(0.05, Math.min(1, (node.lastRssi + 125) / 85));
