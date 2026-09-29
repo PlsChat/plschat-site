@@ -416,8 +416,11 @@
         let hasFitToData = false;
 
         function initMap() {
-            map = L.map('map', { zoomControl: true, attributionControl: false }).setView([25, 10], 2.2);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { opacity: 0.85 }).addTo(map);
+            map = L.map('map', { zoomControl: true, attributionControl: true }).setView([25, 10], 2.2);
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                opacity: 0.85, maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+            }).addTo(map);
             coverageLayer = L.layerGroup().addTo(map);
             neededLayer = L.layerGroup().addTo(map);
             // Real coverage circles only appear once live data has loaded — see fetchLiveData().
