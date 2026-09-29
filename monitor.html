@@ -489,6 +489,7 @@ async function connectSerial() {
     devicePassword = null;
   }
 
+  releaseLocalDevice();
   connectedDeviceId = null;
   updateConnectedDeviceBadge();
   try {
@@ -527,6 +528,7 @@ async function disconnectSerial() {
   if (port) { try { await port.close(); } catch(e){} port = null; }
   isConnected = false; updateConnectionUI(false);
   if (ppsInterval) { clearInterval(ppsInterval); ppsInterval = null; }
+  releaseLocalDevice();
   connectedDeviceId = null;
   devicePassword = null; // clear password on disconnect
   updateConnectedDeviceBadge();
@@ -756,12 +758,27 @@ function parsePacketLine(line, timestamp) {
   return { timestamp, from, to, type, rssi, snr, raw: line };
 }
 
-function recordLink(parsed) {
-  if (!parsed.from || parsed.from === '????') return;
-  if (!parsed.to || parsed.to === 'BCAST') return;
-  const key = [parsed.from, parsed.to].sort().join('|');
+// A link is drawn only for real radio traffic: sender -> the USB device that heard it,
+// and sender -> addressed node for private/ack packets.
+function addLink(a, b) {
+  if (!a || !b || a === b || a === '????' || b === '????' || b === 'BCAST') return;
+  const key = [a, b].sort().join('|');
   const existing = linkCounts.get(key);
   linkCounts.set(key, { count: (existing ? existing.count : 0) + 1, lastSeen: Date.now() });
+}
+function recordLink(parsed) {
+  if (!parsed.from || parsed.from === '????') return;
+  if (connectedDeviceId) addLink(parsed.from, connectedDeviceId);
+  addLink(parsed.from, parsed.to);
+}
+
+// When the USB device changes or disconnects, the previous one is no longer "connected via USB".
+function releaseLocalDevice() {
+  if (!connectedDeviceId) return;
+  const n = nodes.get(connectedDeviceId);
+  if (n) { n.isLocal = false; n.online = false; }
+  renderNodesList();
+  if (typeof updateMeshVisualization === 'function') updateMeshVisualization();
 }
 
 function refreshVisualization() {
@@ -984,15 +1001,16 @@ function drawMesh() {
   if (!ctx || !canvas || currentMeshView !== 'network') return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.strokeStyle = 'rgba(103, 232, 249, 0.12)'; ctx.lineWidth = 1;
-  for (let i = 0; i < meshNodes.length; i++) {
-    for (let j = i + 1; j < meshNodes.length; j++) {
-      const a = meshNodes[i], b = meshNodes[j];
-      const dist = Math.hypot(a.x - b.x, a.y - b.y);
-      if (dist < 200) {
-        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-      }
-    }
-  }
+  // Only draw links that real packets have shown (not just nodes that happen to sit close together).
+  const byId = new Map(meshNodes.map(n => [n.id, n]));
+  linkCounts.forEach((info, key) => {
+    const [ia, ib] = key.split('|');
+    const a = byId.get(ia), b = byId.get(ib);
+    if (!a || !b) return;
+    const age = (Date.now() - info.lastSeen) / 1000;
+    ctx.strokeStyle = `rgba(103, 232, 249, ${Math.max(0.15, 0.7 - Math.min(age / 300, 0.55))})`;
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  });
   meshNodes.forEach(node => {
     const age = node.lastSeen ? (Date.now() - node.lastSeen.getTime()) / 1000 : Infinity;
     const alpha = node.online ? Math.max(0.3, 1 - Math.min(age / 180, 0.75)) : 0.35;
