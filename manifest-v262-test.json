@@ -1,0 +1,17 @@
+{
+  "name": "PLSChat Heltec V4 - v2.62 BENCH TEST",
+  "version": "2.62-test",
+  "new_install_prompt_erase": true,
+  "reset-on-install": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        { "path": "flasher/bootloader.bin?v=262t", "offset": 0 },
+        { "path": "flasher/partitions.bin?v=262t", "offset": 32768 },
+        { "path": "flasher/boot_app0.bin?v=262t", "offset": 57344 },
+        { "path": "PLSChat_v2_62.ino.bin?v=262t", "offset": 65536 }
+      ]
+    }
+  ]
+}

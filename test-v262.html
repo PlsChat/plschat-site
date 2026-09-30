@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>PLSChat v2.62 Bench Test</title>
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  <style>
+    body{font-family:system-ui,sans-serif;background:#0a0c1f;color:#c9d1d9;margin:0;padding:24px 16px}
+    .wrap{max-width:640px;margin:0 auto}
+    h1{color:#67e8f9;font-size:22px;margin:0 0 6px}
+    .warn{background:#3f2a1f;border:1px solid #eab308;color:#fcd34d;border-radius:10px;padding:12px 14px;font-size:14px;margin:14px 0}
+    .card{background:#0f1326;border:1px solid #374151;border-radius:12px;padding:16px;margin:14px 0}
+    .card h2{font-size:16px;margin:0 0 4px;color:#e5e7eb}
+    .card p{font-size:13px;color:#8b949e;margin:0 0 8px}
+    esp-web-install-button{display:block;margin-top:8px}
+    ol{font-size:14px;line-height:1.6;padding-left:20px}
+    code{background:#1f2937;padding:1px 5px;border-radius:4px}
+  </style>
+</head>
+<body><div class="wrap">
+  <h1>PLSChat v2.62 &mdash; bench test only</h1>
+  <div class="warn"><strong>Test firmware (encrypted storage).</strong> Not the customer release &mdash; the normal flasher still installs v2.61.
+  To test the upgrade of existing contacts and messages, answer <strong>No</strong> when asked to erase the device.</div>
+
+  <div class="card">
+    <h2>Heltec WiFi LoRa 32 V4</h2>
+    <p>v2.62 test build &bull; same bootloader and partitions as v2.61</p>
+    <esp-web-install-button manifest="manifest-v262-test.json"></esp-web-install-button>
+  </div>
+
+  <div class="card">
+    <h2>XIAO ESP32-S3 key fob</h2>
+    <p>v2.62 test build &bull; same bootloader and partitions as v2.61</p>
+    <esp-web-install-button manifest="manifest-xiao-v262-test.json"></esp-web-install-button>
+  </div>
+
+  <div class="card">
+    <h2>Test checklist</h2>
+    <ol>
+      <li>Flash without erasing, unlock in the web page. Serial: <code>[Vault] Storage encrypted with your PIN</code>, <code>STATUS</code> shows <code>VAULT:OPEN</code>. Contacts, rooms and messages still there.</li>
+      <li>Power off and on: <code>VAULT:SEALED</code>. Send it a private message &mdash; it should alert. Unlock &mdash; the message appears.</li>
+      <li>Change PIN, reboot, only the new PIN works.</li>
+      <li>Settings &rarr; Security &rarr; Lock storage now, then unlock.</li>
+      <li>Serial <code>CONTACTS</code> while locked replies <code>LOCKED</code>.</li>
+      <li>Only then, on one device: Bind storage to this chip (permanent), reboot, unlock.</li>
+    </ol>
+  </div>
+</div></body>
+</html>
