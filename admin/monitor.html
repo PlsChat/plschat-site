@@ -193,6 +193,43 @@
         </div>
 
         <!-- ═══════════════════════════════════════════════════════════
+             BENCH TEST FIRMWARE (consumer builds not yet released)
+        ═══════════════════════════════════════════════════════════ -->
+        <div class="card" id="bench-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                <h3>&#129514; Bench Test Firmware</h3>
+                <span id="bench-ver" style="font-size:13px;color:#64748b;">Consumer builds under test &bull; not on the public flasher yet</span>
+            </div>
+            <p style="color:#8b949e;font-size:14px;margin-bottom:14px;">
+                Flash the next customer firmware to a <strong>test</strong> device before it goes on the public flasher.
+                To test upgrading existing contacts and messages, answer <strong>No</strong> when asked to erase the device.
+                Delete any saved passwords for 192.168.4.1 on your phone first &mdash; an autofilled old PIN counts as a wrong attempt.
+            </p>
+            <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:10px;">
+                <div style="flex:1;min-width:240px;">
+                    <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
+                    <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=263"></esp-web-install-button>
+                </div>
+                <div style="flex:1;min-width:240px;">
+                    <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">XIAO ESP32-S3 key fob</div>
+                    <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=263"></esp-web-install-button>
+                </div>
+            </div>
+            <details style="margin-top:8px;">
+                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist</summary>
+                <ol style="color:#8b949e;font-size:14px;line-height:1.7;margin:10px 0 0 20px;">
+                    <li>Flash without erasing, unlock in the web page. Settings &rarr; Security &rarr; Stored messages &amp; keys shows <strong>Encrypted with your PIN</strong>. Serial <code>STATUS</code>: <code>VAULT:OPEN</code>.</li>
+                    <li>Contacts, rooms and messages are all still there.</li>
+                    <li>Power off and on: <code>VAULT:SEALED</code>. Send it a private message &mdash; it alerts. Unlock &mdash; the message appears.</li>
+                    <li>Lock button &rarr; unlock page (no &ldquo;Too many attempts&rdquo;) &rarr; unlock &rarr; everything back.</li>
+                    <li>Settings &rarr; Privacy &amp; Security &rarr; &ldquo;Lock when I leave the page&rdquo; ON, lock the phone, come back &rarr; locked.</li>
+                    <li>Change PIN, reboot, only the new PIN works.</li>
+                    <li>If the card says &ldquo;Not encrypted yet&rdquo;, screenshot the &ldquo;Last try failed&rdquo; line.</li>
+                </ol>
+            </details>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
              COMPANY MODE / TAMPER ACTIVATION
         ═══════════════════════════════════════════════════════════ -->
         <div class="card" id="company-card">
@@ -984,14 +1021,14 @@
             } catch(e) {}
             // The web flasher needs exclusive USB access — release our serial
             // handle automatically the moment its Connect button is clicked.
-            const flashBtn = document.querySelector('esp-web-install-button');
-            if (flashBtn) flashBtn.addEventListener('click', () => releaseSerialPort(false), true);
+            document.querySelectorAll('esp-web-install-button').forEach(b => b.addEventListener('click', () => releaseSerialPort(false), true));
 
             document.getElementById('admin-password').addEventListener('keydown', function(e) { if(e.key==='Enter') checkAdminPassword(); });
             document.getElementById('cp-confirm').addEventListener('keydown', function(e) { if(e.key==='Enter') changeAdminPassword(); });
         }
 
         window.onload = init;
+        fetch('/admin/bench/manifest-heltec.json?x='+Date.now()).then(r=>r.json()).then(j=>{const e=document.getElementById('bench-ver');if(e&&j.version)e.innerHTML='Build under test: <strong style="color:#a855f7">v'+j.version.replace('-test','')+'</strong> &bull; not on the public flasher yet';}).catch(()=>{});
     </script>
 </body>
 </html>
