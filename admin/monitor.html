@@ -212,24 +212,29 @@
             <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:10px;">
                 <div style="flex:1;min-width:240px;">
                     <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
-                    <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=266a"></esp-web-install-button>
+                    <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=268a"></esp-web-install-button>
                 </div>
                 <div style="flex:1;min-width:240px;">
                     <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">XIAO ESP32-S3 key fob</div>
-                    <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=266a"></esp-web-install-button>
+                    <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=268a"></esp-web-install-button>
+                </div>
+                <div style="flex:1;min-width:240px;">
+                    <div style="font-size:13px;color:#fbbf24;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Company v007.10 (test)</div>
+                    <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=10a"></esp-web-install-button>
                 </div>
             </div>
             <details style="margin-top:8px;">
-                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.66)</summary>
+                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.68 + v007.10)</summary>
                 <ol style="color:#8b949e;font-size:14px;line-height:1.7;margin:10px 0 0 20px;">
-                    <li>Flash every bench device without erasing (v2.66 sends GCM &mdash; firmware older than v2.58 can't read it). Unlock: serial <code>STATUS</code> shows <code>VAULT:OPEN</code>; contacts, rooms and messages still there.</li>
-                    <li>Unread badges: with 40+ messages stored, send room, private and public messages while on another tab or Settings &rarr; red counts on each tab + total on Chat. Opening the chat clears it.</li>
-                    <li>GrapheneOS app: same test, then close and reopen the app &rarr; badges still there until opened.</li>
-                    <li>Power-cycle, send a message before unlocking, unlock &rarr; it shows as unread.</li>
-                    <li>Send <code>C:\test</code> (a backslash) &rarr; chat keeps updating.</li>
-                    <li>Revoke the key on B &rarr; A's page refreshes by itself; inviting B to a room says &ldquo;Not sent to B &ndash; no longer a contact&rdquo;. Pair again (no need to remove first) &rarr; messages and invites work.</li>
-                    <li>Join / leave / room-key notes appear but don't beep or buzz; a room invite still alerts.</li>
-                    <li>Serial <code>WIRE:STATUS</code> &rarr; <code>WIRE_TX:GCM</code>.</li>
+                    <li>Flash <strong>every</strong> consumer bench device to v2.68 without erasing (revocations changed number in v2.68, so v2.65&ndash;v2.67 and v2.68 can't revoke to each other). Unlock: contacts, rooms and messages still there.</li>
+                    <li>XIAO fob: serial shows <code>[Vault] old message item removed (now saved in parts)</code> once, and <strong>no</strong> <code>write 'mg' FAILED</code>. Send a few messages, power-cycle, unlock &rarr; history is still there.</li>
+                    <li>Fill the history (40+ messages) on the XIAO, power-cycle again &rarr; still there; no <code>message history not fully saved</code> lines.</li>
+                    <li>Revoke the key on B &rarr; A removes B and B shows the confirmation (now packet types 0x13/0x14).</li>
+                    <li>Unread badges, <code>C:\test</code> backslash test and GrapheneOS app test from v2.66 still pass.</li>
+                    <li>Company unit on <strong>v007.10</strong> (third button, answer <strong>No</strong> to erase): Node ID unchanged, contacts kept, Bluetooth-only mode still shows the right Node ID.</li>
+                    <li>v007.10 chat: fill past 40 messages, then send from another device while on Settings &rarr; red badges appear. A message with a backslash doesn't freeze the chat.</li>
+                    <li>Pair a v2.68 device with the v007.10 unit, then revoke on the v2.68 device &rarr; the company unit removes it and the v2.68 device shows it was confirmed.</li>
+                    <li>With a v2.68 device between the admin page and a company unit, send a TX-power admin command &rarr; the company unit applies it (consumer units now pass it on intact).</li>
                 </ol>
             </details>
         </div>
