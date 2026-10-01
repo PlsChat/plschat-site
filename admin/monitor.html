@@ -200,6 +200,10 @@
                 <h3>&#129514; Bench Test Firmware</h3>
                 <span id="bench-ver" style="font-size:13px;color:#64748b;">Consumer builds under test &bull; not on the public flasher yet</span>
             </div>
+            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                <button class="btn btn-secondary" onclick="location.reload()" style="padding:8px 14px;font-size:14px;" title="Reload the page">&#8635; Refresh</button>
+                <button class="btn btn-secondary" onclick="releaseSerialPort(true, this)" style="padding:8px 14px;font-size:14px;" title="Free the USB serial port so another section (or the flasher) can use it">&#128268; Release Serial</button>
+            </div>
             <p style="color:#8b949e;font-size:14px;margin-bottom:14px;">
                 Flash the next customer firmware to a <strong>test</strong> device before it goes on the public flasher.
                 To test upgrading existing contacts and messages, answer <strong>No</strong> when asked to erase the device.
@@ -208,23 +212,24 @@
             <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:10px;">
                 <div style="flex:1;min-width:240px;">
                     <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
-                    <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=263"></esp-web-install-button>
+                    <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=266a"></esp-web-install-button>
                 </div>
                 <div style="flex:1;min-width:240px;">
                     <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">XIAO ESP32-S3 key fob</div>
-                    <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=263"></esp-web-install-button>
+                    <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=266a"></esp-web-install-button>
                 </div>
             </div>
             <details style="margin-top:8px;">
-                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist</summary>
+                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.66)</summary>
                 <ol style="color:#8b949e;font-size:14px;line-height:1.7;margin:10px 0 0 20px;">
-                    <li>Flash without erasing, unlock in the web page. Settings &rarr; Security &rarr; Stored messages &amp; keys shows <strong>Encrypted with your PIN</strong>. Serial <code>STATUS</code>: <code>VAULT:OPEN</code>.</li>
-                    <li>Contacts, rooms and messages are all still there.</li>
-                    <li>Power off and on: <code>VAULT:SEALED</code>. Send it a private message &mdash; it alerts. Unlock &mdash; the message appears.</li>
-                    <li>Lock button &rarr; unlock page (no &ldquo;Too many attempts&rdquo;) &rarr; unlock &rarr; everything back.</li>
-                    <li>Settings &rarr; Privacy &amp; Security &rarr; &ldquo;Lock when I leave the page&rdquo; ON, lock the phone, come back &rarr; locked.</li>
-                    <li>Change PIN, reboot, only the new PIN works.</li>
-                    <li>If the card says &ldquo;Not encrypted yet&rdquo;, screenshot the &ldquo;Last try failed&rdquo; line.</li>
+                    <li>Flash every bench device without erasing (v2.66 sends GCM &mdash; firmware older than v2.58 can't read it). Unlock: serial <code>STATUS</code> shows <code>VAULT:OPEN</code>; contacts, rooms and messages still there.</li>
+                    <li>Unread badges: with 40+ messages stored, send room, private and public messages while on another tab or Settings &rarr; red counts on each tab + total on Chat. Opening the chat clears it.</li>
+                    <li>GrapheneOS app: same test, then close and reopen the app &rarr; badges still there until opened.</li>
+                    <li>Power-cycle, send a message before unlocking, unlock &rarr; it shows as unread.</li>
+                    <li>Send <code>C:\test</code> (a backslash) &rarr; chat keeps updating.</li>
+                    <li>Revoke the key on B &rarr; A's page refreshes by itself; inviting B to a room says &ldquo;Not sent to B &ndash; no longer a contact&rdquo;. Pair again (no need to remove first) &rarr; messages and invites work.</li>
+                    <li>Join / leave / room-key notes appear but don't beep or buzz; a room invite still alerts.</li>
+                    <li>Serial <code>WIRE:STATUS</code> &rarr; <code>WIRE_TX:GCM</code>.</li>
                 </ol>
             </details>
         </div>
