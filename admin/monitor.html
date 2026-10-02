@@ -896,13 +896,31 @@
             p.textContent = on ? 'USB: connected' : 'USB: not connected';
             p.className = 'pill2' + (on ? ' ok' : '');
         }
+        // Opens a port whatever state it was left in. The firmware installer (or an earlier
+        // connection) can leave the same port open: use it as it is, or close and reopen it.
+        async function serialOpen(p) {
+            if (p.readable && p.writable) {
+                if (!p.readable.locked && !p.writable.locked) return;          // already open and free
+                try { await p.close(); } catch (e) {}
+            }
+            try { await p.open({ baudRate: 115200 }); }
+            catch (e) {
+                if (e && e.name === 'InvalidStateError') {
+                    if (p.readable && !p.readable.locked) return;
+                    try { await p.close(); } catch (_) {}
+                    try { await p.open({ baudRate: 115200 }); return; } catch (_) {}
+                    throw new Error('The USB port is still held by the installer. Reload this page (Refresh button) and connect again.');
+                }
+                throw e;
+            }
+        }
         async function serialEnsure() {
             if (!licSerialPort || !licSerialPort.writable) {
                 let p = null;
                 if (lastSerialPort) {                       // the unit used before: no need to pick it again
-                    try { await lastSerialPort.open({ baudRate: 115200 }); p = lastSerialPort; } catch (e) { p = null; }
+                    try { await serialOpen(lastSerialPort); p = lastSerialPort; } catch (e) { p = null; }
                 }
-                if (!p) { p = await navigator.serial.requestPort(); await p.open({ baudRate: 115200 }); }
+                if (!p) { p = await navigator.serial.requestPort(); await serialOpen(p); }
                 licSerialPort = lastSerialPort = p;
                 devClearLocal();
             }
@@ -968,6 +986,11 @@
                 if (activeSerialReader) { try { await activeSerialReader.cancel(); } catch (e) {} }
                 await new Promise(r => setTimeout(r, 120));        // let the reader loop let go
                 if (port) { try { await port.close(); } catch (e) {} }
+                // also a port left open by the installer or an earlier connection
+                const stray = new Set();
+                if (lastSerialPort && lastSerialPort !== port) stray.add(lastSerialPort);
+                try { (await navigator.serial.getPorts()).forEach(x => { if (x !== port) stray.add(x); }); } catch (e) {}
+                for (const x of stray) { if (x.readable && !x.readable.locked) { try { await x.close(); } catch (e) {} } }
             } finally {
                 if (licSerialPort === port) licSerialPort = null;
                 devClearLocal(); devRender();
@@ -1511,7 +1534,8 @@
         if(d._state==='INSTALL'&&d._installState&&d._installState.state==='finished'){
           d._plsDone=true;
           setTimeout(function(){
-            try{d._closeDialog();}catch(e){}
+            var ip=d.port;try{d._closeDialog();}catch(e){}
+            setTimeout(function(){try{if(ip&&ip.readable&&!ip.readable.locked)ip.close().catch(function(){});}catch(e){}},1500);
             toast('<b>&#10003; Installed.</b> The device is restarting. Join its WiFi (PLSChat-xxxx) and open <b style="color:#a855f7">192.168.4.1</b> to unlock it.');
           },1200);
         }
