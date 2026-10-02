@@ -132,6 +132,13 @@
         .help { background:#0f1326; border:1px solid #374151; border-radius:12px; padding:4px 16px; margin-bottom:14px; font-size:14px; color:#c9d1d9; }
         .help summary { cursor:pointer; padding:10px 0; color:#67e8f9; font-weight:600; }
         .help h4 { color:#a855f7; font-size:14px; margin:12px 0 4px; } .help ol, .help ul { margin:0 0 10px 20px; color:#8b949e; line-height:1.65; } .help b { color:#c9d1d9; }
+        .setup { background:#0a0c1f; border:1px solid #a855f7; border-radius:10px; padding:10px 12px; margin-bottom:10px; font-size:13px; color:#c9d1d9; }
+        .setup .r { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:5px 0; border-bottom:1px solid #1f2439; }
+        .setup .r:last-of-type { border-bottom:0; }
+        .setup .r > span:first-child { flex:1; min-width:110px; color:#8b949e; }
+        .setup input[type=text], .setup input[type=number], .setup select { background:#12152b; border:1px solid #374151; color:#e5e7eb; border-radius:6px; padding:5px 7px; font-size:12px; }
+        .setup input[type=text] { width:112px; } .setup input[type=number] { width:64px; }
+        .setup h5 { color:#67e8f9; font-size:12px; text-transform:uppercase; letter-spacing:.5px; margin:2px 0 4px; }
         .devlog { background:#0a0c1f; border:1px solid #1f2439; border-radius:10px; padding:10px 12px; font:12px/1.6 monospace; color:#8b949e; max-height:190px; overflow:auto; white-space:pre-wrap; }
     
   /* PLSChat theme for the esp-web-tools install dialog (it is white/blue by default) */
@@ -207,7 +214,8 @@
         <div style="font-size:12px;color:#64748b;margin:-10px 0 16px 4px;">The write key stays in this tab's memory only &mdash; it is never saved, and is checked by the server on every action.</div>
 
         <div class="tabs" id="tabs">
-            <div data-tip="Live readings and relay switches for your company units." class="tip-r tab on" data-t="devices" onclick="showTab('devices')">&#127899; Devices<span class="n" id="dev-count" style="display:none">0</span></div>
+            <div class="tab on tip-r" data-tip="Live readings from your company units: sensors, inputs, battery, licence, tamper." data-t="devices" onclick="showTab('devices')">&#127899; I/O<span class="n" id="dev-count" style="display:none">0</span></div>
+            <div class="tab tip-r" data-tip="Relay switches for your company units. Each switch is a command signed by the server for that one unit." data-t="relays" onclick="showTab('relays')">&#128268; Relays</div>
             <div data-tip="Make a licence for a MAC address and send it by USB or over the mesh." class="tip-r tab" data-t="licences" onclick="showTab('licences')">&#128273; Licences</div>
             <div data-tip="Install company or test firmware. Opening this tab releases the USB device for the installer."  class="tab" data-t="firmware" onclick="showTab('firmware')">&#127981; Firmware</div>
             <div data-tip="Turn company mode and the tamper watch on or off for the plugged-in unit."  class="tab" data-t="company" onclick="showTab('company')">&#128737; Company &amp; tamper</div>
@@ -218,16 +226,16 @@
         <!-- ═══════════════════════════════════════════════════════════
              DEVICES (remote I/O) — v007.13+
         ═══════════════════════════════════════════════════════════ -->
-        <div class="card" id="devices-card" data-tab="devices">
+        <div class="card" id="devices-card" data-tab="devices relays">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
-                <h3>&#127899; Company devices</h3>
+                <h3 id="dev-title">&#127899; Sensors and inputs</h3>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
                     <button data-tip="Sends one signed command asking every company unit in range to send its readings now. Answers arrive over the next 15 seconds. Needs the write key." class="tip-l btn btn-secondary" style="padding:8px 14px;font-size:14px;" onclick="devAskReport('')">&#8635; Ask all to report</button>
                     <button data-tip="Set the shared passphrase on the unit that is plugged in. Units can only read each other when they hold the same one." class="tip-l btn btn-secondary" style="padding:8px 14px;font-size:14px;" onclick="devToggleKey()">&#128272; Company key</button>
                 </div>
             </div>
             <p style="color:#8b949e;font-size:14px;margin-bottom:14px;">
-                Readings arrive by radio through the company unit plugged into this PC, encrypted with your company key. Click any <strong>name</strong> or <strong>label</strong> to rename it, and use <strong>Customise</strong> to choose which boxes a device shows. Relays are switched with a command signed by the server for that one device.
+                Readings arrive by radio through the company unit plugged into this PC, encrypted with your company key. Click any <strong>name</strong> or <strong>label</strong> to rename it here, <strong>Customise</strong> chooses which boxes show, and <strong>Set up</strong> shows what is switched on in the unit and lets you change it from here with a command signed by the server for that one unit.
             </p>
             <details class="help">
                 <summary>How to set this up (company key, switches, relays, sensors)</summary>
@@ -238,10 +246,11 @@
                     <li>Set it either here (<b>Company key</b> button, one unit at a time over USB) or on the unit's own page: <b>I/O</b> tab &rarr; Company key. Use exactly the same passphrase on all of them.</li>
                     <li>It is never sent to the server and never saved in this page. Keep a copy somewhere safe &mdash; it cannot be read back out of a unit.</li>
                 </ul>
-                <h4>2. Tell each unit what is wired to it</h4>
+                <h4>2. Tell each unit what is wired to it (on the unit, or from here)</h4>
                 <ol>
                     <li>Join the unit's WiFi (PLSChat-xxxx), open <b>192.168.4.1</b>, unlock it and open the <b>I/O</b> tab (company units only).</li>
                     <li>Tick what is fitted, give each thing a name, choose its pin, press Save. Only ticked items are sent, so a unit with nothing ticked shows just Battery, Licence, Tamper and Signal here.</li>
+                    <li><b>Or do it from this page:</b> press <b>Set up</b> on the unit's card. It shows what the unit has now; change it and press <b>Send to device</b>. The server signs the change for that one unit and the unit confirms. Works over the mesh, needs the write key and v007.14 or newer. The company key cannot be changed this way.</li>
                 </ol>
                 <h4>3. Wiring</h4>
                 <ul>
@@ -271,7 +280,7 @@
                 <div id="dev-key-status" style="font-size:13px;color:#64748b;margin-top:8px;font-family:monospace;min-height:16px;"></div>
             </div>
             <div id="dev-empty" style="background:#0f1326;border:1px dashed #374151;border-radius:12px;padding:22px;text-align:center;color:#8b949e;font-size:14px;">
-                No devices heard yet. Plug a company unit (v007.13 or newer) into this PC and press <strong>Connect a device</strong> above. Units report every 5, 15 or 60 minutes and at once when something changes.
+                No devices heard yet. Plug a company unit (v007.14 or newer) into this PC and press <strong>Connect a device</strong> above. Units report every 5, 15 or 60 minutes and at once when something changes.
             </div>
             <div class="dev-grid" id="dev-grid"></div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 6px;">
@@ -355,19 +364,19 @@
             <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:10px;">
                 <div style="flex:1;min-width:240px;">
                     <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
-                    <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=271a"></esp-web-install-button>
+                    <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=272a"></esp-web-install-button>
                 </div>
                 <div style="flex:1;min-width:240px;">
                     <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">XIAO ESP32-S3 key fob</div>
-                    <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=271a"></esp-web-install-button>
+                    <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=272a"></esp-web-install-button>
                 </div>
                 <div style="flex:1;min-width:240px;">
-                    <div style="font-size:13px;color:#fbbf24;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Company v007.13 (test)</div>
-                    <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=13a"></esp-web-install-button>
+                    <div style="font-size:13px;color:#fbbf24;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Company v007.14 (test)</div>
+                    <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=14a"></esp-web-install-button>
                 </div>
             </div>
             <details style="margin-top:8px;">
-                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.71 + v007.13)</summary>
+                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.72 + v007.14)</summary>
                 <ol style="color:#8b949e;font-size:14px;line-height:1.7;margin:10px 0 0 20px;">
                     <li>Flash without erasing. Unlock: contacts, rooms, messages and settings are still there. The v2.70 tests (clock, quiet hours, Settings tabs) still pass.</li>
                     <li><strong>Licence over the mesh:</strong> plug in device A, leave device B on battery in another room. Licences tab &rarr; type B's MAC &rarr; Generate &rarr; <em>Send over the mesh</em>. Expect &ldquo;installed&rdquo; within about 30 s, and B's Licence page shows the new expiry. Works while B is locked.</li>
@@ -377,6 +386,8 @@
                     <li>Short an input pin to GND on the far unit &rarr; its tile changes here within a few seconds.</li>
                     <li>Flip a relay switch here &rarr; &ldquo;sent&rdquo; then &ldquo;confirmed&rdquo;, and the relay clicks. Flip it on the unit's own page &rarr; this page follows.</li>
                     <li>A consumer device (v2.71) between the two company units passes the reports on but shows nothing itself.</li>
+                    <li><strong>v007.14 remote set-up:</strong> on a far unit's card press Set up &rarr; tick Input 1, give it a name &rarr; Send to device. Expect &ldquo;confirmed&rdquo;, the new box appears, and the unit's own I/O tab shows the same. Two things on one pin are refused.</li>
+                    <li>v007.14: the unit's own page now has separate <strong>I/O</strong> and <strong>Relays</strong> tabs; saving one does not change the other.</li>
                     <li><strong>Check the pins before wiring anything:</strong> the default I/O pins are a first guess for the Heltec V4. Change them on the I/O tab if they clash with your board.</li>
                 </ol>
             </details>
@@ -530,7 +541,7 @@
             </div>
         </div>
 
-        <footer>PLSChat Admin Monitor &bull; Connects via MQTT &bull; For authorised maintainers only</footer>
+        <footer>PLSChat Admin Monitor &bull; Connects via MQTT &bull; For authorized maintainers only</footer>
     </div>
 
 
@@ -871,6 +882,7 @@
         //  hands every line to whoever is waiting (licence replies, command
         //  acks, the Devices tab). Release USB stops it and frees the port.
         // ═══════════════════════════════════════════════════════════
+        let curTab = 'devices';
         let serialPumpOn = false;
         let lastSerialPort = null;      // remembered so the page can reconnect without asking
         let serialAutoReleased = false;
@@ -971,7 +983,10 @@
         function showTab(t) {
             if (!document.querySelector('.tab[data-t="' + t + '"]')) t = 'devices';
             document.querySelectorAll('.tab').forEach(e => e.classList.toggle('on', e.dataset.t === t));
-            document.querySelectorAll('.card[data-tab]').forEach(c => { c.style.display = (c.dataset.tab === t) ? '' : 'none'; });
+            document.querySelectorAll('.card[data-tab]').forEach(c => { c.style.display = c.dataset.tab.split(' ').includes(t) ? '' : 'none'; });
+            curTab = t;
+            const dh = document.getElementById('dev-title'); if (dh) dh.innerHTML = t === 'relays' ? '&#128268; Relays' : '&#127899; Sensors and inputs';
+            try { devRender(); } catch (e) {}
             try { sessionStorage.setItem('plschat_admin_tab', t); } catch (e) {}
             // The installer needs the USB device to itself: let go of it on the Firmware tab,
             // and pick it up again (same unit, no prompt) when leaving.
@@ -1196,6 +1211,16 @@
                         const pe = d.pend[i];
                         if (pe && d.rep.rl[i] === pe.want) { devLog(devName(n) + ': ' + devLabel(n, 'rl' + i) + ' is now ' + (pe.want ? 'ON' : 'OFF') + ' (confirmed by its report)'); delete d.pend[i]; }
                     }
+                } else if (b[0] === 3 && b.length >= 79 && b[1] === 1) {
+                    const o = 1, f = b[o + 1];
+                    d.cfg = {
+                        bme: !!(f & 1), wind: !!(f & 2), inEn: [!!(f & 4), !!(f & 8)], rlEn: [!!(f & 16), !!(f & 32)], rlActiveLow: [!!(f & 64), !!(f & 128)],
+                        sda: b[o + 2], scl: b[o + 3], windPin: b[o + 4], windX1000: (b[o + 5] << 8) | b[o + 6],
+                        inPin: [b[o + 7], b[o + 8]], rlPin: [b[o + 9], b[o + 10]], rlBoot: [b[o + 11], b[o + 12]], reportMin: b[o + 13],
+                        devName: cstr(b, o + 14, 16), inName: [cstr(b, o + 30, 12), cstr(b, o + 42, 12)], rlName: [cstr(b, o + 54, 12), cstr(b, o + 66, 12)]
+                    };
+                    d.info = { dev: d.cfg.devName, in: d.cfg.inName.slice(), rl: d.cfg.rlName.slice() };
+                    if (d.setupOpen && !d.draft) d.draft = JSON.parse(JSON.stringify(d.cfg));
                 } else if (b[0] === 2 && b.length >= 65) {
                     d.info = { dev: cstr(b, 1, 16), in: [cstr(b, 17, 12), cstr(b, 29, 12)], rl: [cstr(b, 41, 12), cstr(b, 53, 12)] };
                 }
@@ -1203,6 +1228,16 @@
                 return;
             }
             m = ln.match(/^ADMIN_ACK:([0-9A-Fa-f]{8}):(\d+):(\d+):(\d+)(?::(\d+))?$/);
+            if (m && m[5] === '4') {
+                const n = m[1].toUpperCase(), d = devGet(n), st = parseInt(m[3], 10);
+                if (d.cfgPend && d.cfgPend.seq === parseInt(m[2], 10)) {
+                    delete d.cfgPend;
+                    if (st === 0) { delete d.draft; d.setupOpen = false; devLog(devName(n) + ': new set-up applied — confirmed'); }
+                    else devLog(devName(n) + ': set-up REFUSED — ' + ({ 1: 'older than a command it already has', 3: 'a pin or value was not acceptable', 4: 'command was more than 15 minutes old' }[st] || ('status ' + st)));
+                }
+                devRender();
+                return;
+            }
             if (m && m[5] === '2') {
                 const n = m[1].toUpperCase(), d = devGet(n), st = parseInt(m[3], 10), mask = parseInt(m[4], 10);
                 d.last = Date.now();
@@ -1261,10 +1296,43 @@
             }
             return null;
         }
+        const IO_PINS = [15, 16, 33, 34, 38, 39, 40, 41, 42];
+        function devPinSel(n, k, i, cur) {
+            return '<select onchange="devSet(\'' + n + '\',\'' + k + '\',' + i + ',parseInt(this.value,10))" onblur="devBlur()">' + IO_PINS.map(p => '<option value="' + p + '"' + (p === cur ? ' selected' : '') + '>GPIO' + p + '</option>').join('') + '</select>';
+        }
+        function devChk(n, k, i, on) { return '<input type="checkbox"' + (on ? ' checked' : '') + ' onchange="devSet(\'' + n + '\',\'' + k + '\',' + i + ',this.checked)">'; }
+        function devTxt(n, k, i, v, max) { return '<input type="text" maxlength="' + max + '" value="' + esc(v) + '" onchange="devSet(\'' + n + '\',\'' + k + '\',' + i + ',this.value)" onblur="devBlur()">'; }
+        function devSel(n, k, i, cur, opts) { return '<select onchange="devSet(\'' + n + '\',\'' + k + '\',' + i + ',parseInt(this.value,10))" onblur="devBlur()">' + opts.map(o => '<option value="' + o[0] + '"' + (o[0] === cur ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select>'; }
+        // The set-up editor. It edits a copy (draft); nothing changes on the unit until Send.
+        function devSetupHtml(n, relays) {
+            const d = devs[n], c = d.draft;
+            if (!c) return '<div class="setup">Waiting for this unit to send its set-up. Press <b>Report now</b>. (Needs company firmware v007.14 or newer.) <button class="mini" onclick="devSetup(\'' + n + '\')">Close</button></div>';
+            let h = '<div class="setup"><h5>' + (relays ? 'Relay set-up on the unit' : 'Sensor and input set-up on the unit') + '</h5>';
+            if (!relays) {
+                h += '<div class="r"><span>Device name</span>' + devTxt(n, 'devName', -1, c.devName, 15) + '</div>';
+                h += '<div class="r"><span>Temp / humidity (BME280)</span>' + devChk(n, 'bme', -1, c.bme) + ' SDA ' + devPinSel(n, 'sda', -1, c.sda) + ' SCL ' + devPinSel(n, 'scl', -1, c.scl) + '</div>';
+                h += '<div class="r"><span>Wind sensor (pulse)</span>' + devChk(n, 'wind', -1, c.wind) + devPinSel(n, 'windPin', -1, c.windPin)
+                   + ' <input type="number" step="0.01" min="0.1" max="20" value="' + (c.windX1000 / 1000 * 2.23694).toFixed(2) + '" onchange="devSet(\'' + n + '\',\'windMph\',-1,this.value)" onblur="devBlur()"> mph per pulse/s</div>';
+                for (const i of [0, 1]) h += '<div class="r"><span>Input ' + (i + 1) + '</span>' + devChk(n, 'inEn', i, c.inEn[i]) + devTxt(n, 'inName', i, c.inName[i], 11) + devPinSel(n, 'inPin', i, c.inPin[i]) + '</div>';
+                h += '<div class="r"><span>Report every</span>' + devSel(n, 'reportMin', -1, c.reportMin, [[5, '5 minutes'], [15, '15 minutes'], [60, '1 hour']]) + '</div>';
+            } else {
+                for (const i of [0, 1]) {
+                    h += '<div class="r"><span>Relay ' + (i + 1) + '</span>' + devChk(n, 'rlEn', i, c.rlEn[i]) + devTxt(n, 'rlName', i, c.rlName[i], 11) + devPinSel(n, 'rlPin', i, c.rlPin[i]) + '</div>';
+                    h += '<div class="r"><span>&nbsp; at power-up / wiring</span>' + devSel(n, 'rlBoot', i, c.rlBoot[i], [[0, 'Off'], [1, 'On'], [2, 'As it was']]) + devSel(n, 'rlActiveLow', i, c.rlActiveLow[i] ? 1 : 0, [[0, 'Active high'], [1, 'Active low']]) + '</div>';
+                }
+            }
+            h += '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+               + '<button class="mini tip-r" style="border-color:#a855f7" data-tip="The server signs this set-up for this one unit, the plugged-in unit sends it, and the unit confirms. Needs the write key." onclick="devSendCfg(\'' + n + '\')"' + (d.cfgPend ? ' disabled' : '') + '>' + (d.cfgPend ? 'Sent, waiting...' : '&#128225; Send to device') + '</button>'
+               + '<button class="mini" onclick="devSetup(\'' + n + '\')">Cancel</button>'
+               + '<span style="color:#64748b;font-size:12px;">Check pins against the board before enabling anything.</span></div></div>';
+            return h;
+        }
         function devRender() {
             const grid = document.getElementById('dev-grid'); if (!grid) return;
-            if (grid.contains(document.activeElement) && /INPUT/.test(document.activeElement.tagName) && document.activeElement.type === 'text') { devDirty = true; return; }
+            const ae = document.activeElement;
+            if (grid.contains(ae) && ((ae.tagName === 'INPUT' && (ae.type === 'text' || ae.type === 'number')) || ae.tagName === 'SELECT')) { devDirty = true; return; }
             devDirty = false;
+            const relays = curTab === 'relays';
             const ids = Object.keys(devs).sort((a, b) => devName(a).localeCompare(devName(b)));
             document.getElementById('dev-empty').style.display = ids.length ? 'none' : '';
             const cnt = document.getElementById('dev-count');
@@ -1273,38 +1341,74 @@
                 const d = devs[n], p = devPref(n), r = d.rep;
                 const stale = (Date.now() - d.last) > 150 * 60000;
                 let h = '<div class="dev' + (stale ? ' stale' : '') + '"><div class="dev-head"><div style="flex:1;min-width:0">'
-                    + '<input class="dev-name" type="text" maxlength="24" value="' + esc(p.name) + '" placeholder="' + esc((d.info && d.info.dev) || ('Node ' + n)) + '" title="Click to rename" onchange="devRename(\'' + n + '\',this.value)" onblur="devBlur()">'
+                    + '<input class="dev-name" type="text" maxlength="24" value="' + esc(p.name) + '" placeholder="' + esc((d.info && d.info.dev) || ('Node ' + n)) + '" title="Click to rename (on this page only)" onchange="devRename(\'' + n + '\',this.value)" onblur="devBlur()">'
                     + '<div class="dev-sub">' + n + (r ? ' &bull; v007.' + r.fw : '') + (d.local ? ' &bull; plugged in here' : (d.rssi === 0 ? ' &bull; was plugged in' : d.hops ? ' &bull; ' + d.hops + ' hop' + (d.hops > 1 ? 's' : '') : ' &bull; direct')) + '</div></div>'
                     + '<span class="pill2 ' + (stale ? 'warn' : 'ok') + '">' + (stale ? 'quiet &bull; ' : '') + devAgo(d.last) + '</span></div>';
+                if (d.setupOpen) h += devSetupHtml(n, relays);
                 if (devOpenCust[n]) {
                     h += '<div class="cust"><div style="color:#8b949e;margin-bottom:6px;">Boxes to show for this device:</div>';
-                    for (const [k] of DEV_TILES) {
+                    if (!relays) for (const [k] of DEV_TILES) {
                         if (r && devTileValue(d, k) === null) continue;
                         h += '<label><input type="checkbox" ' + (p.hide[k] ? '' : 'checked') + ' onchange="devShow(\'' + n + '\',\'' + k + '\',this.checked)">' + esc(devLabel(n, k)) + '</label>';
                     }
-                    for (const i of [0, 1]) if (!r || r.rlEn[i]) h += '<label><input type="checkbox" ' + (p.hide['rl' + i] ? '' : 'checked') + ' onchange="devShow(\'' + n + '\',\'rl' + i + '\',this.checked)">' + esc(devLabel(n, 'rl' + i)) + '</label>';
+                    if (relays) for (const i of [0, 1]) if (!r || r.rlEn[i]) h += '<label><input type="checkbox" ' + (p.hide['rl' + i] ? '' : 'checked') + ' onchange="devShow(\'' + n + '\',\'rl' + i + '\',this.checked)">' + esc(devLabel(n, 'rl' + i)) + '</label>';
                     h += '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button class="mini" onclick="devResetNames(\'' + n + '\')">Use the names set on the device</button><button class="mini" onclick="devForget(\'' + n + '\')">Remove from this page</button></div></div>';
                 }
                 if (!r) h += '<div style="color:#8b949e;font-size:13px;margin-bottom:10px;">Heard, waiting for its first readings...</div>';
-                else {
+                else if (!relays) {
                     let tiles = '';
                     for (const [k] of DEV_TILES) {
                         if (p.hide[k]) continue;
                         const v = devTileValue(d, k); if (!v) continue;
-                        tiles += '<div class="tile"><div class="v ' + v[1] + '">' + esc(v[0]) + '</div><input class="lbl" type="text" maxlength="14" value="' + esc(devLabel(n, k)) + '" title="Click to rename" onchange="devRelabel(\'' + n + '\',\'' + k + '\',this.value)" onblur="devBlur()"></div>';
+                        tiles += '<div class="tile"><div class="v ' + v[1] + '">' + esc(v[0]) + '</div><input class="lbl" type="text" maxlength="14" value="' + esc(devLabel(n, k)) + '" title="Click to rename (on this page only)" onchange="devRelabel(\'' + n + '\',\'' + k + '\',this.value)" onblur="devBlur()"></div>';
                     }
                     if (tiles) h += '<div class="tiles">' + tiles + '</div>';
+                } else {
+                    let any = false;
                     for (const i of [0, 1]) {
                         if (!r.rlEn[i] || p.hide['rl' + i]) continue;
+                        any = true;
                         const pe = d.pend[i], on = pe ? pe.want : r.rl[i];
-                        h += '<div class="rl"><input class="lbl" type="text" maxlength="14" value="' + esc(devLabel(n, 'rl' + i)) + '" title="Click to rename" onchange="devRelabel(\'' + n + '\',\'rl' + i + '\',this.value)" onblur="devBlur()">'
+                        h += '<div class="rl"><input class="lbl" type="text" maxlength="14" value="' + esc(devLabel(n, 'rl' + i)) + '" title="Click to rename (on this page only)" onchange="devRelabel(\'' + n + '\',\'rl' + i + '\',this.value)" onblur="devBlur()">'
                             + '<span class="st" style="color:' + (pe ? '#eab308' : (r.rl[i] ? '#22c55e' : '#8b949e')) + '">' + (pe ? 'sent, waiting...' : (r.rl[i] ? 'ON' : 'OFF')) + '</span>'
                             + '<label class="sw tip-l" data-tip="Switches this relay with a command signed by the server for this one unit. Needs the write key."><input type="checkbox" ' + (on ? 'checked' : '') + (pe ? ' disabled' : '') + ' onchange="devRelay(\'' + n + '\',' + i + ',this.checked)"><span></span></label></div>';
                     }
+                    if (!any) h += '<div style="color:#8b949e;font-size:13px;margin-bottom:10px;">No relays switched on for this unit. Press <b>Set up</b> to add one.</div>';
                 }
-                h += '<div class="dev-foot"><button class="mini tip-r" data-tip="Ask this unit to send its readings now. Needs the write key." onclick="devAskReport(\'' + n + '\')">&#8635; Report now</button><button class="mini" data-tip="Choose which boxes this card shows, go back to the names set on the unit, or remove the card." onclick="devCust(\'' + n + '\')">&#9881; Customise</button></div></div>';
+                h += '<div class="dev-foot"><button class="mini tip-r" data-tip="Ask this unit to send its readings and set-up now. Needs the write key." onclick="devAskReport(\'' + n + '\')">&#8635; Report now</button>'
+                   + '<button class="mini" data-tip="See what is switched on in the unit (names, pins, sensors, relays) and change it from here." onclick="devSetup(\'' + n + '\')">&#128295; Set up</button>'
+                   + '<button class="mini tip-l" data-tip="Choose which boxes this card shows, go back to the names set on the unit, or remove the card." onclick="devCust(\'' + n + '\')">&#9881; Customise</button></div></div>';
                 return h;
             }).join('');
+        }
+        function devSetup(n) {
+            const d = devGet(n);
+            d.setupOpen = !d.setupOpen;
+            if (d.setupOpen && d.cfg) d.draft = JSON.parse(JSON.stringify(d.cfg)); else if (!d.setupOpen) delete d.draft;
+            if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+            devRender();
+        }
+        function devSet(n, k, i, v) {
+            const c = devGet(n).draft; if (!c) return;
+            if (k === 'windMph') { const f = parseFloat(v); if (f >= 0.1 && f <= 20) c.windX1000 = Math.round(f / 2.23694 * 1000); return; }
+            if (k === 'rlActiveLow') v = !!v;
+            if (typeof v === 'string') v = v.replace(/[^\x20-\x7E]/g, '').replace(/[<>&"']/g, '').trim();
+            if (i < 0) c[k] = v; else c[k][i] = v;
+        }
+        async function devSendCfg(n) {
+            const d = devGet(n), c = d.draft;
+            if (!c || d.cfgPend) return;
+            if (!confirm('Send this set-up to ' + devName(n) + ' (' + n + ')?\n\nIt replaces the I/O set-up on that unit. Make sure the pins match what is wired to it.')) return;
+            try {
+                const data = await adminSign({ cmd: 'config', target: n, cfg: c });
+                d.cfgPend = { seq: data.seq };
+                await serialSend('ADMIN:' + data.hex);
+                devLog(devName(n) + ': new set-up sent (command ' + data.seq + ')');
+                devRender();
+                setTimeout(() => {
+                    if (d.cfgPend && d.cfgPend.seq === data.seq) { delete d.cfgPend; devLog(devName(n) + ': NO ANSWER to the set-up. Press Report now to see what it has before sending again.'); devRender(); }
+                }, 30000);
+            } catch (e) { delete d.cfgPend; devLog(devName(n) + ': could not send the set-up — ' + e.message); devRender(); }
         }
         function devBlur() { setTimeout(() => { if (devDirty) devRender(); }, 150); }
         function devRename(n, v) { devPref(n).name = v.trim().slice(0, 24); devSavePrefs(); devDirty = true; }
