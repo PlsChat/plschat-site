@@ -136,7 +136,7 @@
         .setup .r { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:5px 0; border-bottom:1px solid #1f2439; }
         .setup .r:last-of-type { border-bottom:0; }
         .setup .r > span:first-child { flex:1; min-width:110px; color:#8b949e; }
-        .setup input[type=text], .setup input[type=number], .setup select { background:#12152b; border:1px solid #374151; color:#e5e7eb; border-radius:6px; padding:5px 7px; font-size:12px; }
+        .setup input[type=text], .setup input[type=number], .setup input[type=time], .setup select { background:#12152b; border:1px solid #374151; color:#e5e7eb; border-radius:6px; padding:5px 7px; font-size:12px; }
         .setup input[type=text] { width:112px; } .setup input[type=number] { width:64px; }
         .setup h5 { color:#67e8f9; font-size:12px; text-transform:uppercase; letter-spacing:.5px; margin:2px 0 4px; }
         .devlog { background:#0a0c1f; border:1px solid #1f2439; border-radius:10px; padding:10px 12px; font:12px/1.6 monospace; color:#8b949e; max-height:190px; overflow:auto; white-space:pre-wrap; }
@@ -250,11 +250,12 @@
                 <ol>
                     <li>Join the unit's WiFi (PLSChat-xxxx), open <b>192.168.4.1</b>, unlock it and open the <b>I/O</b> tab (company units only).</li>
                     <li>Tick what is fitted, give each thing a name, choose its pin, press Save. Only ticked items are sent, so a unit with nothing ticked shows just Battery, Licence, Tamper and Signal here.</li>
-                    <li><b>Or do it from this page:</b> press <b>Set up</b> on the unit's card. It shows what the unit has now; change it and press <b>Send to device</b>. The server signs the change for that one unit and the unit confirms. Works over the mesh, needs the write key and v007.14 or newer. The company key cannot be changed this way.</li>
+                    <li><b>Or do it from this page:</b> press <b>Set up</b> on the unit's card. It shows what the unit has now; change it and press <b>Send to device</b>. The server signs the change for that one unit and the unit confirms. Works over the mesh, needs the write key and v007.17 or newer. The company key cannot be changed this way.</li>
                 </ol>
                 <h4>3. Wiring</h4>
                 <ul>
                     <li><b>Switch / door contact / alarm output (Input 1, Input 2):</b> wire a volt-free contact between the input pin and <b>GND</b>. Closed = ACTIVE. Never put a voltage on the pin.</li>
+                    <li><b>Relay timers and modes</b> (Relays tab &rarr; Set up): <b>Inching</b> switches off again by itself after a set time; <b>Daily schedule</b> switches on and off at set times on chosen days; <b>Local switch</b> lets a button on an input work the relay at the unit; <b>Interlock</b> stops both relays being on together.</li>
                     <li><b>Relay 1, Relay 2:</b> the pin drives the <b>IN</b> terminal of a 3.3&nbsp;V relay module (with its own transistor or opto) &mdash; never a bare relay coil. Power the module from 5&nbsp;V / GND. If the relay is on when it should be off, tick <b>Active low</b>. Choose what it does after a restart: off, on, or as it was.</li>
                     <li><b>Temperature / humidity / pressure:</b> a BME280 board on 3.3&nbsp;V, GND, SDA and SCL.</li>
                     <li><b>Wind:</b> a pulse (reed switch) anemometer between the wind pin and GND. Enter its mph per pulse-per-second from the sensor's data sheet.</li>
@@ -280,7 +281,7 @@
                 <div id="dev-key-status" style="font-size:13px;color:#64748b;margin-top:8px;font-family:monospace;min-height:16px;"></div>
             </div>
             <div id="dev-empty" style="background:#0f1326;border:1px dashed #374151;border-radius:12px;padding:22px;text-align:center;color:#8b949e;font-size:14px;">
-                No devices heard yet. Plug a company unit (v007.14 or newer) into this PC and press <strong>Connect a device</strong> above. Units report every 5, 15 or 60 minutes and at once when something changes.
+                No devices heard yet. Plug a company unit (v007.17 or newer) into this PC and press <strong>Connect a device</strong> above. Units report every 5, 15 or 60 minutes and at once when something changes.
             </div>
             <div class="dev-grid" id="dev-grid"></div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 6px;">
@@ -354,29 +355,45 @@
         <div class="card" id="bench-card" data-tab="firmware" style="display:none">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
                 <h3>&#129514; Bench Test Firmware</h3>
-                <span id="bench-ver" style="font-size:13px;color:#64748b;">Consumer builds under test &bull; not on the public flasher yet</span>
+                <span id="bench-ver" style="font-size:13px;color:#64748b;">Builds under test &bull; not on the public flasher yet</span>
             </div>
             <p style="color:#8b949e;font-size:14px;margin-bottom:14px;">
-                Flash the next customer firmware to a <strong>test</strong> device before it goes on the public flasher.
+                Flash the next firmware to a <strong>test</strong> device before it is released. Customer and company builds are listed separately below, each for the Heltec V4 and the XIAO.
                 To test upgrading existing contacts and messages, answer <strong>No</strong> when asked to erase the device.
                 Delete any saved passwords for 192.168.4.1 on your phone first &mdash; an autofilled old PIN counts as a wrong attempt.
             </p>
-            <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:10px;">
-                <div style="flex:1;min-width:240px;">
-                    <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
-                    <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=272a"></esp-web-install-button>
-                </div>
-                <div style="flex:1;min-width:240px;">
-                    <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">XIAO ESP32-S3 key fob</div>
-                    <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=272a"></esp-web-install-button>
-                </div>
-                <div style="flex:1;min-width:240px;">
-                    <div style="font-size:13px;color:#fbbf24;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Company v007.14 (test)</div>
-                    <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=14a"></esp-web-install-button>
+            <div class="config-section" style="margin-bottom:14px;">
+                <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:#67e8f9;margin-bottom:12px;">Customer devices &mdash; v2.74 (test)</div>
+                <div style="display:flex;gap:24px;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:240px;">
+                        <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
+                        <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=274a"></esp-web-install-button>
+                    </div>
+                    <div style="flex:1;min-width:240px;">
+                        <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">XIAO ESP32-S3 key fob</div>
+                        <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=274a"></esp-web-install-button>
+                    </div>
                 </div>
             </div>
+            <div class="config-section" style="margin-bottom:14px;border-color:#a16207;">
+                <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:#fbbf24;margin-bottom:12px;">Company devices &mdash; v007.17 (test) &bull; admin use only</div>
+                <div style="display:flex;gap:24px;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:240px;">
+                        <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
+                        <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=17a"></esp-web-install-button>
+                    </div>
+                    <div style="flex:1;min-width:240px;">
+                        <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">XIAO ESP32-S3 (B2B radio kit)</div>
+                        <esp-web-install-button manifest="/admin/fw/manifest-v007-xiao-test.json?v=17a"></esp-web-install-button>
+                    </div>
+                </div>
+                <p style="color:#8b949e;font-size:13px;margin-top:10px;">
+                    <strong>Company XIAO:</strong> I/O pins are GPIO2 (D1), GPIO3 (D2), GPIO5 (D4) and GPIO43 (D6). A pin given to I/O is taken from the vibration motor (D1) or external LED (D2). Use D6 for an input, not a relay &mdash; it pulses at power-up. No screen on company XIAO units. GPIO4 (D3) is the lid switch, so buzzer leg 2 goes to GND. Units wired with the radio on the header pins cannot use I/O.
+                    After flashing, enable company mode on the <em>Company &amp; tamper</em> tab.
+                </p>
+            </div>
             <details style="margin-top:8px;">
-                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.72 + v007.14)</summary>
+                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.74 + v007.17)</summary>
                 <ol style="color:#8b949e;font-size:14px;line-height:1.7;margin:10px 0 0 20px;">
                     <li>Flash without erasing. Unlock: contacts, rooms, messages and settings are still there. The v2.70 tests (clock, quiet hours, Settings tabs) still pass.</li>
                     <li><strong>Licence over the mesh:</strong> plug in device A, leave device B on battery in another room. Licences tab &rarr; type B's MAC &rarr; Generate &rarr; <em>Send over the mesh</em>. Expect &ldquo;installed&rdquo; within about 30 s, and B's Licence page shows the new expiry. Works while B is locked.</li>
@@ -388,6 +405,10 @@
                     <li>A consumer device (v2.71) between the two company units passes the reports on but shows nothing itself.</li>
                     <li><strong>v007.14 remote set-up:</strong> on a far unit's card press Set up &rarr; tick Input 1, give it a name &rarr; Send to device. Expect &ldquo;confirmed&rdquo;, the new box appears, and the unit's own I/O tab shows the same. Two things on one pin are refused.</li>
                     <li>v007.14: the unit's own page now has separate <strong>I/O</strong> and <strong>Relays</strong> tabs; saving one does not change the other.</li>
+                    <li><strong>v007.15 company XIAO:</strong> flash a XIAO from the Company section, enable company mode, set the company key. Its card appears here; Set up offers only the XIAO pins. Tick Relay 1 (GPIO3), Send &rarr; switch it from the Relays tab.</li>
+                    <li><strong>v2.73 ping:</strong> Status &rarr; Ping network. Contacts show by name with a CONTACT tag and a chat button; company units show REPEATER; strongest first with Good / Fair / Weak. Leave the page and come back &rarr; the last result is still there with &ldquo;last ping N min ago&rdquo;. The Contacts tab shows &ldquo;in range&rdquo; / &ldquo;not heard&rdquo;.</li>
+                    <li>v2.73: on device B, Settings &rarr; Network &rarr; tick &ldquo;Let people nearby find me&rdquo; and type a nickname. Ping from A &rarr; B shows the nickname and <em>+ Add</em> sends a pairing request that B must accept. Untick it &rarr; B is a bare ID again and + Add asks for its code.</li>
+                    <li><strong>v007.17 relay modes</strong> (Relays tab &rarr; Set up, or the unit's own Relays tab): <em>Inching</em> 2 s &rarr; switch on, it goes off by itself after 2 s and the page follows. <em>Interlock</em> &rarr; switching relay 2 on drops relay 1. <em>Schedule</em> a minute or two ahead &rarr; it switches at that time (the unit needs its clock). <em>Local switch</em> on Input 1 &rarr; shorting the input to GND toggles the relay.</li>
                     <li><strong>Check the pins before wiring anything:</strong> the default I/O pins are a first guess for the Heltec V4. Change them on the I/O tab if they clash with your board.</li>
                 </ol>
             </details>
@@ -1228,13 +1249,13 @@
                         bme: !!(caps & 1), wind: !!(caps & 2), inEn: [!!(caps & 4), !!(caps & 8)], rlEn: [!!(caps & 16), !!(caps & 32)],
                         in: [!!(st & 1), !!(st & 2)], rl: [!!(st & 4), !!(st & 8)], armed: !!(st & 16), licensed: !!(st & 32), tampered: !!(st & 64),
                         t: i16(3) / 10, h: b[5], p: u16(6), w: u16(8) / 10 * 2.23694, g: u16(10) / 10 * 2.23694,
-                        mv: u16(12), bat: b[14], days: u16(15), epoch: ((b[17] << 24) | (b[18] << 16) | (b[19] << 8) | b[20]) >>> 0, reason: b[21], fw: b[22]
+                        mv: u16(12), bat: b[14], days: u16(15), epoch: ((b[17] << 24) | (b[18] << 16) | (b[19] << 8) | b[20]) >>> 0, reason: b[21], fw: b[22], board: b[23]
                     };
                     for (const i of [0, 1]) {            // a report that shows what we asked for confirms it
                         const pe = d.pend[i];
                         if (pe && d.rep.rl[i] === pe.want) { devLog(devName(n) + ': ' + devLabel(n, 'rl' + i) + ' is now ' + (pe.want ? 'ON' : 'OFF') + ' (confirmed by its report)'); delete d.pend[i]; }
                     }
-                } else if (b[0] === 3 && b.length >= 79 && b[1] === 1) {
+                } else if (b[0] === 3 && b.length >= 99 && b[1] === 2) {
                     const o = 1, f = b[o + 1];
                     d.cfg = {
                         bme: !!(f & 1), wind: !!(f & 2), inEn: [!!(f & 4), !!(f & 8)], rlEn: [!!(f & 16), !!(f & 32)], rlActiveLow: [!!(f & 64), !!(f & 128)],
@@ -1242,6 +1263,10 @@
                         inPin: [b[o + 7], b[o + 8]], rlPin: [b[o + 9], b[o + 10]], rlBoot: [b[o + 11], b[o + 12]], reportMin: b[o + 13],
                         devName: cstr(b, o + 14, 16), inName: [cstr(b, o + 30, 12), cstr(b, o + 42, 12)], rlName: [cstr(b, o + 54, 12), cstr(b, o + 66, 12)]
                     };
+                    const u16c = k => (b[o + k] << 8) | b[o + k + 1];
+                    d.cfg.modes = { mode: [b[o + 78], b[o + 79]], pulseDs: [u16c(80), u16c(82)], interlock: !!b[o + 84],
+                        schEn: [!!(b[o + 85] & 1), !!(b[o + 85] & 2)], schOn: [u16c(86), u16c(90)], schOff: [u16c(88), u16c(92)], schDays: [b[o + 94], b[o + 95]],
+                        link: [b[o + 96] & 15, b[o + 97] & 15], linkFollow: [!!(b[o + 96] & 16), !!(b[o + 97] & 16)] };
                     d.info = { dev: d.cfg.devName, in: d.cfg.inName.slice(), rl: d.cfg.rlName.slice() };
                     if (d.setupOpen && !d.draft) d.draft = JSON.parse(JSON.stringify(d.cfg));
                 } else if (b[0] === 2 && b.length >= 65) {
@@ -1319,9 +1344,20 @@
             }
             return null;
         }
-        const IO_PINS = [15, 16, 33, 34, 38, 39, 40, 41, 42];
+        const IO_PINS_BOARD = [[15, 16, 33, 34, 38, 39, 40, 41, 42], [2, 3, 5, 43]];   // 0 = Heltec V4, 1 = XIAO
+        function devPins(n) { const d = devs[n]; return IO_PINS_BOARD[(d && d.rep && d.rep.board === 1) ? 1 : 0]; }
+        function devHHMM(m) { return m >= 1440 ? '' : String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+        function devModeText(d, i) {
+            const m = d.cfg && d.cfg.modes; if (!m) return '';
+            const t = [];
+            if (m.mode[i] === 1) t.push('inching ' + (m.pulseDs[i] / 10) + ' s');
+            if (m.schEn[i]) t.push('daily ' + (devHHMM(m.schOn[i]) || '--') + ' \u2192 ' + (devHHMM(m.schOff[i]) || '--'));
+            if (m.link[i]) t.push('switch: input ' + m.link[i]);
+            if (m.interlock) t.push('interlock');
+            return t.join(' \u2022 ');
+        }
         function devPinSel(n, k, i, cur) {
-            return '<select onchange="devSet(\'' + n + '\',\'' + k + '\',' + i + ',parseInt(this.value,10))" onblur="devBlur()">' + IO_PINS.map(p => '<option value="' + p + '"' + (p === cur ? ' selected' : '') + '>GPIO' + p + '</option>').join('') + '</select>';
+            return '<select onchange="devSet(\'' + n + '\',\'' + k + '\',' + i + ',parseInt(this.value,10))" onblur="devBlur()">' + devPins(n).map(p => '<option value="' + p + '"' + (p === cur ? ' selected' : '') + '>GPIO' + p + '</option>').join('') + '</select>';
         }
         function devChk(n, k, i, on) { return '<input type="checkbox"' + (on ? ' checked' : '') + ' onchange="devSet(\'' + n + '\',\'' + k + '\',' + i + ',this.checked)">'; }
         function devTxt(n, k, i, v, max) { return '<input type="text" maxlength="' + max + '" value="' + esc(v) + '" onchange="devSet(\'' + n + '\',\'' + k + '\',' + i + ',this.value)" onblur="devBlur()">'; }
@@ -1342,7 +1378,16 @@
                 for (const i of [0, 1]) {
                     h += '<div class="r"><span>Relay ' + (i + 1) + '</span>' + devChk(n, 'rlEn', i, c.rlEn[i]) + devTxt(n, 'rlName', i, c.rlName[i], 11) + devPinSel(n, 'rlPin', i, c.rlPin[i]) + '</div>';
                     h += '<div class="r"><span>&nbsp; at power-up / wiring</span>' + devSel(n, 'rlBoot', i, c.rlBoot[i], [[0, 'Off'], [1, 'On'], [2, 'As it was']]) + devSel(n, 'rlActiveLow', i, c.rlActiveLow[i] ? 1 : 0, [[0, 'Active high'], [1, 'Active low']]) + '</div>';
+                    const m = c.modes;
+                    h += '<div class="r"><span class="tip-r" data-tip="Latching: stays on or off as set. Inching: switches on, then off again by itself after the time set - for a gate pulse or door release.">&nbsp; mode</span>' + devSel(n, 'm.mode', i, m.mode[i], [[0, 'Latching'], [1, 'Inching']])
+                       + ' <input type="number" step="0.5" min="0.5" max="3600" value="' + (m.pulseDs[i] / 10).toFixed(1) + '" onchange="devSet(\'' + n + '\',\'m.pulseS\',' + i + ',this.value)" onblur="devBlur()"> s</div>';
+                    h += '<div class="r"><span class="tip-r" data-tip="Switches on and off at set times each day, using the clock on the unit. Leave a time empty to skip it.">&nbsp; daily schedule</span>' + devChk(n, 'm.schEn', i, m.schEn[i])
+                       + ' on <input type="time" value="' + devHHMM(m.schOn[i]) + '" onchange="devSet(\'' + n + '\',\'m.schOn\',' + i + ',this.value)" onblur="devBlur()">'
+                       + ' off <input type="time" value="' + devHHMM(m.schOff[i]) + '" onchange="devSet(\'' + n + '\',\'m.schOff\',' + i + ',this.value)" onblur="devBlur()"></div>';
+                    h += '<div class="r"><span>&nbsp; days</span>' + ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((dn, di) => '<label style="margin-right:4px"><input type="checkbox"' + ((m.schDays[i] >> di) & 1 ? ' checked' : '') + ' onchange="devSet(\'' + n + '\',\'m.day' + di + '\',' + i + ',this.checked)">' + dn + '</label>').join('') + '</div>';
+                    h += '<div class="r"><span class="tip-r" data-tip="A button or switch wired to an input on the unit works this relay locally, with no radio needed.">&nbsp; local switch</span>' + devSel(n, 'm.link', i, m.link[i], [[0, 'None'], [1, 'Input 1'], [2, 'Input 2']]) + devSel(n, 'm.linkFollow', i, m.linkFollow[i] ? 1 : 0, [[0, 'Each press toggles'], [1, 'Follows the input']]) + '</div>';
                 }
+                h += '<div class="r"><span class="tip-r" data-tip="Switching one relay on switches the other off first, so they are never on together (open / close, forward / reverse).">Interlock (never both on)</span>' + devChk(n, 'm.interlock', -1, c.modes.interlock) + '</div>';
             }
             h += '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
                + '<button class="mini tip-r" style="border-color:#a855f7" data-tip="The server signs this set-up for this one unit, the plugged-in unit sends it, and the unit confirms. Needs the write key." onclick="devSendCfg(\'' + n + '\')"' + (d.cfgPend ? ' disabled' : '') + '>' + (d.cfgPend ? 'Sent, waiting...' : '&#128225; Send to device') + '</button>'
@@ -1365,7 +1410,7 @@
                 const stale = (Date.now() - d.last) > 150 * 60000;
                 let h = '<div class="dev' + (stale ? ' stale' : '') + '"><div class="dev-head"><div style="flex:1;min-width:0">'
                     + '<input class="dev-name" type="text" maxlength="24" value="' + esc(p.name) + '" placeholder="' + esc((d.info && d.info.dev) || ('Node ' + n)) + '" title="Click to rename (on this page only)" onchange="devRename(\'' + n + '\',this.value)" onblur="devBlur()">'
-                    + '<div class="dev-sub">' + n + (r ? ' &bull; v007.' + r.fw : '') + (d.local ? ' &bull; plugged in here' : (d.rssi === 0 ? ' &bull; was plugged in' : d.hops ? ' &bull; ' + d.hops + ' hop' + (d.hops > 1 ? 's' : '') : ' &bull; direct')) + '</div></div>'
+                    + '<div class="dev-sub">' + n + (r ? ' &bull; v007.' + r.fw + (r.fw >= 15 ? (r.board === 1 ? ' XIAO' : ' Heltec') : '') : '') + (d.local ? ' &bull; plugged in here' : (d.rssi === 0 ? ' &bull; was plugged in' : d.hops ? ' &bull; ' + d.hops + ' hop' + (d.hops > 1 ? 's' : '') : ' &bull; direct')) + '</div></div>'
                     + '<span class="pill2 ' + (stale ? 'warn' : 'ok') + '">' + (stale ? 'quiet &bull; ' : '') + devAgo(d.last) + '</span></div>';
                 if (d.setupOpen) h += devSetupHtml(n, relays);
                 if (devOpenCust[n]) {
@@ -1395,6 +1440,8 @@
                         h += '<div class="rl"><input class="lbl" type="text" maxlength="14" value="' + esc(devLabel(n, 'rl' + i)) + '" title="Click to rename (on this page only)" onchange="devRelabel(\'' + n + '\',\'rl' + i + '\',this.value)" onblur="devBlur()">'
                             + '<span class="st" style="color:' + (pe ? '#eab308' : (r.rl[i] ? '#22c55e' : '#8b949e')) + '">' + (pe ? 'sent, waiting...' : (r.rl[i] ? 'ON' : 'OFF')) + '</span>'
                             + '<label class="sw tip-l" data-tip="Switches this relay with a command signed by the server for this one unit. Needs the write key."><input type="checkbox" ' + (on ? 'checked' : '') + (pe ? ' disabled' : '') + ' onchange="devRelay(\'' + n + '\',' + i + ',this.checked)"><span></span></label></div>';
+                        const mt = devModeText(d, i);
+                        if (mt) h += '<div style="font-size:11px;color:#8b949e;margin:-4px 0 8px 12px;">' + esc(mt) + '</div>';
                     }
                     if (!any) h += '<div style="color:#8b949e;font-size:13px;margin-bottom:10px;">No relays switched on for this unit. Press <b>Set up</b> to add one.</div>';
                 }
@@ -1414,6 +1461,17 @@
         function devSet(n, k, i, v) {
             const c = devGet(n).draft; if (!c) return;
             if (k === 'windMph') { const f = parseFloat(v); if (f >= 0.1 && f <= 20) c.windX1000 = Math.round(f / 2.23694 * 1000); return; }
+            if (k.indexOf('m.') === 0) {                       // relay modes
+                const m = c.modes, f = k.slice(2);
+                if (f === 'pulseS') { const x = parseFloat(v); if (x >= 0.5 && x <= 3600) m.pulseDs[i] = Math.round(x * 10); }
+                else if (f === 'schOn' || f === 'schOff') { const t = /^(\d\d):(\d\d)$/.exec(v); m[f][i] = t ? (parseInt(t[1], 10) * 60 + parseInt(t[2], 10)) : 1440; }
+                else if (f.indexOf('day') === 0) { const bit = 1 << parseInt(f.slice(3), 10); m.schDays[i] = v ? (m.schDays[i] | bit) : (m.schDays[i] & ~bit); }
+                else if (f === 'interlock') m.interlock = !!v;
+                else if (f === 'linkFollow') m.linkFollow[i] = !!v;
+                else if (f === 'schEn') m.schEn[i] = !!v;
+                else m[f][i] = v;
+                return;
+            }
             if (k === 'rlActiveLow') v = !!v;
             if (typeof v === 'string') v = v.replace(/[^\x20-\x7E]/g, '').replace(/[<>&"']/g, '').trim();
             if (i < 0) c[k] = v; else c[k][i] = v;
