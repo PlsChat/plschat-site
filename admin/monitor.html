@@ -85,7 +85,24 @@
         .pw-eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 17px; color: #64748b; padding: 4px 6px; line-height: 1; }
         .pw-eye:hover { color: #67e8f9; }
         esp-web-install-button { --esp-tools-button-color: #a855f7; }
-    </style>
+    
+  /* PLSChat theme for the esp-web-tools install dialog (it is white/blue by default) */
+  ewt-install-dialog{
+    --md-sys-color-primary:#a855f7;--md-sys-color-on-primary:#fff;
+    --md-sys-color-surface:#1a1a2e;--md-sys-color-surface-container:#1a1a2e;
+    --md-sys-color-surface-container-high:#1a1a2e;--md-sys-color-surface-container-highest:#23233a;
+    --md-sys-color-secondary-container:#2a2a40;--md-sys-color-on-secondary-container:#e0e0f0;
+    --md-sys-color-on-surface:#e0e0f0;--md-sys-color-on-surface-variant:#a0a0c0;
+    --md-sys-color-outline:#3a3a55;--md-sys-color-outline-variant:#2a2a40;
+    --md-sys-color-primary-container:#2a2a40;--md-sys-color-tertiary:#22d3ee;
+    --text-color:#a0a0c0;--danger-color:#f08080;
+    --roboto-font:system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  #plsFlashToast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99999;max-width:min(92vw,460px);
+    background:#1a1a2e;border:1px solid #a855f7;border-radius:14px;padding:14px 18px;color:#e0e0f0;
+    font:14px/1.5 system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.6)}
+  #plsFlashToast b{color:#22c55e}
+</style>
 </head>
 <body>
 
@@ -1041,6 +1058,29 @@
 
         window.onload = init;
         fetch('/admin/bench/manifest-heltec.json?x='+Date.now()).then(r=>r.json()).then(j=>{const e=document.getElementById('bench-ver');if(e&&j.version)e.innerHTML='Build under test: <strong style="color:#a855f7">v'+j.version.replace('-test','')+'</strong> &bull; not on the public flasher yet';}).catch(()=>{});
-    </script>
+    
+  // After "Installation complete" the stock dialog's Next button only goes back to its own
+  // menu, which looks like a loop. Close it instead and say what to do next.
+  (function(){
+    function toast(html){
+      var t=document.getElementById('plsFlashToast');
+      if(!t){t=document.createElement('div');t.id='plsFlashToast';document.body.appendChild(t);}
+      t.innerHTML=html;clearTimeout(t._h);t._h=setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},12000);
+    }
+    setInterval(function(){
+      var d=document.querySelector('ewt-install-dialog');
+      if(!d||d._plsDone)return;
+      try{
+        if(d._state==='INSTALL'&&d._installState&&d._installState.state==='finished'){
+          d._plsDone=true;
+          setTimeout(function(){
+            try{d._closeDialog();}catch(e){}
+            toast('<b>&#10003; Installed.</b> The device is restarting. Join its WiFi (PLSChat-xxxx) and open <b style="color:#a855f7">192.168.4.1</b> to unlock it.');
+          },1200);
+        }
+      }catch(e){}
+    },400);
+  })();
+</script>
 </body>
 </html>
