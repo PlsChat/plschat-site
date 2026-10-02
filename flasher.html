@@ -113,8 +113,8 @@
     --text-color:#a0a0c0;--danger-color:#f08080;
     --roboto-font:system-ui,-apple-system,"Segoe UI",sans-serif;
   }
-  #plsFlashToast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99999;max-width:min(92vw,460px);
-    background:#1a1a2e;border:1px solid #a855f7;border-radius:14px;padding:14px 18px;color:#e0e0f0;
+  #plsFlashToast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:99999;width:min(92vw,460px);text-align:center;cursor:pointer;
+    background:#1a1a2e;border:1px solid #a855f7;border-radius:14px;padding:22px 22px;color:#e0e0f0;
     font:14px/1.5 system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.6)}
   #plsFlashToast b{color:#22c55e}
 </style>
@@ -428,7 +428,7 @@
     function toast(html){
       var t=document.getElementById('plsFlashToast');
       if(!t){t=document.createElement('div');t.id='plsFlashToast';document.body.appendChild(t);}
-      t.innerHTML=html;clearTimeout(t._h);t._h=setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},12000);
+      t.innerHTML=html;t.title='Click to close';t.onclick=function(){if(t.parentNode)t.parentNode.removeChild(t);};clearTimeout(t._h);t._h=setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},12000);
     }
     setInterval(function(){
       var d=document.querySelector('ewt-install-dialog');
