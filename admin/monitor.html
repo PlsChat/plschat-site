@@ -123,6 +123,15 @@
         .mini:hover { border-color:#a855f7; }
         .cust { background:#0a0c1f; border:1px solid #374151; border-radius:10px; padding:10px 12px; margin-bottom:10px; font-size:13px; color:#c9d1d9; }
         .cust label { display:inline-flex; align-items:center; gap:6px; margin:3px 12px 3px 0; }
+        [data-tip] { position:relative; }
+        [data-tip]:hover::after, [data-tip]:focus-visible::after { content:attr(data-tip); position:absolute; left:50%; top:calc(100% + 9px); transform:translateX(-50%); z-index:500;
+            width:max-content; max-width:290px; white-space:normal; text-align:left; text-transform:none; letter-spacing:0;
+            background:#1a1a2e; color:#e0e0f0; border:1px solid #a855f7; border-radius:10px; padding:9px 12px; font:400 12.5px/1.45 Inter,system-ui,sans-serif; box-shadow:0 10px 30px rgba(0,0,0,.6); pointer-events:none; }
+        [data-tip]:hover::before, [data-tip]:focus-visible::before { content:''; position:absolute; left:50%; top:calc(100% + 3px); transform:translateX(-50%); border:6px solid transparent; border-top:0; border-bottom-color:#a855f7; z-index:501; }
+        [data-tip].tip-l:hover::after { left:auto; right:0; transform:none; } [data-tip].tip-r:hover::after { left:0; transform:none; }
+        .help { background:#0f1326; border:1px solid #374151; border-radius:12px; padding:4px 16px; margin-bottom:14px; font-size:14px; color:#c9d1d9; }
+        .help summary { cursor:pointer; padding:10px 0; color:#67e8f9; font-weight:600; }
+        .help h4 { color:#a855f7; font-size:14px; margin:12px 0 4px; } .help ol, .help ul { margin:0 0 10px 20px; color:#8b949e; line-height:1.65; } .help b { color:#c9d1d9; }
         .devlog { background:#0a0c1f; border:1px solid #1f2439; border-radius:10px; padding:10px 12px; font:12px/1.6 monospace; color:#8b949e; max-height:190px; overflow:auto; white-space:pre-wrap; }
     
   /* PLSChat theme for the esp-web-tools install dialog (it is white/blue by default) */
@@ -175,9 +184,9 @@
                 <div class="badge">SECURE • MQTT</div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn btn-secondary" onclick="location.reload()" title="Reload the page — you stay logged in for this tab">&#8635; Refresh</button>
-                <button id="release-serial-btn" class="btn btn-secondary" onclick="releaseSerialPort()" title="Disconnect the USB device so the flasher (or another program) can use it">&#128268; Release USB</button>
-                <button class="btn btn-secondary" onclick="lockAdmin()" title="Lock this page — password required again">&#128274; Lock</button>
+                <button data-tip="Reloads the page. You will be asked for the admin password again." class="tip-l btn btn-secondary" onclick="location.reload()">&#8635; Refresh</button>
+                <button data-tip="Lets go of the USB device so the firmware installer or another program can use it. This happens by itself when you open the Firmware tab." id="release-serial-btn" class="tip-l btn btn-secondary" onclick="releaseSerialPort()">&#128268; Release USB</button>
+                <button data-tip="Locks this page. The admin password is needed to open it again." class="tip-l btn btn-secondary" onclick="lockAdmin()">&#128274; Lock</button>
                 <a href="../index.html" class="btn btn-secondary">&#8592; Back to Site</a>
             </div>
         </header>
@@ -192,18 +201,18 @@
                 <input type="password" id="lic-write-key" placeholder="Needed to sign licences and commands" autocomplete="off">
                 <button type="button" class="pw-eye" onclick="togglePw('lic-write-key',this)" title="Show key">&#128065;</button>
             </div>
-            <span class="pill2" id="serial-pill">USB: not connected</span>
-            <button class="mini" onclick="serialConnect()">&#128268; Connect a device</button>
+            <span data-tip="Shows whether this page is talking to a unit over USB." class="tip-l pill2" id="serial-pill">USB: not connected</span>
+            <button data-tip="Pick the PLSChat unit plugged into this PC. The page then listens to it: readings from every company unit it can hear appear on the Devices tab." class="tip-l mini" onclick="serialConnect()">&#128268; Connect a device</button>
         </div>
         <div style="font-size:12px;color:#64748b;margin:-10px 0 16px 4px;">The write key stays in this tab's memory only &mdash; it is never saved, and is checked by the server on every action.</div>
 
         <div class="tabs" id="tabs">
-            <div class="tab on" data-t="devices" onclick="showTab('devices')">&#127899; Devices<span class="n" id="dev-count" style="display:none">0</span></div>
-            <div class="tab" data-t="licences" onclick="showTab('licences')">&#128273; Licences</div>
-            <div class="tab" data-t="firmware" onclick="showTab('firmware')">&#127981; Firmware</div>
-            <div class="tab" data-t="company" onclick="showTab('company')">&#128737; Company &amp; tamper</div>
-            <div class="tab" data-t="network" onclick="showTab('network')">&#128225; Network</div>
-            <div class="tab" data-t="account" onclick="showTab('account')">&#128100; Account</div>
+            <div data-tip="Live readings and relay switches for your company units." class="tip-r tab on" data-t="devices" onclick="showTab('devices')">&#127899; Devices<span class="n" id="dev-count" style="display:none">0</span></div>
+            <div data-tip="Make a licence for a MAC address and send it by USB or over the mesh." class="tip-r tab" data-t="licences" onclick="showTab('licences')">&#128273; Licences</div>
+            <div data-tip="Install company or test firmware. Opening this tab releases the USB device for the installer."  class="tab" data-t="firmware" onclick="showTab('firmware')">&#127981; Firmware</div>
+            <div data-tip="Turn company mode and the tamper watch on or off for the plugged-in unit."  class="tab" data-t="company" onclick="showTab('company')">&#128737; Company &amp; tamper</div>
+            <div data-tip="Set the radio transmit power on company units with a signed command."  class="tab" data-t="network" onclick="showTab('network')">&#128225; Network</div>
+            <div data-tip="Change the admin password."  class="tab" data-t="account" onclick="showTab('account')">&#128100; Account</div>
         </div>
 
         <!-- ═══════════════════════════════════════════════════════════
@@ -213,13 +222,42 @@
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
                 <h3>&#127899; Company devices</h3>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button class="btn btn-secondary" style="padding:8px 14px;font-size:14px;" onclick="devAskReport('')">&#8635; Ask all to report</button>
-                    <button class="btn btn-secondary" style="padding:8px 14px;font-size:14px;" onclick="devToggleKey()">&#128272; Company key</button>
+                    <button data-tip="Sends one signed command asking every company unit in range to send its readings now. Answers arrive over the next 15 seconds. Needs the write key." class="tip-l btn btn-secondary" style="padding:8px 14px;font-size:14px;" onclick="devAskReport('')">&#8635; Ask all to report</button>
+                    <button data-tip="Set the shared passphrase on the unit that is plugged in. Units can only read each other when they hold the same one." class="tip-l btn btn-secondary" style="padding:8px 14px;font-size:14px;" onclick="devToggleKey()">&#128272; Company key</button>
                 </div>
             </div>
             <p style="color:#8b949e;font-size:14px;margin-bottom:14px;">
                 Readings arrive by radio through the company unit plugged into this PC, encrypted with your company key. Click any <strong>name</strong> or <strong>label</strong> to rename it, and use <strong>Customise</strong> to choose which boxes a device shows. Relays are switched with a command signed by the server for that one device.
             </p>
+            <details class="help">
+                <summary>How to set this up (company key, switches, relays, sensors)</summary>
+                <h4>1. Company key &mdash; do this first, on every company unit</h4>
+                <ul>
+                    <li>It is one passphrase of 12 or more characters that <b>you</b> choose. Each unit turns it into an encryption key and keeps it.</li>
+                    <li>Readings are encrypted with it before they go on the air. Customer devices pass them along but cannot read them. A unit with a different key (or none) is simply not shown here.</li>
+                    <li>Set it either here (<b>Company key</b> button, one unit at a time over USB) or on the unit's own page: <b>I/O</b> tab &rarr; Company key. Use exactly the same passphrase on all of them.</li>
+                    <li>It is never sent to the server and never saved in this page. Keep a copy somewhere safe &mdash; it cannot be read back out of a unit.</li>
+                </ul>
+                <h4>2. Tell each unit what is wired to it</h4>
+                <ol>
+                    <li>Join the unit's WiFi (PLSChat-xxxx), open <b>192.168.4.1</b>, unlock it and open the <b>I/O</b> tab (company units only).</li>
+                    <li>Tick what is fitted, give each thing a name, choose its pin, press Save. Only ticked items are sent, so a unit with nothing ticked shows just Battery, Licence, Tamper and Signal here.</li>
+                </ol>
+                <h4>3. Wiring</h4>
+                <ul>
+                    <li><b>Switch / door contact / alarm output (Input 1, Input 2):</b> wire a volt-free contact between the input pin and <b>GND</b>. Closed = ACTIVE. Never put a voltage on the pin.</li>
+                    <li><b>Relay 1, Relay 2:</b> the pin drives the <b>IN</b> terminal of a 3.3&nbsp;V relay module (with its own transistor or opto) &mdash; never a bare relay coil. Power the module from 5&nbsp;V / GND. If the relay is on when it should be off, tick <b>Active low</b>. Choose what it does after a restart: off, on, or as it was.</li>
+                    <li><b>Temperature / humidity / pressure:</b> a BME280 board on 3.3&nbsp;V, GND, SDA and SCL.</li>
+                    <li><b>Wind:</b> a pulse (reed switch) anemometer between the wind pin and GND. Enter its mph per pulse-per-second from the sensor's data sheet.</li>
+                    <li>The default pins are a first guess for the Heltec V4 &mdash; check them against your board before wiring.</li>
+                </ul>
+                <h4>4. Using this page</h4>
+                <ul>
+                    <li>Plug any one company unit into this PC and press <b>Connect a device</b>. Every unit it can hear appears as a card. Units report every 5, 15 or 60 minutes, at once when something changes, and when you press <b>Report now</b>.</li>
+                    <li>Relay switches need the <b>write key</b>: the server signs each command for one unit. The switch shows &ldquo;sent, waiting&rdquo; until that unit confirms.</li>
+                    <li>Click a device name or a box label to rename it. <b>Customise</b> chooses which boxes show. These are saved in this browser only.</li>
+                </ul>
+            </details>
             <div class="config-section" id="dev-keybox" style="display:none;margin-bottom:14px;">
                 <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Company key</div>
                 <p style="color:#8b949e;font-size:13px;margin-bottom:10px;">Every company unit needs the <strong>same</strong> passphrase (12+ characters) to read each other's reports. It is sent only down the USB cable to the connected unit, which stores a key made from it. It is not saved in this page and never goes to the server. You can also set it on a unit's own I/O tab.</p>
@@ -228,7 +266,7 @@
                         <input type="password" id="dev-cokey" placeholder="Company passphrase (12+ characters)" autocomplete="off" style="width:100%;padding:10px;background:#0a0c1f;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
                         <button type="button" class="pw-eye" onclick="togglePw('dev-cokey',this)" title="Show">&#128065;</button>
                     </div>
-                    <button class="btn" onclick="devSetKey()">Set on the connected unit</button>
+                    <button data-tip="Sends the passphrase down the USB cable to the plugged-in unit only. Repeat for each unit, or type it on the unit&#39;s own I/O tab." class="tip-l btn" onclick="devSetKey()">Set on the connected unit</button>
                 </div>
                 <div id="dev-key-status" style="font-size:13px;color:#64748b;margin-top:8px;font-family:monospace;min-height:16px;"></div>
             </div>
@@ -278,7 +316,7 @@
                 </div>
             </div>
             <div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-                <button class="btn" id="cp-btn" onclick="changeAdminPassword()">Update Password</button>
+                <button data-tip="Checks your current password with the server, then stores the new one (hashed)." class="tip-r btn" id="cp-btn" onclick="changeAdminPassword()">Update Password</button>
                 <div id="cp-status" style="font-size:14px;color:#64748b;font-family:monospace;min-height:18px;"></div>
             </div>
         </div>
@@ -359,8 +397,8 @@
                 Only enable this on <strong>owner-deployed company units</strong>. With tamper armed, opening the case (or, if VBUS-trip is on, attaching USB) will lock or wipe that device's own keys per its policy. Set the tamper policy first if you need WIPE vs LOCK.
             </div>
             <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-                <button class="btn" onclick="setCompanyMode(true)">&#128274; Enable Company Mode (COMPANY:ON)</button>
-                <button class="btn btn-secondary" onclick="setCompanyMode(false)">Disable (COMPANY:OFF)</button>
+                <button data-tip="Marks the plugged-in unit as a company unit and arms its tamper watch. Only for units you own and deploy." class="tip-r btn" onclick="setCompanyMode(true)">&#128274; Enable Company Mode (COMPANY:ON)</button>
+                <button data-tip="Turns company mode and the tamper watch off on the plugged-in unit."  class="btn btn-secondary" onclick="setCompanyMode(false)">Disable (COMPANY:OFF)</button>
             </div>
             <div id="company-status" style="font-size:14px;color:#64748b;margin-top:12px;font-family:monospace;min-height:18px;word-break:break-all;"></div>
             <p style="color:#64748b;font-size:12px;margin-top:12px;">
@@ -385,9 +423,9 @@
                     style="width:100%;padding:10px;border-radius:8px;border:1px solid #374151;background:#0b1020;color:#e5e7eb;font-family:monospace;" maxlength="8">
             </div>
             <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-                <button class="btn" onclick="netPowerSend(22)" style="background:#7f1d1d;border-color:#b91c1c;">&#9888; Max (22 dBm)</button>
-                <button class="btn" onclick="netPowerSend(14)">Legal (14 dBm)</button>
-                <button class="btn btn-secondary" onclick="netPowerSend(10)">Low (10 dBm)</button>
+                <button data-tip="Full power. Above the UK limit with the stock antenna - enclosed or attenuated installs only." class="tip-r btn" onclick="netPowerSend(22)" style="background:#7f1d1d;border-color:#b91c1c;">&#9888; Max (22 dBm)</button>
+                <button data-tip="The UK 868 MHz limit. The safe default."  class="btn" onclick="netPowerSend(14)">Legal (14 dBm)</button>
+                <button data-tip="Lower power for units that are close together. Saves battery."  class="btn btn-secondary" onclick="netPowerSend(10)">Low (10 dBm)</button>
             </div>
             <div class="warning" style="margin-top:14px;">
                 <strong>Max (22 dBm) is above the UK 868 MHz limit (25 mW ERP / 14 dBm)</strong> with the stock antenna. Only use Max in a genuinely enclosed / attenuated deployment where the radiated power at the antenna stays legal. <strong>Legal (14 dBm)</strong> is the safe default.
@@ -416,10 +454,10 @@
                         <input type="text" id="lic-mac" placeholder="90:70:69:83:E6:1C"
                                style="width:100%;padding:10px;background:#0a0c1f;border:1px solid #374151;color:#c9d1d9;border-radius:8px;font-family:monospace;">
                     </div>
-                    <button onclick="licDetectDevice()" class="btn btn-secondary" style="padding:10px 18px;white-space:nowrap;">
+                    <button data-tip="Reads the MAC address and licence state from the plugged-in device."  onclick="licDetectDevice()" class="btn btn-secondary" style="padding:10px 18px;white-space:nowrap;">
                         &#128268; Auto-detect via USB
                     </button>
-                    <button onclick="licCheckExisting()" class="btn btn-secondary" style="padding:10px 18px;white-space:nowrap;">
+                    <button data-tip="Asks the server whether a licence was already issued for this MAC. Nothing is changed." onclick="licCheckExisting()" class="tip-l btn btn-secondary" style="padding:10px 18px;white-space:nowrap;">
                         &#128269; Check for existing licence
                     </button>
                 </div>
@@ -451,14 +489,14 @@
             <div class="config-section">
                 <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Step 3 — Generate &amp; Send</div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                    <button onclick="licGenerate()" class="btn" style="flex:1;">
+                    <button data-tip="The server signs a new licence for the MAC above and stores it. Needs the write key." onclick="licGenerate()" class="tip-r btn" style="flex:1;">
                         &#9889; Generate Signed Licence
                     </button>
-                    <button onclick="licSendToDevice()" class="btn" id="lic-send-btn"
+                    <button data-tip="Installs the licence on the device plugged into this PC."  onclick="licSendToDevice()" class="btn" id="lic-send-btn"
                             style="flex:1;background:linear-gradient(90deg,#22c55e,#16a34a);opacity:.4;cursor:not-allowed;" disabled>
                         &#128268; Send to the connected device (USB)
                     </button>
-                    <button onclick="licSendMesh()" class="btn" id="lic-mesh-btn" style="flex:1;background:linear-gradient(90deg,#a855f7,#6366f1);">
+                    <button data-tip="The plugged-in device sends the licence by radio to the device it was made for. Up to 6 tries, about 3 minutes." onclick="licSendMesh()" class="tip-l btn" id="lic-mesh-btn" style="flex:1;background:linear-gradient(90deg,#a855f7,#6366f1);">
                         &#128225; Send over the mesh
                     </button>
                 </div>
@@ -478,7 +516,7 @@
                     <textarea id="lic-paste" rows="3" placeholder="v1|90:70:69:83:E6:1C|1782000000|yearly|a1b2c3..."
                               style="width:100%;padding:10px;background:#0a0c1f;border:1px solid #374151;color:#c9d1d9;border-radius:8px;font-family:monospace;font-size:.8em;resize:vertical;word-break:break-all;"></textarea>
                 </div>
-                <button onclick="licSendPasted()" class="btn" id="lic-paste-send-btn"
+                <button data-tip="Installs the pasted licence on the device plugged into this PC." onclick="licSendPasted()" class="tip-r btn" id="lic-paste-send-btn"
                         style="background:linear-gradient(90deg,#22c55e,#16a34a);">
                     &#128268; Send Pasted Licence to Device (USB)
                 </button>
@@ -834,6 +872,8 @@
         //  acks, the Devices tab). Release USB stops it and frees the port.
         // ═══════════════════════════════════════════════════════════
         let serialPumpOn = false;
+        let lastSerialPort = null;      // remembered so the page can reconnect without asking
+        let serialAutoReleased = false;
         const serialSubs = new Set();
         const SERIAL_HINT = ' — if the flasher or another program is holding the USB port, press "Release USB" (or unplug and replug), then retry.';
 
@@ -846,8 +886,13 @@
         }
         async function serialEnsure() {
             if (!licSerialPort || !licSerialPort.writable) {
-                licSerialPort = await navigator.serial.requestPort();
-                await licSerialPort.open({ baudRate: 115200 });
+                let p = null;
+                if (lastSerialPort) {                       // the unit used before: no need to pick it again
+                    try { await lastSerialPort.open({ baudRate: 115200 }); p = lastSerialPort; } catch (e) { p = null; }
+                }
+                if (!p) { p = await navigator.serial.requestPort(); await p.open({ baudRate: 115200 }); }
+                licSerialPort = lastSerialPort = p;
+                devClearLocal();
             }
             if (!serialPumpOn) serialPump(licSerialPort);
             serialUi();
@@ -913,6 +958,7 @@
                 if (port) { try { await port.close(); } catch (e) {} }
             } finally {
                 if (licSerialPort === port) licSerialPort = null;
+                devClearLocal(); devRender();
                 serialUi();
                 if (showFeedback) {
                     const b = btnEl || document.getElementById('release-serial-btn');
@@ -927,6 +973,14 @@
             document.querySelectorAll('.tab').forEach(e => e.classList.toggle('on', e.dataset.t === t));
             document.querySelectorAll('.card[data-tab]').forEach(c => { c.style.display = (c.dataset.tab === t) ? '' : 'none'; });
             try { sessionStorage.setItem('plschat_admin_tab', t); } catch (e) {}
+            // The installer needs the USB device to itself: let go of it on the Firmware tab,
+            // and pick it up again (same unit, no prompt) when leaving.
+            if (t === 'firmware') {
+                if (licSerialPort) { serialAutoReleased = true; releaseSerialPort(false); }
+            } else if (serialAutoReleased && lastSerialPort) {
+                serialAutoReleased = false;
+                setTimeout(() => { serialEnsure().then(() => serialSend('IO:REPORT')).catch(() => {}); }, 600);
+            }
         }
 
         // ── Licence: read the connected device ──────────────────
@@ -1115,6 +1169,7 @@
             const el = document.getElementById('dev-log'); if (!el) return;
             el.textContent = new Date().toLocaleTimeString('en-GB') + '  ' + t + '\n' + el.textContent.slice(0, 6000);
         }
+        function devClearLocal() { for (const k in devs) devs[k].local = false; }
         function devGet(n) { return devs[n] || (devs[n] = { node: n, rep: null, info: null, last: 0, rssi: 0, hops: 0, pend: {} }); }
         function devName(n) { const d = devs[n], p = devPrefs[n]; return (p && p.name) || (d && d.info && d.info.dev) || ('Node ' + n); }
         function cstr(b, off, len) { let s = ''; for (let i = off; i < off + len && b[i]; i++) s += String.fromCharCode(b[i]); return s.replace(/[^\x20-\x7E]/g, '').trim(); }
@@ -1126,7 +1181,7 @@
                 for (let i = 0; i + 1 < hex.length; i += 2) b.push(parseInt(hex.substr(i, 2), 16));
                 const d = devGet(n);
                 d.last = Date.now(); d.rssi = parseInt(m[2], 10); d.hops = parseInt(m[3], 10);
-                d.local = (d.rssi === 0 && d.hops === 0);
+                if (d.rssi === 0 && d.hops === 0) { devClearLocal(); d.local = true; }
                 if (b[0] === 1 && b.length >= 24) {
                     const i16 = o => { const v = (b[o] << 8) | b[o + 1]; return v > 32767 ? v - 65536 : v; };
                     const u16 = o => (b[o] << 8) | b[o + 1];
@@ -1202,7 +1257,7 @@
                 case 'b': return r.mv > 500 ? [(r.mv / 1000).toFixed(2) + ' V', r.bat && r.bat < 20 ? 'alert' : ''] : ['USB', ''];
                 case 'lic': return !r.licensed ? ['NONE', 'alert'] : (r.days === 65535 ? ['OK', 'on'] : [r.days + ' d', r.days < 30 ? 'alert' : 'on']);
                 case 'tam': return r.tampered ? ['TRIPPED', 'alert'] : (r.armed ? ['Armed', 'on'] : ['Off', 'off']);
-                case 'sig': return d.local ? ['USB', 'on'] : [d.rssi + ' dBm', d.rssi > -100 ? 'on' : (d.rssi > -115 ? '' : 'alert')];
+                case 'sig': return d.local ? ['USB', 'on'] : d.rssi === 0 ? ['--', 'off'] : [d.rssi + ' dBm', d.rssi > -100 ? 'on' : (d.rssi > -115 ? '' : 'alert')];
             }
             return null;
         }
@@ -1219,7 +1274,7 @@
                 const stale = (Date.now() - d.last) > 150 * 60000;
                 let h = '<div class="dev' + (stale ? ' stale' : '') + '"><div class="dev-head"><div style="flex:1;min-width:0">'
                     + '<input class="dev-name" type="text" maxlength="24" value="' + esc(p.name) + '" placeholder="' + esc((d.info && d.info.dev) || ('Node ' + n)) + '" title="Click to rename" onchange="devRename(\'' + n + '\',this.value)" onblur="devBlur()">'
-                    + '<div class="dev-sub">' + n + (r ? ' &bull; v007.' + r.fw : '') + (d.local ? ' &bull; plugged in here' : (d.hops ? ' &bull; ' + d.hops + ' hop' + (d.hops > 1 ? 's' : '') : ' &bull; direct')) + '</div></div>'
+                    + '<div class="dev-sub">' + n + (r ? ' &bull; v007.' + r.fw : '') + (d.local ? ' &bull; plugged in here' : (d.rssi === 0 ? ' &bull; was plugged in' : d.hops ? ' &bull; ' + d.hops + ' hop' + (d.hops > 1 ? 's' : '') : ' &bull; direct')) + '</div></div>'
                     + '<span class="pill2 ' + (stale ? 'warn' : 'ok') + '">' + (stale ? 'quiet &bull; ' : '') + devAgo(d.last) + '</span></div>';
                 if (devOpenCust[n]) {
                     h += '<div class="cust"><div style="color:#8b949e;margin-bottom:6px;">Boxes to show for this device:</div>';
@@ -1244,10 +1299,10 @@
                         const pe = d.pend[i], on = pe ? pe.want : r.rl[i];
                         h += '<div class="rl"><input class="lbl" type="text" maxlength="14" value="' + esc(devLabel(n, 'rl' + i)) + '" title="Click to rename" onchange="devRelabel(\'' + n + '\',\'rl' + i + '\',this.value)" onblur="devBlur()">'
                             + '<span class="st" style="color:' + (pe ? '#eab308' : (r.rl[i] ? '#22c55e' : '#8b949e')) + '">' + (pe ? 'sent, waiting...' : (r.rl[i] ? 'ON' : 'OFF')) + '</span>'
-                            + '<label class="sw"><input type="checkbox" ' + (on ? 'checked' : '') + (pe ? ' disabled' : '') + ' onchange="devRelay(\'' + n + '\',' + i + ',this.checked)"><span></span></label></div>';
+                            + '<label class="sw tip-l" data-tip="Switches this relay with a command signed by the server for this one unit. Needs the write key."><input type="checkbox" ' + (on ? 'checked' : '') + (pe ? ' disabled' : '') + ' onchange="devRelay(\'' + n + '\',' + i + ',this.checked)"><span></span></label></div>';
                     }
                 }
-                h += '<div class="dev-foot"><button class="mini" onclick="devAskReport(\'' + n + '\')">&#8635; Report now</button><button class="mini" onclick="devCust(\'' + n + '\')">&#9881; Customise</button></div></div>';
+                h += '<div class="dev-foot"><button class="mini tip-r" data-tip="Ask this unit to send its readings now. Needs the write key." onclick="devAskReport(\'' + n + '\')">&#8635; Report now</button><button class="mini" data-tip="Choose which boxes this card shows, go back to the names set on the unit, or remove the card." onclick="devCust(\'' + n + '\')">&#9881; Customise</button></div></div>';
                 return h;
             }).join('');
         }
