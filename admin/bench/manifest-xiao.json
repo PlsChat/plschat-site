@@ -1,6 +1,6 @@
 {
-  "name": "PLSChat Key Fob (XIAO ESP32-S3) - v2.69 BENCH TEST",
-  "version": "2.69-test",
+  "name": "PLSChat Key Fob (XIAO ESP32-S3) - v2.70 BENCH TEST",
+  "version": "2.70-test",
   "new_install_prompt_erase": true,
   "reset-on-install": true,
   "builds": [
@@ -8,19 +8,19 @@
       "chipFamily": "ESP32-S3",
       "parts": [
         {
-          "path": "/PLSChat_v2_60_XIAO.ino.bootloader.bin?v=269a",
+          "path": "/PLSChat_v2_60_XIAO.ino.bootloader.bin?v=270a",
           "offset": 0
         },
         {
-          "path": "/PLSChat_v2_60_XIAO.ino.partitions.bin?v=269a",
+          "path": "/PLSChat_v2_60_XIAO.ino.partitions.bin?v=270a",
           "offset": 32768
         },
         {
-          "path": "/boot_app0.bin?v=269a",
+          "path": "/boot_app0.bin?v=270a",
           "offset": 57344
         },
         {
-          "path": "/PLSChat_v2_69_XIAO.ino.bin?v=269a",
+          "path": "/PLSChat_v2_70_XIAO.ino.bin?v=270a",
           "offset": 65536
         }
       ]
