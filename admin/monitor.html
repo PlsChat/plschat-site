@@ -371,28 +371,28 @@
                 Delete any saved passwords for 192.168.4.1 on your phone first &mdash; an autofilled old PIN counts as a wrong attempt.
             </p>
             <div class="config-section" style="margin-bottom:14px;">
-                <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:#67e8f9;margin-bottom:12px;">Customer devices &mdash; v2.74 (test)</div>
+                <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:#67e8f9;margin-bottom:12px;">Customer devices &mdash; v2.75 (test)</div>
                 <div style="display:flex;gap:24px;flex-wrap:wrap;">
                     <div style="flex:1;min-width:240px;">
                         <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
-                        <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=274a"></esp-web-install-button>
+                        <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=275a"></esp-web-install-button>
                     </div>
                     <div style="flex:1;min-width:240px;">
                         <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">XIAO ESP32-S3 key fob</div>
-                        <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=274a"></esp-web-install-button>
+                        <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=275a"></esp-web-install-button>
                     </div>
                 </div>
             </div>
             <div class="config-section" style="margin-bottom:14px;border-color:#a16207;">
-                <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:#fbbf24;margin-bottom:12px;">Company devices &mdash; v007.17 (test) &bull; admin use only</div>
+                <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:#fbbf24;margin-bottom:12px;">Company devices &mdash; v007.18 (test) &bull; admin use only</div>
                 <div style="display:flex;gap:24px;flex-wrap:wrap;">
                     <div style="flex:1;min-width:240px;">
                         <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
-                        <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=17a"></esp-web-install-button>
+                        <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=18a"></esp-web-install-button>
                     </div>
                     <div style="flex:1;min-width:240px;">
                         <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">XIAO ESP32-S3 (B2B radio kit)</div>
-                        <esp-web-install-button manifest="/admin/fw/manifest-v007-xiao-test.json?v=17a"></esp-web-install-button>
+                        <esp-web-install-button manifest="/admin/fw/manifest-v007-xiao-test.json?v=18a"></esp-web-install-button>
                     </div>
                 </div>
                 <p style="color:#8b949e;font-size:13px;margin-top:10px;">
@@ -401,8 +401,11 @@
                 </p>
             </div>
             <details style="margin-top:8px;">
-                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.74 + v007.17)</summary>
+                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.75 + v007.18)</summary>
                 <ol style="color:#8b949e;font-size:14px;line-height:1.7;margin:10px 0 0 20px;">
+                    <li><strong>New radio settings (v2.75 / v007.18): reflash EVERY device.</strong> They now use 869.4625 MHz, 62.5 kHz, SF9 with the amplifier on. A device left on older firmware cannot hear the new ones at all.</li>
+                    <li>Range test: ping between two devices at a spot that was marginal before; expect a clearly stronger &ldquo;they heard you&rdquo; figure. Serial shows <code>[Radio] TX power HIGH: amplifier on</code> on a Heltec at start-up.</li>
+                    <li>Do not run a Heltec on High without an antenna fitted &mdash; the amplifier can be damaged.</li>
                     <li>Flash without erasing. Unlock: contacts, rooms, messages and settings are still there. The v2.70 tests (clock, quiet hours, Settings tabs) still pass.</li>
                     <li><strong>Licence over the mesh:</strong> plug in device A, leave device B on battery in another room. Licences tab &rarr; type B's MAC &rarr; Generate &rarr; <em>Send over the mesh</em>. Expect &ldquo;installed&rdquo; within about 30 s, and B's Licence page shows the new expiry. Works while B is locked.</li>
                     <li>Send B's licence a second time &rarr; still &ldquo;installed&rdquo;. A licence made for a different MAC never reaches B and times out after 6 tries.</li>
@@ -455,7 +458,7 @@
                 <span style="font-size:13px;color:#64748b;">Server-signed &bull; v007.7+ &bull; Ed25519</span>
             </div>
             <p style="color:#8b949e;font-size:14px;margin-bottom:16px;">
-                Sets the LoRa transmit power on company nodes across the mesh. The Worker signs the command with the company key; the <strong>connected</strong> device broadcasts it over serial and every company repeater relays &amp; applies it. Leave <em>Target</em> blank to address <strong>all</strong> company nodes, or enter one node ID (8 hex) to change just one.
+                Sets the LoRa transmit power level on company nodes across the mesh (869.40&ndash;869.65 MHz band, limit 500 mW ERP). The Worker signs the command with the company key; the <strong>connected</strong> device broadcasts it over serial and every company repeater relays &amp; applies it. Leave <em>Target</em> blank to address <strong>all</strong> company nodes, or enter one node ID (8 hex) to change just one.
             </p>
             <div class="config-section" style="margin-bottom:16px;">
                 <label style="display:block;font-size:13px;color:#94a3b8;margin-bottom:6px;">Target node ID (blank = all company nodes)</label>
@@ -463,12 +466,12 @@
                     style="width:100%;padding:10px;border-radius:8px;border:1px solid #374151;background:#0b1020;color:#e5e7eb;font-family:monospace;" maxlength="8">
             </div>
             <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-                <button data-tip="Full power. Above the UK limit with the stock antenna - enclosed or attenuated installs only." class="tip-r btn" onclick="netPowerSend(22)" style="background:#7f1d1d;border-color:#b91c1c;">&#9888; Max (22 dBm)</button>
-                <button data-tip="The UK 868 MHz limit. The safe default."  class="btn" onclick="netPowerSend(14)">Legal (14 dBm)</button>
+                <button data-tip="Amplifier on, about 25 dBm. The default. Inside the 500 mW band limit with a normal antenna." class="tip-r btn" onclick="netPowerSend(22)" >High (amplifier on, ~25 dBm)</button>
+                <button data-tip="25 mW with the amplifier bypassed. Use with a high-gain antenna or to save battery."  class="btn" onclick="netPowerSend(14)">Standard (14 dBm, 25 mW)</button>
                 <button data-tip="Lower power for units that are close together. Saves battery."  class="btn btn-secondary" onclick="netPowerSend(10)">Low (10 dBm)</button>
             </div>
-            <div class="warning" style="margin-top:14px;">
-                <strong>Max (22 dBm) is above the UK 868 MHz limit (25 mW ERP / 14 dBm)</strong> with the stock antenna. Only use Max in a genuinely enclosed / attenuated deployment where the radiated power at the antenna stays legal. <strong>Legal (14 dBm)</strong> is the safe default.
+            <div class="info" style="margin-top:14px;">
+                <strong>High</strong> switches the Heltec amplifier in (about 25 dBm / 300 mW) and is the default from v007.18. It stays inside the 500 mW ERP limit of the 869.40&ndash;869.65 MHz band with a normal (about 2 dBi) antenna. With a high-gain antenna use <strong>Standard</strong>, or ask for the drive level to be reduced. A XIAO has no amplifier: High there is 22 dBm.
             </div>
             <div id="np-status" style="font-size:14px;color:#64748b;margin-top:12px;font-family:monospace;min-height:18px;word-break:break-all;white-space:pre-wrap;"></div>
             <p style="color:#64748b;font-size:12px;margin-top:12px;">
@@ -1188,7 +1191,7 @@
                 el.textContent = 'Target must be 8 hex characters (a node ID), or blank for all nodes.';
                 return;
             }
-            if (dbm === 22 && !confirm('Max (22 dBm) is above the UK 868 MHz legal limit with the stock antenna. Only continue if this deployment keeps the radiated power legal. Send Max power?')) return;
+            
             const acks = [];
             let failed = false;
             const sub = ln => {
