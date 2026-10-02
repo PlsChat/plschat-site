@@ -212,29 +212,29 @@
             <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:10px;">
                 <div style="flex:1;min-width:240px;">
                     <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
-                    <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=268a"></esp-web-install-button>
+                    <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=269a"></esp-web-install-button>
                 </div>
                 <div style="flex:1;min-width:240px;">
                     <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">XIAO ESP32-S3 key fob</div>
-                    <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=268a"></esp-web-install-button>
+                    <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=269a"></esp-web-install-button>
                 </div>
                 <div style="flex:1;min-width:240px;">
-                    <div style="font-size:13px;color:#fbbf24;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Company v007.10 (test)</div>
-                    <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=10a"></esp-web-install-button>
+                    <div style="font-size:13px;color:#fbbf24;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Company v007.11 (test)</div>
+                    <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=11a"></esp-web-install-button>
                 </div>
             </div>
             <details style="margin-top:8px;">
-                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.68 + v007.10)</summary>
+                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.69 + v007.11)</summary>
                 <ol style="color:#8b949e;font-size:14px;line-height:1.7;margin:10px 0 0 20px;">
-                    <li>Flash <strong>every</strong> consumer bench device to v2.68 without erasing (revocations changed number in v2.68, so v2.65&ndash;v2.67 and v2.68 can't revoke to each other). Unlock: contacts, rooms and messages still there.</li>
-                    <li>XIAO fob: serial shows <code>[Vault] old message item removed (now saved in parts)</code> once, and <strong>no</strong> <code>write 'mg' FAILED</code>. Send a few messages, power-cycle, unlock &rarr; history is still there.</li>
-                    <li>Fill the history (40+ messages) on the XIAO, power-cycle again &rarr; still there; no <code>message history not fully saved</code> lines.</li>
-                    <li>Revoke the key on B &rarr; A removes B and B shows the confirmation (now packet types 0x13/0x14).</li>
-                    <li>Unread badges, <code>C:\test</code> backslash test and GrapheneOS app test from v2.66 still pass.</li>
-                    <li>Company unit on <strong>v007.10</strong> (third button, answer <strong>No</strong> to erase): Node ID unchanged, contacts kept, Bluetooth-only mode still shows the right Node ID.</li>
-                    <li>v007.10 chat: fill past 40 messages, then send from another device while on Settings &rarr; red badges appear. A message with a backslash doesn't freeze the chat.</li>
-                    <li>Pair a v2.68 device with the v007.10 unit, then revoke on the v2.68 device &rarr; the company unit removes it and the v2.68 device shows it was confirmed.</li>
-                    <li>With a v2.68 device between the admin page and a company unit, send a TX-power admin command &rarr; the company unit applies it (consumer units now pass it on intact).</li>
+                    <li>Flash without erasing. Contacts, rooms and messages still there.</li>
+                    <li><strong>Pending contact:</strong> switch device B off. On A: Contacts &rarr; + Add &rarr; B's code. After ~25 s it says &ldquo;Saved as Pending&rdquo; and B shows in the list with an orange PENDING tag.</li>
+                    <li>Switch B on and unlock it. Within a few seconds of B's first HELLO (serial on A: <code>is in range - asking again</code>) B shows the pairing popup. Accept &rarr; A's list changes to a normal contact by itself.</li>
+                    <li>Resend and Cancel buttons on a pending row work. Reboot A with a request pending &rarr; it is still listed after unlocking.</li>
+                    <li>On B press <strong>Reject</strong> &rarr; the popup stays away (it used to come back).</li>
+                    <li><strong>Relayed pairing:</strong> put A and B out of each other's range with a v2.69 or v007.11 device between &rarr; pairing still completes.</li>
+                    <li><strong>Ping:</strong> Status &rarr; Ping network &rarr; every v2.69 / v007.11 device in reach is listed with its node ID (name if a contact), &ldquo;Direct&rdquo; or relays, and signal. Serial <code>PING</code> does the same.</li>
+                    <li>Settings &rarr; untick &ldquo;Answer network pings&rdquo; on B, save &rarr; B no longer appears in A's ping but still relays other devices' answers.</li>
+                    <li>v2.68 items still pass: XIAO history after power-cycle, revoke/confirm, unread badges.</li>
                 </ol>
             </details>
         </div>
