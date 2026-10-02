@@ -212,29 +212,31 @@
             <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:10px;">
                 <div style="flex:1;min-width:240px;">
                     <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
-                    <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=269a"></esp-web-install-button>
+                    <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=270a"></esp-web-install-button>
                 </div>
                 <div style="flex:1;min-width:240px;">
                     <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">XIAO ESP32-S3 key fob</div>
-                    <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=269a"></esp-web-install-button>
+                    <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=270a"></esp-web-install-button>
                 </div>
                 <div style="flex:1;min-width:240px;">
-                    <div style="font-size:13px;color:#fbbf24;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Company v007.11 (test)</div>
-                    <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=11a"></esp-web-install-button>
+                    <div style="font-size:13px;color:#fbbf24;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Company v007.12 (test)</div>
+                    <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=12a"></esp-web-install-button>
                 </div>
             </div>
             <details style="margin-top:8px;">
-                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.69 + v007.11)</summary>
+                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.70 + v007.12)</summary>
                 <ol style="color:#8b949e;font-size:14px;line-height:1.7;margin:10px 0 0 20px;">
-                    <li>Flash without erasing. Contacts, rooms and messages still there.</li>
-                    <li><strong>Pending contact:</strong> switch device B off. On A: Contacts &rarr; + Add &rarr; B's code. After ~25 s it says &ldquo;Saved as Pending&rdquo; and B shows in the list with an orange PENDING tag.</li>
-                    <li>Switch B on and unlock it. Within a few seconds of B's first HELLO (serial on A: <code>is in range - asking again</code>) B shows the pairing popup. Accept &rarr; A's list changes to a normal contact by itself.</li>
-                    <li>Resend and Cancel buttons on a pending row work. Reboot A with a request pending &rarr; it is still listed after unlocking.</li>
-                    <li>On B press <strong>Reject</strong> &rarr; the popup stays away (it used to come back).</li>
-                    <li><strong>Relayed pairing:</strong> put A and B out of each other's range with a v2.69 or v007.11 device between &rarr; pairing still completes.</li>
-                    <li><strong>Ping:</strong> Status &rarr; Ping network &rarr; every v2.69 / v007.11 device in reach is listed with its node ID (name if a contact), &ldquo;Direct&rdquo; or relays, and signal. Serial <code>PING</code> does the same.</li>
-                    <li>Settings &rarr; untick &ldquo;Answer network pings&rdquo; on B, save &rarr; B no longer appears in A's ping but still relays other devices' answers.</li>
-                    <li>v2.68 items still pass: XIAO history after power-cycle, revoke/confirm, unread badges.</li>
+                    <li>Flash one device first, without erasing. Unlock: the page loads, contacts / rooms / messages are still there.</li>
+                    <li><strong>Settings</strong> shows four small tabs: Alerts, Security, Network, Device. Change one thing on each and Save &rarr; only that tab's settings change, and you land back on the same tab.</li>
+                    <li><strong>Clock:</strong> Settings &rarr; Device shows the right time, &ldquo;set from your phone&rdquo;. Serial <code>STATUS</code> shows <code>CLOCK_LOCAL</code>.</li>
+                    <li>New messages show a clock time (e.g. <code>09:42</code>), older ones &ldquo;time unknown&rdquo;. Restart the device (not a power cut) &rarr; times are still right.</li>
+                    <li>Pull the power on device B, power it up near device A and don't open B's page: within ~5 min serial on B shows <code>[Clock] Time picked up from ...</code>.</li>
+                    <li><strong>Quiet hours:</strong> set a window that includes now, Save. Send a private message &rarr; no beep / buzz / flash, but the unread badge appears. Tick the sender under &ldquo;Always alert&rdquo; &rarr; it alerts again.</li>
+                    <li>Old tests still pass: pending pairing, Ping network, XIAO history after power-cycle, revoke.</li>
+                    <li><strong>Company v007.12</strong> (flash without erasing over v007.9/.10/.11): Node ID, contacts and PIN unchanged. After the first unlock serial shows <code>[Vault] Storage encrypted with your PIN</code>; <code>STATUS</code> shows <code>VAULT:OPEN</code>.</li>
+                    <li>v007.12: the Tamper tab appears (company units), Arm / Service toggles work, <code>TAMPER:STATUS</code> on serial answers. Do NOT test WIPE / scorched on a unit you want to keep.</li>
+                    <li>v007.12: Settings &rarr; Network shows Radio power; a signed TX-power admin command is applied and acknowledged; Settings &rarr; Security offers &ldquo;bind to this chip&rdquo;.</li>
+                    <li>v007.12 buzzer: leg 2 must go to GND on company units (GPIO4 is the lid switch).</li>
                 </ol>
             </details>
         </div>
