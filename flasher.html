@@ -100,7 +100,24 @@
     .modal-note { font-size: 13px; color: #64748b; margin-top: 16px; }
     .modal-close { display: block; width: 100%; margin-top: 24px; padding: 13px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #c9d1d9; font-size: 14px; font-weight: 600; cursor: pointer; }
     .modal-close:hover { background: rgba(255,255,255,0.1); }
-  </style>
+  
+  /* PLSChat theme for the esp-web-tools install dialog (it is white/blue by default) */
+  ewt-install-dialog{
+    --md-sys-color-primary:#a855f7;--md-sys-color-on-primary:#fff;
+    --md-sys-color-surface:#1a1a2e;--md-sys-color-surface-container:#1a1a2e;
+    --md-sys-color-surface-container-high:#1a1a2e;--md-sys-color-surface-container-highest:#23233a;
+    --md-sys-color-secondary-container:#2a2a40;--md-sys-color-on-secondary-container:#e0e0f0;
+    --md-sys-color-on-surface:#e0e0f0;--md-sys-color-on-surface-variant:#a0a0c0;
+    --md-sys-color-outline:#3a3a55;--md-sys-color-outline-variant:#2a2a40;
+    --md-sys-color-primary-container:#2a2a40;--md-sys-color-tertiary:#22d3ee;
+    --text-color:#a0a0c0;--danger-color:#f08080;
+    --roboto-font:system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  #plsFlashToast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99999;max-width:min(92vw,460px);
+    background:#1a1a2e;border:1px solid #a855f7;border-radius:14px;padding:14px 18px;color:#e0e0f0;
+    font:14px/1.5 system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.6)}
+  #plsFlashToast b{color:#22c55e}
+</style>
 </head>
 <body>
 
@@ -405,33 +422,28 @@
     }
   }
 
-  // ── Patch esp-web-tools "Next" → "Close" after installation complete ─────
-  function patchInstallButtons() {
-    document.querySelectorAll('esp-web-install-button').forEach(el => {
-      if (!el.shadowRoot || el._patched) return;
-      el._patched = true;
-      new MutationObserver(() => {
-        const shadow = el.shadowRoot;
-        if (!shadow) return;
-        if (!(shadow.textContent || '').includes('Installation complete')) return;
-        shadow.querySelectorAll('button, mwc-button').forEach(btn => {
-          if ((btn.textContent || '').trim() === 'Next' && !btn._replaced) {
-            btn._replaced = true;
-            btn.textContent = 'Close';
-            btn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              const dialog = shadow.querySelector('dialog');
-              if (dialog && dialog.open) { dialog.close(); return; }
-              shadow.querySelectorAll('[role="dialog"],[class*="dialog"],[class*="overlay"]')
-                .forEach(d => { d.style.display = 'none'; });
-            });
-          }
-        });
-      }).observe(el.shadowRoot, { childList: true, subtree: true, characterData: true });
-    });
-  }
-  document.addEventListener('DOMContentLoaded', patchInstallButtons);
-  setTimeout(patchInstallButtons, 1500);
+  // After "Installation complete" the stock dialog's Next button only goes back to its own
+  // menu, which looks like a loop. Close it instead and say what to do next.
+  (function(){
+    function toast(html){
+      var t=document.getElementById('plsFlashToast');
+      if(!t){t=document.createElement('div');t.id='plsFlashToast';document.body.appendChild(t);}
+      t.innerHTML=html;clearTimeout(t._h);t._h=setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},12000);
+    }
+    setInterval(function(){
+      var d=document.querySelector('ewt-install-dialog');
+      if(!d||d._plsDone)return;
+      try{
+        if(d._state==='INSTALL'&&d._installState&&d._installState.state==='finished'){
+          d._plsDone=true;
+          setTimeout(function(){
+            try{d._closeDialog();}catch(e){}
+            toast('<b>&#10003; Installed.</b> The device is restarting. Join its WiFi (PLSChat-xxxx) and open <b style="color:#a855f7">192.168.4.1</b> to unlock it.');
+          },1200);
+        }
+      }catch(e){}
+    },400);
+  })();
 
   function setStatus(msg) {
     document.getElementById('statusBox').textContent = msg;
