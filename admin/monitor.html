@@ -205,7 +205,7 @@
         <div class="keybar">
             <label for="lic-write-key">&#128273; Write key</label>
             <div class="pw-wrap">
-                <input type="password" id="lic-write-key" placeholder="Needed to sign licences and commands" autocomplete="off">
+                <input type="password" id="lic-write-key" placeholder="Needed to sign licences and commands" autocomplete="off" oninput="wkSync(this,'dev-write-key')">
                 <button type="button" class="pw-eye" onclick="togglePw('lic-write-key',this)" title="Show key">&#128065;</button>
             </div>
             <span data-tip="Shows whether this page is talking to a unit over USB." class="tip-l pill2" id="serial-pill">USB: not connected</span>
@@ -233,6 +233,14 @@
                     <button data-tip="Sends one signed command asking every company unit in range to send its readings now. Answers arrive over the next 15 seconds. Needs the write key." class="tip-l btn btn-secondary" style="padding:8px 14px;font-size:14px;" onclick="devAskReport('')">&#8635; Ask all to report</button>
                     <button data-tip="Set the shared passphrase on the unit that is plugged in. Units can only read each other when they hold the same one." class="tip-l btn btn-secondary" style="padding:8px 14px;font-size:14px;" onclick="devToggleKey()">&#128272; Company key</button>
                 </div>
+            </div>
+            <div class="keybar" style="margin-bottom:14px;">
+                <label for="dev-write-key">&#128273; Write key</label>
+                <div class="pw-wrap">
+                    <input type="password" id="dev-write-key" placeholder="Needed for relay switches, Report now and Send to device" autocomplete="off" oninput="wkSync(this,'lic-write-key')">
+                    <button type="button" class="pw-eye" onclick="togglePw('dev-write-key',this)" title="Show key">&#128065;</button>
+                </div>
+                <span class="pill2" id="dev-wk-pill">not entered</span>
             </div>
             <p style="color:#8b949e;font-size:14px;margin-bottom:14px;">
                 Readings arrive by radio through the company unit plugged into this PC, encrypted with your company key. Click any <strong>name</strong> or <strong>label</strong> to rename it here, <strong>Customise</strong> chooses which boxes show, and <strong>Set up</strong> shows what is switched on in the unit and lets you change it from here with a command signed by the server for that one unit.
@@ -1023,6 +1031,12 @@
             }
         }
 
+        // The write key box on the I/O and Relays tabs is the same key as the one at the top of the page.
+        function wkSync(from, toId) {
+            const to = document.getElementById(toId); if (to && to.value !== from.value) to.value = from.value;
+            const p = document.getElementById('dev-wk-pill');
+            if (p) { const on = from.value.trim().length > 0; p.textContent = on ? 'entered' : 'not entered'; p.className = 'pill2' + (on ? ' ok' : ''); }
+        }
         // ── Tabs ────────────────────────────────────────────────
         function showTab(t) {
             if (!document.querySelector('.tab[data-t="' + t + '"]')) t = 'devices';
