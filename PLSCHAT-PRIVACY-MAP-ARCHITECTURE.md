@@ -8,12 +8,12 @@
 
 ## 1. Why This Matters (Non-Negotiable)
 
-PLSChat's value proposition is **decentralized, off-grid, anonymous communication** using LoRa mesh + persistent Room Servers + PLSC-powered premium features.
+PLSChat's value proposition is **decentralised, off-grid, anonymous communication** using LoRa mesh + persistent Room Servers + PLSC-powered premium features.
 
 A naive public map of exact node locations would be **catastrophic**:
 
 - Physical targeting / destruction / jamming of repeaters
-- Owner de-anonymization (wallet linkage, social engineering)
+- Owner de-anonymisation (wallet linkage, social engineering)
 - Traffic analysis (when & where people communicate)
 - Defeats the entire anonymity model that makes PLSChat valuable vs Meshtastic (which shows exact pins)
 
@@ -29,13 +29,13 @@ A naive public map of exact node locations would be **catastrophic**:
 | Regional node counts          | Ranges only (e.g. 18–42) | No exact fingerprinting                | "Contributing nodes (est.)" |
 | Aggregate messages relayed    | 24h totals per region  | No timing or content leaks             | "184,300 messages" |
 | Needed repeater target grids  | Grid ID + status       | "Active" when filled — no attribution  | Amber dashed zones |
-| Mesh density overlay          | Heatmap style          | No hop lines, no topology              | Opacity + color intensity |
+| Mesh density overlay          | Heatmap style          | No hop lines, no topology              | Opacity + colour intensity |
 
 **Never shown**:
 - Exact GPS (even to map backend)
 - Persistent Node IDs
 - Individual uptime / stats
-- Wallet addresses or license linkages on the map
+- Wallet addresses or licence linkages on the map
 - Message timing or content patterns
 - Hop paths or RSSI per node
 
@@ -49,7 +49,7 @@ A naive public map of exact node locations would be **catastrophic**:
        ├── 1. Boot → Generate random 128-bit NodeID (ephemeral, rotates every ~30 days)
        │
        ├── 2. GPS read → Immediately snap to nearest 1km grid square
-       │                 (math: round(lat * 111) / 111, same for lng with cos(lat) correction)
+       │                 (maths: round(lat * 111) / 111, same for lng with cos(lat) correction)
        │                 Exact coords → discarded from RAM
        │
        ├── 3. Collect local aggregates only:
@@ -58,7 +58,7 @@ A naive public map of exact node locations would be **catastrophic**:
        │      - (Optional) simple health metrics
        │
        ├── 4. Sign attestation with device private key
-       │      (tied to PLSC device-bound license — verifiable but location-free)
+       │      (tied to PLSC device-bound licence — verifiable but location-free)
        │
        └── 5. Submit ONLY:
              { grid_id: "g1km_51.51_-0.13",
@@ -71,7 +71,7 @@ A naive public map of exact node locations would be **catastrophic**:
 **Key guarantees**:
 - Exact GPS **never** leaves the device.
 - NodeID is meaningless after rotation.
-- Signature proves legitimacy (license) without revealing identity or location.
+- Signature proves legitimacy (licence) without revealing identity or location.
 - Backend receives **no IP** (if submitted via anonymity layer) and **no persistent identifier**.
 
 ---
@@ -84,7 +84,7 @@ A naive public map of exact node locations would be **catastrophic**:
 - **Cloudflare Workers** or **Fly.io** / **Railway** minimal API
 - Endpoints:
   - `POST /submit` — accepts only validated `{grid_id, stats, signature, ts}`
-    - Validates signature against known license public keys (or future ZK)
+    - Validates signature against known licence public keys (or future ZK)
     - Rate limits aggressively (per grid + global)
     - **Immediately discards** raw submission after aggregation
     - **Never logs** IP, User-Agent, or timestamp beyond coarse bucket
@@ -98,7 +98,7 @@ A naive public map of exact node locations would be **catastrophic**:
 - No way to link submissions to specific devices or people
 - No long-term NodeID tracking
 
-### Phase 3+ (Decentralized)
+### Phase 3+ (Decentralised)
 - Publish aggregated GeoJSON to IPFS + Arweave (immutable, censorship resistant)
 - Use The Graph or custom subgraph for on-chain verification of aggregates (if desired)
 - Future: Nodes can submit directly via smart contract calls (with ZK proofs)
@@ -107,15 +107,15 @@ A naive public map of exact node locations would be **catastrophic**:
 
 ## 5. Reward System Privacy (PLSC)
 
-Rewards must **not** create a side-channel that deanonymizes nodes.
+Rewards must **not** create a side-channel that deanonymises nodes.
 
 **Current / Recommended Model**:
 1. Node generates local uptime + relay attestation (signed).
 2. Attestation submitted **directly to PLSC reward smart contract** (or privacy oracle) — **bypassing the map entirely**.
-3. Contract verifies signature / license validity.
-4. Payout to the license-controlled address.
+3. Contract verifies signature / licence validity.
+4. Payout to the licence-controlled address.
 5. Because:
-   - License acquisition can be private
+   - Licence acquisition can be private
    - No location data ever touches the reward path
    - Map data is deliberately coarse and non-linkable
    → There is **no reliable correlation** between "someone earned rewards" and "this specific grid square had activity".
@@ -135,14 +135,14 @@ Rewards must **not** create a side-channel that deanonymizes nodes.
 - Can monitor PulseChain for PLSC reward transactions
 - Can seize or compromise the map backend server
 - Can perform traffic analysis on any internet uplinks
-- Wants to locate high-value nodes (journalists, activists, event organizers, etc.)
+- Wants to locate high-value nodes (journalists, activists, event organisers, etc.)
 
 **What adversary CANNOT do (by design)**:
 - Determine exact location of any node (1km uncertainty + no persistent ID)
 - Link a specific node to its owner or wallet via the map
 - Know which nodes are online right now or their uptime patterns
 - Reconstruct mesh topology or communication paths
-- Use reward payouts to de-anonymize operators
+- Use reward payouts to de-anonymise operators
 
 **Residual risks we accept** (and mitigate elsewhere):
 - Very high-density grids in tiny countries could theoretically narrow possibilities (mitigation: encourage more nodes everywhere)
@@ -158,7 +158,7 @@ Rewards must **not** create a side-channel that deanonymizes nodes.
 | 1     | Interactive static prototype (this HTML) | ✅ Done   | Self-contained, beautiful, ready to drop into plschat-site repo |
 | 2     | Real backend aggregator + live data | Next      | Minimal API, strict privacy, GeoJSON output |
 | 3     | On-chain reward integration         | Planned   | Direct from nodes to contract |
-| 4     | Decentralized map data (IPFS) + ZK  | Future    | Maximum censorship resistance & privacy |
+| 4     | Decentralised map data (IPFS) + ZK  | Future    | Maximum censorship resistance & privacy |
 | 5     | Node firmware integration           | Parallel  | Add optional "report to map" toggle in firmware (off by default, privacy warning) |
 
 ---
@@ -182,7 +182,7 @@ Rewards must **not** create a side-channel that deanonymizes nodes.
 
 This map turns privacy into a **competitive advantage**:
 - Meshtastic shows exact pins → PLSChat shows "the network is real and growing" without the risks.
-- This becomes a selling point for security-conscious users (preppers, activists, journalists, event organizers, remote teams).
+- This becomes a selling point for security-conscious users (preppers, activists, journalists, event organisers, remote teams).
 
 **If we can't keep users, repeaters, and the mesh safe and anonymous — we don't build the feature.**
 
