@@ -344,14 +344,23 @@
         ═══════════════════════════════════════════════════════════ -->
         <div class="card" id="flasher-card" data-tab="firmware" style="display:none">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-                <h3>&#127981; Company Firmware — v007</h3>
+                <h3>&#127981; Company Firmware — v007.18</h3>
                 <span style="font-size:13px;color:#64748b;">Tamper-enabled build &bull; ESP32-S3</span>
             </div>
             <p style="color:#8b949e;font-size:14px;margin-bottom:16px;">
-                Flash the v007 firmware to a company device. Hold the <strong>BOOT button</strong> on the Heltec while clicking Connect in the installer.
-                After flashing, provision it with <code style="color:#67e8f9;">COMPANY:ON</code> over serial to enable the tamper module.
+                Flash the current company firmware (v007.18) to a company device. If the installer cannot connect, hold the <strong>BOOT button</strong> while clicking Connect. You are asked whether to erase: answer No to keep the unit's contacts and settings.
+                After flashing a new unit, enable company mode on the <em>Company &amp; tamper</em> tab and set the company key.
             </p>
-            <esp-web-install-button manifest="/admin/fw/manifest-v007.json?v=8"></esp-web-install-button>
+            <div style="display:flex;gap:24px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:240px;">
+                    <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
+                    <esp-web-install-button manifest="/admin/fw/manifest-v007.json?v=18"></esp-web-install-button>
+                </div>
+                <div style="flex:1;min-width:240px;">
+                    <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">XIAO ESP32-S3 (B2B radio kit)</div>
+                    <esp-web-install-button manifest="/admin/fw/manifest-v007-xiao.json?v=18"></esp-web-install-button>
+                </div>
+            </div>
             <p style="color:#64748b;font-size:12px;margin-top:14px;">
                 <i>Note:</i> the company firmware is served from a private store (<code>/admin/fw/</code>, Cloudflare Access only) — it is not in the public repo. Once a device has secure boot + flash encryption enabled (Release mode), it can no longer be reflashed here — that's expected. Clicking Connect automatically releases the Licence Manager's serial connection first, so you don't need to refresh between sections.
             </p>
