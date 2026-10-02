@@ -85,6 +85,45 @@
         .pw-eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 17px; color: #64748b; padding: 4px 6px; line-height: 1; }
         .pw-eye:hover { color: #67e8f9; }
         esp-web-install-button { --esp-tools-button-color: #a855f7; }
+        .tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px; border-bottom:1px solid #1f2439; padding-bottom:10px; }
+        .tab { background:#12152b; border:1px solid #1f2439; color:#8b949e; padding:9px 16px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; }
+        .tab:hover { color:#c9d1d9; border-color:#374151; }
+        .tab.on { color:#fff; border-color:#a855f7; background:linear-gradient(90deg,rgba(168,85,247,.25),rgba(103,232,249,.12)); }
+        .tab .n { background:#a855f7; color:#fff; border-radius:9999px; font-size:11px; padding:1px 7px; margin-left:6px; }
+        .keybar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:#0f1326; border:1px solid #374151; border-radius:12px; padding:12px 16px; margin-bottom:18px; }
+        .keybar label { font-size:13px; color:#8b949e; white-space:nowrap; }
+        .keybar .pw-wrap { flex:1; min-width:220px; }
+        .keybar input { width:100%; padding:9px 12px; background:#0a0c1f; border:1px solid #374151; color:#c9d1d9; border-radius:8px; font-size:14px; }
+        .pill2 { font-size:12px; font-weight:600; padding:3px 10px; border-radius:9999px; border:1px solid #374151; color:#8b949e; white-space:nowrap; }
+        .pill2.ok { color:#22c55e; border-color:#22c55e; } .pill2.warn { color:#eab308; border-color:#eab308; } .pill2.bad { color:#ef4444; border-color:#ef4444; }
+        .dev-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:16px; }
+        .dev { background:#0f1326; border:1px solid #1f2439; border-radius:14px; padding:16px; }
+        .dev.stale { opacity:.62; }
+        .dev-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; margin-bottom:12px; }
+        .dev-name { background:transparent; border:1px solid transparent; color:#e5e7eb; font:600 17px 'Space Grotesk',system-ui,sans-serif; padding:2px 6px; margin-left:-6px; border-radius:6px; width:100%; }
+        .dev-name:hover { border-color:#374151; } .dev-name:focus { border-color:#a855f7; outline:none; background:#0a0c1f; }
+        .dev-sub { font-size:12px; color:#64748b; font-family:monospace; }
+        .tiles { display:grid; grid-template-columns:repeat(auto-fill,minmax(98px,1fr)); gap:8px; margin-bottom:12px; }
+        .tile { background:#12152b; border:1px solid #1f2439; border-radius:10px; padding:10px 8px; text-align:center; }
+        .tile .v { font-size:19px; font-weight:700; color:#67e8f9; line-height:1.15; }
+        .tile .v.on { color:#22c55e; } .tile .v.off { color:#8b949e; } .tile .v.alert { color:#ef4444; }
+        .lbl { display:block; width:100%; background:transparent; border:1px solid transparent; border-radius:5px; color:#8b949e; font-size:11px; text-transform:uppercase; letter-spacing:.4px; text-align:center; padding:1px 2px; margin-top:4px; }
+        .lbl:hover { border-color:#374151; } .lbl:focus { border-color:#a855f7; outline:none; background:#0a0c1f; color:#e5e7eb; }
+        .rl { display:flex; align-items:center; gap:10px; background:#12152b; border:1px solid #1f2439; border-radius:10px; padding:9px 12px; margin-bottom:8px; }
+        .rl .lbl { text-align:left; font-size:13px; text-transform:none; letter-spacing:0; color:#c9d1d9; margin:0; flex:1; }
+        .rl .st { font-size:12px; color:#8b949e; min-width:92px; text-align:right; }
+        .sw { position:relative; width:46px; height:26px; flex:none; }
+        .sw input { opacity:0; width:0; height:0; }
+        .sw span { position:absolute; inset:0; background:#374151; border-radius:26px; cursor:pointer; transition:.2s; }
+        .sw span:before { content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; }
+        .sw input:checked + span { background:#22c55e; } .sw input:checked + span:before { transform:translateX(20px); }
+        .sw input:disabled + span { opacity:.5; cursor:wait; }
+        .dev-foot { display:flex; gap:8px; flex-wrap:wrap; }
+        .mini { background:#1f2439; border:1px solid #374151; color:#c9d1d9; border-radius:8px; padding:6px 11px; font-size:12px; cursor:pointer; }
+        .mini:hover { border-color:#a855f7; }
+        .cust { background:#0a0c1f; border:1px solid #374151; border-radius:10px; padding:10px 12px; margin-bottom:10px; font-size:13px; color:#c9d1d9; }
+        .cust label { display:inline-flex; align-items:center; gap:6px; margin:3px 12px 3px 0; }
+        .devlog { background:#0a0c1f; border:1px solid #1f2439; border-radius:10px; padding:10px 12px; font:12px/1.6 monospace; color:#8b949e; max-height:190px; overflow:auto; white-space:pre-wrap; }
     
   /* PLSChat theme for the esp-web-tools install dialog (it is white/blue by default) */
   ewt-install-dialog{
@@ -137,7 +176,7 @@
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="btn btn-secondary" onclick="location.reload()" title="Reload the page — you stay logged in for this tab">&#8635; Refresh</button>
-                <button id="release-serial-btn" class="btn btn-secondary" onclick="releaseSerialPort()" title="Free the USB serial port so another section (or the flasher) can use it">&#128268; Release Serial</button>
+                <button id="release-serial-btn" class="btn btn-secondary" onclick="releaseSerialPort()" title="Disconnect the USB device so the flasher (or another program) can use it">&#128268; Release USB</button>
                 <button class="btn btn-secondary" onclick="lockAdmin()" title="Lock this page — password required again">&#128274; Lock</button>
                 <a href="../index.html" class="btn btn-secondary">&#8592; Back to Site</a>
             </div>
@@ -147,10 +186,67 @@
             <strong>Protected by Cloudflare Access</strong> — only your email (via one-time PIN) can load this page, and this admin password is a second factor behind that. Sensitive actions are also independently checked by the Worker.
         </div>
 
+        <div class="keybar">
+            <label for="lic-write-key">&#128273; Write key</label>
+            <div class="pw-wrap">
+                <input type="password" id="lic-write-key" placeholder="Needed to sign licences and commands" autocomplete="off">
+                <button type="button" class="pw-eye" onclick="togglePw('lic-write-key',this)" title="Show key">&#128065;</button>
+            </div>
+            <span class="pill2" id="serial-pill">USB: not connected</span>
+            <button class="mini" onclick="serialConnect()">&#128268; Connect a device</button>
+        </div>
+        <div style="font-size:12px;color:#64748b;margin:-10px 0 16px 4px;">The write key stays in this tab's memory only &mdash; it is never saved, and is checked by the server on every action.</div>
+
+        <div class="tabs" id="tabs">
+            <div class="tab on" data-t="devices" onclick="showTab('devices')">&#127899; Devices<span class="n" id="dev-count" style="display:none">0</span></div>
+            <div class="tab" data-t="licences" onclick="showTab('licences')">&#128273; Licences</div>
+            <div class="tab" data-t="firmware" onclick="showTab('firmware')">&#127981; Firmware</div>
+            <div class="tab" data-t="company" onclick="showTab('company')">&#128737; Company &amp; tamper</div>
+            <div class="tab" data-t="network" onclick="showTab('network')">&#128225; Network</div>
+            <div class="tab" data-t="account" onclick="showTab('account')">&#128100; Account</div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             DEVICES (remote I/O) — v007.13+
+        ═══════════════════════════════════════════════════════════ -->
+        <div class="card" id="devices-card" data-tab="devices">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+                <h3>&#127899; Company devices</h3>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-secondary" style="padding:8px 14px;font-size:14px;" onclick="devAskReport('')">&#8635; Ask all to report</button>
+                    <button class="btn btn-secondary" style="padding:8px 14px;font-size:14px;" onclick="devToggleKey()">&#128272; Company key</button>
+                </div>
+            </div>
+            <p style="color:#8b949e;font-size:14px;margin-bottom:14px;">
+                Readings arrive by radio through the company unit plugged into this PC, encrypted with your company key. Click any <strong>name</strong> or <strong>label</strong> to rename it, and use <strong>Customise</strong> to choose which boxes a device shows. Relays are switched with a command signed by the server for that one device.
+            </p>
+            <div class="config-section" id="dev-keybox" style="display:none;margin-bottom:14px;">
+                <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Company key</div>
+                <p style="color:#8b949e;font-size:13px;margin-bottom:10px;">Every company unit needs the <strong>same</strong> passphrase (12+ characters) to read each other's reports. It is sent only down the USB cable to the connected unit, which stores a key made from it. It is not saved in this page and never goes to the server. You can also set it on a unit's own I/O tab.</p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <div class="pw-wrap" style="flex:1;min-width:240px;">
+                        <input type="password" id="dev-cokey" placeholder="Company passphrase (12+ characters)" autocomplete="off" style="width:100%;padding:10px;background:#0a0c1f;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
+                        <button type="button" class="pw-eye" onclick="togglePw('dev-cokey',this)" title="Show">&#128065;</button>
+                    </div>
+                    <button class="btn" onclick="devSetKey()">Set on the connected unit</button>
+                </div>
+                <div id="dev-key-status" style="font-size:13px;color:#64748b;margin-top:8px;font-family:monospace;min-height:16px;"></div>
+            </div>
+            <div id="dev-empty" style="background:#0f1326;border:1px dashed #374151;border-radius:12px;padding:22px;text-align:center;color:#8b949e;font-size:14px;">
+                No devices heard yet. Plug a company unit (v007.13 or newer) into this PC and press <strong>Connect a device</strong> above. Units report every 5, 15 or 60 minutes and at once when something changes.
+            </div>
+            <div class="dev-grid" id="dev-grid"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 6px;">
+                <strong style="font-size:13px;color:#8b949e;">Command log</strong>
+                <button class="mini" onclick="document.getElementById('dev-log').textContent=''">Clear</button>
+            </div>
+            <div class="devlog" id="dev-log"></div>
+        </div>
+
         <!-- ═══════════════════════════════════════════════════════════
              CHANGE ADMIN PASSWORD
         ═══════════════════════════════════════════════════════════ -->
-        <div class="card" id="change-pw-card">
+        <div class="card" id="change-pw-card" data-tab="account" style="display:none">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
                 <h3>&#128273; Change Admin Password</h3>
                 <span style="font-size:13px;color:#64748b;">Verified server-side &bull; stored hashed in KV</span>
@@ -190,14 +286,10 @@
         <!-- ═══════════════════════════════════════════════════════════
              FIRMWARE FLASHER (company / v007)
         ═══════════════════════════════════════════════════════════ -->
-        <div class="card" id="flasher-card">
+        <div class="card" id="flasher-card" data-tab="firmware" style="display:none">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
                 <h3>&#127981; Company Firmware — v007</h3>
                 <span style="font-size:13px;color:#64748b;">Tamper-enabled build &bull; ESP32-S3</span>
-            </div>
-            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-                <button class="btn btn-secondary" onclick="location.reload()" style="padding:8px 14px;font-size:14px;" title="Reload the page">&#8635; Refresh</button>
-                <button class="btn btn-secondary" onclick="releaseSerialPort(true, this)" style="padding:8px 14px;font-size:14px;" title="Free the USB serial port so another section (or the flasher) can use it">&#128268; Release Serial</button>
             </div>
             <p style="color:#8b949e;font-size:14px;margin-bottom:16px;">
                 Flash the v007 firmware to a company device. Hold the <strong>BOOT button</strong> on the Heltec while clicking Connect in the installer.
@@ -212,14 +304,10 @@
         <!-- ═══════════════════════════════════════════════════════════
              BENCH TEST FIRMWARE (consumer builds not yet released)
         ═══════════════════════════════════════════════════════════ -->
-        <div class="card" id="bench-card">
+        <div class="card" id="bench-card" data-tab="firmware" style="display:none">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
                 <h3>&#129514; Bench Test Firmware</h3>
                 <span id="bench-ver" style="font-size:13px;color:#64748b;">Consumer builds under test &bull; not on the public flasher yet</span>
-            </div>
-            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-                <button class="btn btn-secondary" onclick="location.reload()" style="padding:8px 14px;font-size:14px;" title="Reload the page">&#8635; Refresh</button>
-                <button class="btn btn-secondary" onclick="releaseSerialPort(true, this)" style="padding:8px 14px;font-size:14px;" title="Free the USB serial port so another section (or the flasher) can use it">&#128268; Release Serial</button>
             </div>
             <p style="color:#8b949e;font-size:14px;margin-bottom:14px;">
                 Flash the next customer firmware to a <strong>test</strong> device before it goes on the public flasher.
@@ -229,31 +317,29 @@
             <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:10px;">
                 <div style="flex:1;min-width:240px;">
                     <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
-                    <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=270a"></esp-web-install-button>
+                    <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=271a"></esp-web-install-button>
                 </div>
                 <div style="flex:1;min-width:240px;">
                     <div style="font-size:13px;color:#67e8f9;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">XIAO ESP32-S3 key fob</div>
-                    <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=270a"></esp-web-install-button>
+                    <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=271a"></esp-web-install-button>
                 </div>
                 <div style="flex:1;min-width:240px;">
-                    <div style="font-size:13px;color:#fbbf24;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Company v007.12 (test)</div>
-                    <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=12a"></esp-web-install-button>
+                    <div style="font-size:13px;color:#fbbf24;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Company v007.13 (test)</div>
+                    <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=13a"></esp-web-install-button>
                 </div>
             </div>
             <details style="margin-top:8px;">
-                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.70 + v007.12)</summary>
+                <summary style="cursor:pointer;color:#c9d1d9;font-size:14px;">Test checklist (v2.71 + v007.13)</summary>
                 <ol style="color:#8b949e;font-size:14px;line-height:1.7;margin:10px 0 0 20px;">
-                    <li>Flash one device first, without erasing. Unlock: the page loads, contacts / rooms / messages are still there.</li>
-                    <li><strong>Settings</strong> shows four small tabs: Alerts, Security, Network, Device. Change one thing on each and Save &rarr; only that tab's settings change, and you land back on the same tab.</li>
-                    <li><strong>Clock:</strong> Settings &rarr; Device shows the right time, &ldquo;set from your phone&rdquo;. Serial <code>STATUS</code> shows <code>CLOCK_LOCAL</code>.</li>
-                    <li>New messages show a clock time (e.g. <code>09:42</code>), older ones &ldquo;time unknown&rdquo;. Restart the device (not a power cut) &rarr; times are still right.</li>
-                    <li>Pull the power on device B, power it up near device A and don't open B's page: within ~5 min serial on B shows <code>[Clock] Time picked up from ...</code>.</li>
-                    <li><strong>Quiet hours:</strong> set a window that includes now, Save. Send a private message &rarr; no beep / buzz / flash, but the unread badge appears. Tick the sender under &ldquo;Always alert&rdquo; &rarr; it alerts again.</li>
-                    <li>Old tests still pass: pending pairing, Ping network, XIAO history after power-cycle, revoke.</li>
-                    <li><strong>Company v007.12</strong> (flash without erasing over v007.9/.10/.11): Node ID, contacts and PIN unchanged. After the first unlock serial shows <code>[Vault] Storage encrypted with your PIN</code>; <code>STATUS</code> shows <code>VAULT:OPEN</code>.</li>
-                    <li>v007.12: the Tamper tab appears (company units), Arm / Service toggles work, <code>TAMPER:STATUS</code> on serial answers. Do NOT test WIPE / scorched on a unit you want to keep.</li>
-                    <li>v007.12: Settings &rarr; Network shows Radio power; a signed TX-power admin command is applied and acknowledged; Settings &rarr; Security offers &ldquo;bind to this chip&rdquo;.</li>
-                    <li>v007.12 buzzer: leg 2 must go to GND on company units (GPIO4 is the lid switch).</li>
+                    <li>Flash without erasing. Unlock: contacts, rooms, messages and settings are still there. The v2.70 tests (clock, quiet hours, Settings tabs) still pass.</li>
+                    <li><strong>Licence over the mesh:</strong> plug in device A, leave device B on battery in another room. Licences tab &rarr; type B's MAC &rarr; Generate &rarr; <em>Send over the mesh</em>. Expect &ldquo;installed&rdquo; within about 30 s, and B's Licence page shows the new expiry. Works while B is locked.</li>
+                    <li>Send B's licence a second time &rarr; still &ldquo;installed&rdquo;. A licence made for a different MAC never reaches B and times out after 6 tries.</li>
+                    <li><strong>v007.13 I/O tab</strong> (company units): set the same Company key on two units, tick the sensors / inputs / relays that are wired, Save. The tiles update every few seconds.</li>
+                    <li>With one unit plugged in here: Devices tab &rarr; Connect a device. Both units appear within a minute; rename one and a label, reload the page &rarr; names kept.</li>
+                    <li>Short an input pin to GND on the far unit &rarr; its tile changes here within a few seconds.</li>
+                    <li>Flip a relay switch here &rarr; &ldquo;sent&rdquo; then &ldquo;confirmed&rdquo;, and the relay clicks. Flip it on the unit's own page &rarr; this page follows.</li>
+                    <li>A consumer device (v2.71) between the two company units passes the reports on but shows nothing itself.</li>
+                    <li><strong>Check the pins before wiring anything:</strong> the default I/O pins are a first guess for the Heltec V4. Change them on the I/O tab if they clash with your board.</li>
                 </ol>
             </details>
         </div>
@@ -261,7 +347,7 @@
         <!-- ═══════════════════════════════════════════════════════════
              COMPANY MODE / TAMPER ACTIVATION
         ═══════════════════════════════════════════════════════════ -->
-        <div class="card" id="company-card">
+        <div class="card" id="company-card" data-tab="company" style="display:none">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
                 <h3>&#128274; Company Mode &amp; Tamper</h3>
                 <span style="font-size:13px;color:#64748b;">Serial &bull; v007 &bull; persisted to NVS</span>
@@ -278,14 +364,14 @@
             </div>
             <div id="company-status" style="font-size:14px;color:#64748b;margin-top:12px;font-family:monospace;min-height:18px;word-break:break-all;"></div>
             <p style="color:#64748b;font-size:12px;margin-top:12px;">
-                Uses the same USB serial port as the Licence Manager. If nothing is connected yet, your browser will prompt you to pick the device. Watch for <code style="color:#22c55e;">COMPANY_OK</code> in the status line above.
+                Uses the connected USB device. If nothing is connected yet, your browser will prompt you to pick the device. Watch for <code style="color:#22c55e;">COMPANY_OK</code> in the status line above.
             </p>
         </div>
 
         <!-- ═══════════════════════════════════════════════════════════
              NETWORK RADIO POWER  (server-signed broadcast command)
         ═══════════════════════════════════════════════════════════ -->
-        <div class="card" id="netpower-card">
+        <div class="card" id="netpower-card" data-tab="network" style="display:none">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
                 <h3>&#128225; Network Radio Power</h3>
                 <span style="font-size:13px;color:#64748b;">Server-signed &bull; v007.7+ &bull; Ed25519</span>
@@ -308,33 +394,17 @@
             </div>
             <div id="np-status" style="font-size:14px;color:#64748b;margin-top:12px;font-family:monospace;min-height:18px;word-break:break-all;white-space:pre-wrap;"></div>
             <p style="color:#64748b;font-size:12px;margin-top:12px;">
-                Requires your <strong>Write Key</strong> (entered in the Licence Manager below). Uses the same USB serial port — connect a company node first. Watch for <code style="color:#22c55e;">ADMIN_ACK</code> lines confirming which repeaters applied the change.
+                Requires your <strong>Write key</strong> (top of the page). Uses the connected USB device — connect a company node first. Watch for <code style="color:#22c55e;">ADMIN_ACK</code> lines confirming which repeaters applied the change.
             </p>
         </div>
 
         <!-- ═══════════════════════════════════════════════════════════
              LICENCE MANAGER
         ═══════════════════════════════════════════════════════════ -->
-        <div class="card" id="licence-manager-card">
+        <div class="card" id="licence-manager-card" data-tab="licences" style="display:none">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
                 <h3>&#128273; Licence Manager</h3>
                 <span style="font-size:13px;color:#64748b;">Ed25519 signed &#8226; stored in Worker KV</span>
-            </div>
-            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-                <button class="btn btn-secondary" onclick="location.reload()" style="padding:8px 14px;font-size:14px;" title="Reload the page">&#8635; Refresh</button>
-                <button class="btn btn-secondary" onclick="releaseSerialPort(true, this)" style="padding:8px 14px;font-size:14px;" title="Free the USB serial port so another section (or the flasher) can use it">&#128268; Release Serial</button>
-            </div>
-
-            <!-- Write Key -->
-            <div class="config-section" style="margin-bottom:16px;">
-                <div class="form-group">
-                    <label>Worker Write Key (required to sign licences)</label>
-                    <div class="pw-wrap">
-                        <input type="password" id="lic-write-key" placeholder="Your WRITE_KEY secret"
-                               style="width:100%;padding:10px;background:#0a0c1f;border:1px solid #374151;color:#c9d1d9;border-radius:8px;">
-                        <button type="button" class="pw-eye" onclick="togglePw('lic-write-key',this)" title="Show key">&#128065;</button>
-                    </div>
-                </div>
             </div>
 
             <!-- Step 1: Device MAC -->
@@ -386,9 +456,13 @@
                     </button>
                     <button onclick="licSendToDevice()" class="btn" id="lic-send-btn"
                             style="flex:1;background:linear-gradient(90deg,#22c55e,#16a34a);opacity:.4;cursor:not-allowed;" disabled>
-                        &#128225; Send to Device via Serial
+                        &#128268; Send to the connected device (USB)
+                    </button>
+                    <button onclick="licSendMesh()" class="btn" id="lic-mesh-btn" style="flex:1;background:linear-gradient(90deg,#a855f7,#6366f1);">
+                        &#128225; Send over the mesh
                     </button>
                 </div>
+                <p style="color:#64748b;font-size:12px;margin-top:8px;"><strong>Over the mesh</strong> sends the licence by radio from the connected device to the device it was made for (the one whose MAC is in it) &mdash; no need to visit it. It uses the licence just generated, or the one pasted in Step 4. Both ends need v2.71 / v007.13 or newer. A licence is signed and tied to one MAC, so it is safe to send in the open.</p>
                 <div id="lic-status" style="font-size:14px;color:#64748b;margin-top:10px;font-family:monospace;min-height:18px;"></div>
                 <div id="lic-result" style="display:none;background:#0a0c1f;border:1px solid #22c55e;border-radius:8px;padding:12px;margin-top:10px;font-family:monospace;font-size:.8em;word-break:break-all;color:#22c55e;"></div>
             </div>
@@ -406,7 +480,7 @@
                 </div>
                 <button onclick="licSendPasted()" class="btn" id="lic-paste-send-btn"
                         style="background:linear-gradient(90deg,#22c55e,#16a34a);">
-                    &#128225; Send Pasted Licence to Device
+                    &#128268; Send Pasted Licence to Device (USB)
                 </button>
                 <div id="lic-paste-status" style="font-size:14px;color:#64748b;margin-top:10px;font-family:monospace;min-height:18px;word-break:break-all;"></div>
             </div>
@@ -541,67 +615,6 @@
             y.querySelector('div').style.color = t==='yearly' ? '#22d3ee' : '#94a3b8';
             l.style.borderColor = t==='lifetime' ? '#22d3ee' : '#374151';
             document.getElementById('lic-lifetime-price').style.color = t==='lifetime' ? '#22d3ee' : '#94a3b8';
-        }
-
-        // Reads the device status block over serial, capturing BOTH the MAC
-        // and the licence status the firmware reports (LICENSED:YES / :NO).
-        async function licDetectDevice() {
-            const el = document.getElementById('lic-detect-status');
-            const banner = document.getElementById('lic-existing');
-            el.style.color = '#64748b';
-            el.textContent = 'Connecting to device...';
-            if (banner) banner.style.display = 'none';
-
-            let reader = null;
-            try {
-                licSerialPort = await navigator.serial.requestPort();
-                await licSerialPort.open({ baudRate: 115200 });
-                reader = licSerialPort.readable.getReader();
-                activeSerialReader = reader;
-
-                let buf = '';
-                let stop = false;
-                const finish = () => { if (!stop) { stop = true; try { reader.cancel(); } catch(e){} } };
-                const timeout = setTimeout(finish, 12000);
-
-                while (!stop) {
-                    const { value, done } = await reader.read();
-                    if (done) break;
-                    buf += new TextDecoder().decode(value);
-                    // Stop once we have a full status block, or a MAC plus a licence line.
-                    const haveMac = /MAC:([0-9A-Fa-f:]{17})/.test(buf);
-                    const haveLic = /LICEN[SC]ED:(YES|NO)/i.test(buf);
-                    if (buf.includes('END_STATUS') || (haveMac && haveLic)) {
-                        clearTimeout(timeout);
-                        finish();
-                    }
-                }
-                try { reader.releaseLock(); } catch(e) {}
-                activeSerialReader = null;
-
-                const m = buf.match(/MAC:([0-9A-Fa-f:]{17})/);
-                if (!m) {
-                    el.style.color = '#ef4444';
-                    el.textContent = 'Connected, but no MAC seen — reset the device and retry.';
-                    return;
-                }
-                const mac = m[1].toUpperCase();
-                document.getElementById('lic-mac').value = mac;
-                el.style.color = '#22c55e';
-                el.textContent = 'MAC detected: ' + mac + ' — serial port ready';
-
-                const licensed = /LICEN[SC]ED:YES/i.test(buf);
-                showExistingLicence(mac, licensed, buf);
-
-                // Also ask the backend whether this MAC already has a purchased
-                // licence — this is the part that survives a re-flash.
-                const backend = await licLookupExisting(mac);
-                showBackendLicence(backend, mac);
-            } catch(e) {
-                try { if (reader) reader.releaseLock(); } catch(_) {}
-                el.style.color = '#ef4444';
-                el.textContent = e.message + ' — if another section or the flasher is holding the USB port, click \"Release Serial\" in the top bar (or unplug/replug), then retry.';
-            }
         }
 
         // Renders the "already licensed / not licensed" readout from the
@@ -776,59 +789,6 @@
             }
         }
 
-        // Shared serial write + response read, used by both "Send to Device"
-        // (freshly generated) and "Send Pasted Licence" (re-flashed device).
-        async function licWriteLicenceToDevice(licence, el) {
-            if (!licence) return;
-            try {
-                if (!licSerialPort || !licSerialPort.writable) {
-                    licSerialPort = await navigator.serial.requestPort();
-                    await licSerialPort.open({ baudRate: 115200 });
-                }
-                el.style.color='#64748b';
-                el.textContent='Sending licence to device...';
-                const writer = licSerialPort.writable.getWriter();
-                await writer.write(new TextEncoder().encode('LICENSE:' + licence + '\n'));
-                writer.releaseLock();
-                el.textContent='Sent — waiting for device response...';
-                setTimeout(async () => {
-                    let reader = null;
-                    try {
-                        reader = licSerialPort.readable.getReader();
-                        activeSerialReader = reader;
-                        let buf = '';
-                        const timeout = setTimeout(() => reader.cancel(), 5000);
-                        while (true) {
-                            const { value, done } = await reader.read();
-                            if (done) break;
-                            buf += new TextDecoder().decode(value);
-                            if (buf.includes('LICENCE_OK')) {
-                                clearTimeout(timeout); reader.cancel();
-                                el.style.color='#22c55e';
-                                el.textContent='Device accepted the licence! LICENSED:YES';
-                                break;
-                            }
-                            if (buf.includes('LICENCE_INVALID')) {
-                                clearTimeout(timeout); reader.cancel();
-                                el.style.color='#ef4444';
-                                el.textContent='Device rejected the licence — MAC mismatch or signature error.';
-                                break;
-                            }
-                        }
-                    } catch(e) {
-                        el.style.color='#ef4444';
-                        el.textContent='Could not read device response: ' + e.message;
-                    } finally {
-                        if (reader) { try { reader.releaseLock(); } catch(_) {} }
-                        if (activeSerialReader === reader) activeSerialReader = null;
-                    }
-                }, 600);
-            } catch(e) {
-                el.style.color='#ef4444';
-                el.textContent='Serial error: ' + e.message + ' — if another section or the flasher is holding the USB port, click \"Release Serial\" in the top bar (or unplug/replug), then retry.';
-            }
-        }
-
         async function licSendToDevice() {
             if (!licCurrentLicence) return;
             licWriteLicenceToDevice(licCurrentLicence, document.getElementById('lic-status'));
@@ -859,149 +819,6 @@
         }
         // ═══════════════════════════════════════════════════════════
 
-        // ── Company / tamper mode ───────────────────────────────
-        // Sends the EXACT command the v007 firmware matches (it trims the line
-        // but is case-sensitive): COMPANY:ON enables companyDevice + arms the
-        // tamper watch; COMPANY:OFF disables it. Device replies COMPANY_OK.
-        async function setCompanyMode(enable) {
-            const el = document.getElementById('company-status');
-            const cmd = enable ? 'COMPANY:ON' : 'COMPANY:OFF';
-            try {
-                if (!licSerialPort || !licSerialPort.writable) {
-                    licSerialPort = await navigator.serial.requestPort();
-                    await licSerialPort.open({ baudRate: 115200 });
-                }
-                el.style.color = '#64748b';
-                el.textContent = 'Sending ' + cmd + ' ...';
-                const writer = licSerialPort.writable.getWriter();
-                await writer.write(new TextEncoder().encode(cmd + '\n'));
-                writer.releaseLock();
-                el.textContent = 'Sent ' + cmd + ' — waiting for device...';
-                setTimeout(async () => {
-                    let reader = null;
-                    try {
-                        reader = licSerialPort.readable.getReader();
-                        activeSerialReader = reader;
-                        let buf = '';
-                        const timeout = setTimeout(() => reader.cancel(), 5000);
-                        while (true) {
-                            const { value, done } = await reader.read();
-                            if (done) break;
-                            buf += new TextDecoder().decode(value);
-                            if (buf.includes('COMPANY_OK')) {
-                                clearTimeout(timeout); reader.cancel();
-                                el.style.color = '#22c55e';
-                                el.textContent = enable
-                                    ? 'Company mode ENABLED — tamper armed (COMPANY_OK). Set tamper policy next if needed.'
-                                    : 'Company mode DISABLED (COMPANY_OK).';
-                                break;
-                            }
-                        }
-                    } catch(e) {
-                        el.style.color = '#ef4444';
-                        el.textContent = 'Could not read device response: ' + e.message;
-                    } finally {
-                        if (reader) { try { reader.releaseLock(); } catch(_) {} }
-                        if (activeSerialReader === reader) activeSerialReader = null;
-                    }
-                }, 600);
-            } catch(e) {
-                el.style.color = '#ef4444';
-                el.textContent = 'Serial error: ' + e.message + ' — if another section or the flasher is holding the USB port, click \"Release Serial\" in the top bar (or unplug/replug), then retry.';
-            }
-        }
-
-        // Signed network TX-power command. The Worker signs a 14-byte body with the
-        // company Ed25519 key; we broadcast it as ADMIN:<hex> over serial and the
-        // firmware relays + applies it, replying ADMIN_SENT / ADMIN_ACK (or ADMIN_ERR).
-        async function netPowerSend(dbm) {
-            const el = document.getElementById('np-status');
-            const writeKey = document.getElementById('lic-write-key').value.trim();
-            if (!writeKey) {
-                el.style.color = '#ef4444';
-                el.textContent = 'Enter your Write Key in the Licence Manager below first.';
-                return;
-            }
-            let target = document.getElementById('np-target').value.trim();
-            if (target && !/^[0-9A-Fa-f]{8}$/.test(target)) {
-                el.style.color = '#ef4444';
-                el.textContent = 'Target must be 8 hex characters (a node ID), or blank for all nodes.';
-                return;
-            }
-            if (dbm === 22 && !confirm('Max (22 dBm) is above the UK 868 MHz legal limit with the stock antenna. Only continue if this deployment keeps the radiated power legal. Send Max power?')) {
-                return;
-            }
-            try {
-                el.style.color = '#64748b';
-                el.textContent = 'Requesting signed command from server...';
-                const res = await fetch(WORKER_URL + '/admin/command/sign', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Write-Key': writeKey },
-                    body: JSON.stringify({ cmd: 'txpower', value: dbm, target: target || null })
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok || !data.ok || !data.hex) {
-                    el.style.color = '#ef4444';
-                    el.textContent = 'Signing failed: ' + (data.error || ('HTTP ' + res.status));
-                    return;
-                }
-                if (!licSerialPort || !licSerialPort.writable) {
-                    licSerialPort = await navigator.serial.requestPort();
-                    await licSerialPort.open({ baudRate: 115200 });
-                }
-                const writer = licSerialPort.writable.getWriter();
-                await writer.write(new TextEncoder().encode('ADMIN:' + data.hex + '\n'));
-                writer.releaseLock();
-                const scope = target ? ('node ' + target.toUpperCase()) : 'ALL company nodes';
-                el.style.color = '#64748b';
-                el.textContent = 'Sent set-power ' + dbm + ' dBm (seq ' + data.seq + ') to ' + scope + ' — waiting for ACKs...';
-                setTimeout(async () => {
-                    let reader = null;
-                    try {
-                        reader = licSerialPort.readable.getReader();
-                        activeSerialReader = reader;
-                        let buf = '', acks = [];
-                        const timeout = setTimeout(() => reader.cancel(), 30000);
-                        while (true) {
-                            const { value, done } = await reader.read();
-                            if (done) break;
-                            buf += new TextDecoder().decode(value);
-                            let nl;
-                            while ((nl = buf.indexOf('\n')) >= 0) {
-                                const ln = buf.slice(0, nl).trim();
-                                buf = buf.slice(nl + 1);
-                                if (ln.startsWith('ADMIN_ERR')) {
-                                    clearTimeout(timeout); reader.cancel();
-                                    el.style.color = '#ef4444';
-                                    el.textContent = 'Device rejected the command: ' + ln;
-                                    return;
-                                }
-                                if (ln.startsWith('ADMIN_ACK') || ln.startsWith('ADMIN_SENT')) {
-                                    acks.push(ln);
-                                    el.style.color = '#22c55e';
-                                    el.textContent = 'Applied — ' + acks.length + ' node(s) reported:\n' + acks.join('\n');
-                                }
-                            }
-                        }
-                        clearTimeout(timeout);
-                        if (!acks.length) {
-                            el.style.color = '#eab308';
-                            el.textContent = 'Command broadcast, but no ACK seen in 30s. The connected node still applied it; distant repeaters may ACK later or be out of range.';
-                        }
-                    } catch (e) {
-                        el.style.color = '#ef4444';
-                        el.textContent = 'Could not read device response: ' + e.message;
-                    } finally {
-                        if (reader) { try { reader.releaseLock(); } catch(_) {} }
-                        if (activeSerialReader === reader) activeSerialReader = null;
-                    }
-                }, 600);
-            } catch (e) {
-                el.style.color = '#ef4444';
-                el.textContent = 'Error: ' + e.message + ' — if another section or the flasher holds the USB port, click "Release Serial" up top, then retry.';
-            }
-        }
-
         // Re-lock the page (clears the tab session; password required again).
         function lockAdmin() {
             try { sessionStorage.removeItem('plschat_admin_session'); sessionStorage.removeItem('plschat_admin_ts'); } catch(e) {}
@@ -1010,26 +827,485 @@
             document.getElementById('login-overlay').style.display = 'flex';
         }
 
-        // Free the USB serial port so another section (or the web flasher)
-        // can claim it — no full page refresh needed. Cancels any in-flight
-        // response reader first, since a locked reader blocks port.close().
-        async function releaseSerialPort(showFeedback = true, btnEl = null) {
+        // ═══════════════════════════════════════════════════════════
+        //  ONE SHARED USB CONNECTION
+        //  A single reader runs for as long as a device is connected and
+        //  hands every line to whoever is waiting (licence replies, command
+        //  acks, the Devices tab). Release USB stops it and frees the port.
+        // ═══════════════════════════════════════════════════════════
+        let serialPumpOn = false;
+        const serialSubs = new Set();
+        const SERIAL_HINT = ' — if the flasher or another program is holding the USB port, press "Release USB" (or unplug and replug), then retry.';
+
+        function serialUi() {
+            const p = document.getElementById('serial-pill');
+            if (!p) return;
+            const on = !!(licSerialPort && licSerialPort.writable && serialPumpOn);
+            p.textContent = on ? 'USB: connected' : 'USB: not connected';
+            p.className = 'pill2' + (on ? ' ok' : '');
+        }
+        async function serialEnsure() {
+            if (!licSerialPort || !licSerialPort.writable) {
+                licSerialPort = await navigator.serial.requestPort();
+                await licSerialPort.open({ baudRate: 115200 });
+            }
+            if (!serialPumpOn) serialPump(licSerialPort);
+            serialUi();
+        }
+        async function serialPump(port) {
+            serialPumpOn = true; serialUi();
+            let reader = null, buf = '';
+            const dec = new TextDecoder();
             try {
-                if (activeSerialReader) {
-                    try { await activeSerialReader.cancel(); } catch(e) {}
-                    try { activeSerialReader.releaseLock(); } catch(e) {}
-                    activeSerialReader = null;
+                reader = port.readable.getReader();
+                activeSerialReader = reader;
+                for (;;) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    buf += dec.decode(value, { stream: true });
+                    let nl;
+                    while ((nl = buf.indexOf('\n')) >= 0) {
+                        const ln = buf.slice(0, nl).replace(/\r/g, '').trim();
+                        buf = buf.slice(nl + 1);
+                        if (ln) serialLine(ln);
+                    }
+                    if (buf.length > 16384) buf = '';
                 }
-                if (licSerialPort) {
-                    try { await licSerialPort.close(); } catch(e) {}
-                }
+            } catch (e) {
+                // unplugged or reset: fall through and mark the port as gone
             } finally {
-                licSerialPort = null;
+                if (reader) { try { reader.releaseLock(); } catch (_) {} }
+                if (activeSerialReader === reader) activeSerialReader = null;
+                serialPumpOn = false;
+                if (licSerialPort === port) { try { await port.close(); } catch (_) {} licSerialPort = null; }
+                serialUi();
+            }
+        }
+        function serialLine(ln) {
+            serialSubs.forEach(fn => { try { fn(ln); } catch (e) {} });
+            try { devOnLine(ln); } catch (e) {}
+        }
+        async function serialSend(text) {
+            await serialEnsure();
+            const w = licSerialPort.writable.getWriter();
+            try { await w.write(new TextEncoder().encode(text + '\n')); } finally { w.releaseLock(); }
+        }
+        // Resolves with the first line that test() accepts, or null after ms.
+        function serialWait(test, ms) {
+            return new Promise(resolve => {
+                const fn = ln => { if (test(ln)) { clearTimeout(t); serialSubs.delete(fn); resolve(ln); } };
+                const t = setTimeout(() => { serialSubs.delete(fn); resolve(null); }, ms);
+                serialSubs.add(fn);
+            });
+        }
+        async function serialConnect() {
+            try {
+                await serialEnsure();
+                setTimeout(() => { serialSend('IO:REPORT').catch(() => {}); }, 1500);   // show the plugged-in unit straight away
+            } catch (e) { devLog('USB: ' + e.message); }
+        }
+        // Free the USB port so the web flasher (or another program) can claim it.
+        async function releaseSerialPort(showFeedback = true, btnEl = null) {
+            const port = licSerialPort;
+            try {
+                if (activeSerialReader) { try { await activeSerialReader.cancel(); } catch (e) {} }
+                await new Promise(r => setTimeout(r, 120));        // let the reader loop let go
+                if (port) { try { await port.close(); } catch (e) {} }
+            } finally {
+                if (licSerialPort === port) licSerialPort = null;
+                serialUi();
                 if (showFeedback) {
                     const b = btnEl || document.getElementById('release-serial-btn');
                     if (b) { const t = b.innerHTML; b.innerHTML = '&#10003; Port released'; setTimeout(() => { b.innerHTML = t; }, 1500); }
                 }
             }
+        }
+
+        // ── Tabs ────────────────────────────────────────────────
+        function showTab(t) {
+            if (!document.querySelector('.tab[data-t="' + t + '"]')) t = 'devices';
+            document.querySelectorAll('.tab').forEach(e => e.classList.toggle('on', e.dataset.t === t));
+            document.querySelectorAll('.card[data-tab]').forEach(c => { c.style.display = (c.dataset.tab === t) ? '' : 'none'; });
+            try { sessionStorage.setItem('plschat_admin_tab', t); } catch (e) {}
+        }
+
+        // ── Licence: read the connected device ──────────────────
+        async function licDetectDevice() {
+            const el = document.getElementById('lic-detect-status');
+            const banner = document.getElementById('lic-existing');
+            el.style.color = '#64748b';
+            el.textContent = 'Connecting to device...';
+            if (banner) banner.style.display = 'none';
+            try {
+                await serialEnsure();
+                let buf = '';
+                const got = () => /MAC:([0-9A-Fa-f:]{17})/.test(buf) && /LICEN[SC]ED:(YES|NO)/i.test(buf);
+                const collect = ln => { buf += ln + '\n'; };
+                serialSubs.add(collect);
+                try {
+                    for (let i = 0; i < 4 && !got(); i++) {
+                        await serialSend('STATUS');
+                        await serialWait(ln => ln.includes('END_STATUS') || got(), 3000);
+                    }
+                } finally { serialSubs.delete(collect); }
+                const m = buf.match(/MAC:([0-9A-Fa-f:]{17})/);
+                if (!m) { el.style.color = '#ef4444'; el.textContent = 'Connected, but no MAC seen — reset the device and retry.'; return; }
+                const mac = m[1].toUpperCase();
+                document.getElementById('lic-mac').value = mac;
+                el.style.color = '#22c55e';
+                el.textContent = 'MAC detected: ' + mac;
+                showExistingLicence(mac, /LICEN[SC]ED:YES/i.test(buf), buf);
+                const backend = await licLookupExisting(mac);
+                showBackendLicence(backend, mac);
+            } catch (e) {
+                el.style.color = '#ef4444';
+                el.textContent = e.message + SERIAL_HINT;
+            }
+        }
+
+        // Send a licence down the USB cable to the connected device.
+        async function licWriteLicenceToDevice(licence, el) {
+            if (!licence) return;
+            try {
+                el.style.color = '#64748b';
+                el.textContent = 'Sending licence to device...';
+                const wait = serialWait(ln => ln.includes('LICENCE_OK') || ln.includes('LICENCE_INVALID'), 6000);
+                await serialSend('LICENSE:' + licence);
+                el.textContent = 'Sent — waiting for device response...';
+                const r = await wait;
+                if (r && r.includes('LICENCE_OK')) { el.style.color = '#22c55e'; el.textContent = 'Device accepted the licence! LICENSED:YES'; }
+                else if (r) { el.style.color = '#ef4444'; el.textContent = 'Device rejected the licence — MAC mismatch or signature error.'; }
+                else { el.style.color = '#eab308'; el.textContent = 'No answer from the device. Is the right device connected?'; }
+            } catch (e) {
+                el.style.color = '#ef4444';
+                el.textContent = 'Serial error: ' + e.message + SERIAL_HINT;
+            }
+        }
+
+        // Deliver a licence by radio: the connected device transmits it, the
+        // device named in the licence checks the signature + its own MAC and confirms.
+        let licMeshBusy = false;
+        async function licSendMesh() {
+            const el = document.getElementById('lic-status');
+            const pasted = document.getElementById('lic-paste').value.trim();
+            const lic = licCurrentLicence || pasted;
+            if (!lic) { el.style.color = '#ef4444'; el.textContent = 'Generate a licence first (or paste one in Step 4).'; return; }
+            const parts = lic.split('|');
+            if (parts[0] !== 'v1' || parts.length < 5 || !/^[0-9A-Fa-f:]{17}$/.test(parts[1])) { el.style.color = '#ef4444'; el.textContent = 'That is not a v1 licence.'; return; }
+            if (licMeshBusy) return;
+            const mac = parts[1].toUpperCase(), node = mac.replace(/:/g, '').slice(4);
+            if (!confirm('Send this licence over the mesh to ' + mac + ' (node ' + node + ')?\n\nThe connected device will try up to 6 times (about 3 minutes).')) return;
+            licMeshBusy = true;
+            let done;
+            const finished = new Promise(r => { done = r; });
+            const sub = ln => {
+                if (ln.startsWith('LIC_SENT:')) { el.style.color = '#64748b'; el.textContent = 'Sent over the mesh to ' + node + ' — try ' + (ln.split(':')[2] || '?') + ' of 6, waiting for it to confirm...'; }
+                else if (ln.startsWith('LIC_ACK:')) {
+                    const ok = ln.split(':')[2] === '1';
+                    el.style.color = ok ? '#22c55e' : '#ef4444';
+                    el.textContent = ok ? 'Installed — device ' + node + ' confirmed the licence.' : 'Device ' + node + ' rejected the licence (signature or MAC).';
+                    done();
+                }
+                else if (ln.startsWith('LIC_TIMEOUT:')) { el.style.color = '#eab308'; el.textContent = 'No answer from ' + node + ' after 6 tries. It may be off, out of range, or on firmware older than v2.71 / v007.13.'; done(); }
+                else if (ln.startsWith('LIC_ERR:')) { el.style.color = '#ef4444'; el.textContent = 'The connected device could not send it (' + ln.slice(8) + ').'; done(); }
+            };
+            serialSubs.add(sub);
+            const guard = setTimeout(() => { el.style.color = '#eab308'; el.textContent = 'No reply from the connected device. It needs firmware v2.71 / v007.13 or newer to send licences.'; done(); }, 200000);
+            try {
+                el.style.color = '#64748b'; el.textContent = 'Handing the licence to the connected device...';
+                await serialSend('LICSEND:' + lic);
+                await finished;
+            } catch (e) {
+                el.style.color = '#ef4444'; el.textContent = 'Serial error: ' + e.message + SERIAL_HINT;
+            } finally { clearTimeout(guard); serialSubs.delete(sub); licMeshBusy = false; }
+        }
+
+        // ── Company / tamper mode ───────────────────────────────
+        async function setCompanyMode(enable) {
+            const el = document.getElementById('company-status');
+            const cmd = enable ? 'COMPANY:ON' : 'COMPANY:OFF';
+            try {
+                el.style.color = '#64748b';
+                el.textContent = 'Sending ' + cmd + ' ...';
+                const wait = serialWait(ln => ln.includes('COMPANY_OK'), 5000);
+                await serialSend(cmd);
+                const r = await wait;
+                if (r) { el.style.color = '#22c55e'; el.textContent = enable ? 'Company mode ENABLED — tamper armed (COMPANY_OK). Set tamper policy next if needed.' : 'Company mode DISABLED (COMPANY_OK).'; }
+                else { el.style.color = '#eab308'; el.textContent = 'No answer from the device.'; }
+            } catch (e) {
+                el.style.color = '#ef4444';
+                el.textContent = 'Serial error: ' + e.message + SERIAL_HINT;
+            }
+        }
+
+        // Ask the server to sign a command (TX power, relay, report now).
+        async function adminSign(body) {
+            const writeKey = document.getElementById('lic-write-key').value.trim();
+            if (!writeKey) throw new Error('Enter your Write key at the top of the page first.');
+            const res = await fetch(WORKER_URL + '/admin/command/sign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Write-Key': writeKey },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.ok || !data.hex) throw new Error('Signing failed: ' + (data.error || ('HTTP ' + res.status)));
+            return data;
+        }
+
+        // Signed network TX-power command.
+        async function netPowerSend(dbm) {
+            const el = document.getElementById('np-status');
+            let target = document.getElementById('np-target').value.trim();
+            if (target && !/^[0-9A-Fa-f]{8}$/.test(target)) {
+                el.style.color = '#ef4444';
+                el.textContent = 'Target must be 8 hex characters (a node ID), or blank for all nodes.';
+                return;
+            }
+            if (dbm === 22 && !confirm('Max (22 dBm) is above the UK 868 MHz legal limit with the stock antenna. Only continue if this deployment keeps the radiated power legal. Send Max power?')) return;
+            const acks = [];
+            let failed = false;
+            const sub = ln => {
+                if (ln.startsWith('ADMIN_ERR')) { failed = true; el.style.color = '#ef4444'; el.textContent = 'Device rejected the command: ' + ln; }
+                else if (ln.startsWith('ADMIN_ACK') || ln.startsWith('ADMIN_SENT')) {
+                    acks.push(ln); el.style.color = '#22c55e';
+                    el.textContent = 'Applied — ' + acks.length + ' node(s) reported:\n' + acks.join('\n');
+                }
+            };
+            try {
+                el.style.color = '#64748b';
+                el.textContent = 'Requesting signed command from server...';
+                const data = await adminSign({ cmd: 'txpower', value: dbm, target: target || null });
+                serialSubs.add(sub);
+                await serialSend('ADMIN:' + data.hex);
+                const scope = target ? ('node ' + target.toUpperCase()) : 'ALL company nodes';
+                el.style.color = '#64748b';
+                el.textContent = 'Sent set-power ' + dbm + ' dBm (seq ' + data.seq + ') to ' + scope + ' — waiting for ACKs...';
+                setTimeout(() => {
+                    serialSubs.delete(sub);
+                    if (!acks.length && !failed) { el.style.color = '#eab308'; el.textContent = 'Command broadcast, but no ACK seen in 35s. The connected node still applied it; distant repeaters may be out of range.'; }
+                }, 35000);
+            } catch (e) {
+                serialSubs.delete(sub);
+                el.style.color = '#ef4444';
+                el.textContent = e.message + (/Sign|Write key/.test(e.message) ? '' : SERIAL_HINT);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        //  DEVICES — remote I/O (company firmware v007.13+)
+        //  Lines from the connected unit:  IO:<node>:<rssi>:<hops>:<hex>
+        //    kind 1 = readings (24 bytes), kind 2 = the names set on the unit (65 bytes)
+        //  Names, labels and which boxes to show are saved in this browser.
+        //  Readings are kept in memory only.
+        // ═══════════════════════════════════════════════════════════
+        const DEV_TILES = [
+            ['t',  'Temperature'], ['h', 'Humidity'], ['p', 'Pressure'], ['w', 'Wind'], ['g', 'Gust'],
+            ['in0','Input 1'], ['in1','Input 2'], ['b', 'Battery'], ['lic','Licence'], ['tam','Tamper'], ['sig','Signal']
+        ];
+        const devs = {};          // node -> live state
+        let devPrefs = {};        // node -> { name, lbl:{}, hide:{} }
+        let devOpenCust = {};     // node -> customise panel open
+        let devDirty = false;
+
+        function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+        function devLoadPrefs() { try { devPrefs = JSON.parse(localStorage.getItem('plschat_admin_devs') || '{}') || {}; } catch (e) { devPrefs = {}; } }
+        function devSavePrefs() { try { localStorage.setItem('plschat_admin_devs', JSON.stringify(devPrefs)); } catch (e) {} }
+        function devPref(n) { return devPrefs[n] || (devPrefs[n] = { name: '', lbl: {}, hide: {} }); }
+        function devLog(t) {
+            const el = document.getElementById('dev-log'); if (!el) return;
+            el.textContent = new Date().toLocaleTimeString('en-GB') + '  ' + t + '\n' + el.textContent.slice(0, 6000);
+        }
+        function devGet(n) { return devs[n] || (devs[n] = { node: n, rep: null, info: null, last: 0, rssi: 0, hops: 0, pend: {} }); }
+        function devName(n) { const d = devs[n], p = devPrefs[n]; return (p && p.name) || (d && d.info && d.info.dev) || ('Node ' + n); }
+        function cstr(b, off, len) { let s = ''; for (let i = off; i < off + len && b[i]; i++) s += String.fromCharCode(b[i]); return s.replace(/[^\x20-\x7E]/g, '').trim(); }
+
+        function devOnLine(ln) {
+            let m = ln.match(/^IO:([0-9A-Fa-f]{8}):(-?\d+):(\d+):([0-9A-Fa-f]+)$/);
+            if (m) {
+                const n = m[1].toUpperCase(), hex = m[4], b = [];
+                for (let i = 0; i + 1 < hex.length; i += 2) b.push(parseInt(hex.substr(i, 2), 16));
+                const d = devGet(n);
+                d.last = Date.now(); d.rssi = parseInt(m[2], 10); d.hops = parseInt(m[3], 10);
+                d.local = (d.rssi === 0 && d.hops === 0);
+                if (b[0] === 1 && b.length >= 24) {
+                    const i16 = o => { const v = (b[o] << 8) | b[o + 1]; return v > 32767 ? v - 65536 : v; };
+                    const u16 = o => (b[o] << 8) | b[o + 1];
+                    const caps = b[1], st = b[2];
+                    d.rep = {
+                        bme: !!(caps & 1), wind: !!(caps & 2), inEn: [!!(caps & 4), !!(caps & 8)], rlEn: [!!(caps & 16), !!(caps & 32)],
+                        in: [!!(st & 1), !!(st & 2)], rl: [!!(st & 4), !!(st & 8)], armed: !!(st & 16), licensed: !!(st & 32), tampered: !!(st & 64),
+                        t: i16(3) / 10, h: b[5], p: u16(6), w: u16(8) / 10 * 2.23694, g: u16(10) / 10 * 2.23694,
+                        mv: u16(12), bat: b[14], days: u16(15), epoch: ((b[17] << 24) | (b[18] << 16) | (b[19] << 8) | b[20]) >>> 0, reason: b[21], fw: b[22]
+                    };
+                    for (const i of [0, 1]) {            // a report that shows what we asked for confirms it
+                        const pe = d.pend[i];
+                        if (pe && d.rep.rl[i] === pe.want) { devLog(devName(n) + ': ' + devLabel(n, 'rl' + i) + ' is now ' + (pe.want ? 'ON' : 'OFF') + ' (confirmed by its report)'); delete d.pend[i]; }
+                    }
+                } else if (b[0] === 2 && b.length >= 65) {
+                    d.info = { dev: cstr(b, 1, 16), in: [cstr(b, 17, 12), cstr(b, 29, 12)], rl: [cstr(b, 41, 12), cstr(b, 53, 12)] };
+                }
+                devRender();
+                return;
+            }
+            m = ln.match(/^ADMIN_ACK:([0-9A-Fa-f]{8}):(\d+):(\d+):(\d+)(?::(\d+))?$/);
+            if (m && m[5] === '2') {
+                const n = m[1].toUpperCase(), d = devGet(n), st = parseInt(m[3], 10), mask = parseInt(m[4], 10);
+                d.last = Date.now();
+                if (st === 0) {
+                    if (d.rep) d.rep.rl = [!!(mask & 1), !!(mask & 2)];
+                    for (const i of [0, 1]) if (d.pend[i] && d.pend[i].seq === parseInt(m[2], 10)) { devLog(devName(n) + ': ' + devLabel(n, 'rl' + i) + ' switched ' + (d.pend[i].want ? 'ON' : 'OFF') + ' — confirmed'); delete d.pend[i]; }
+                } else {
+                    for (const i of [0, 1]) if (d.pend[i] && d.pend[i].seq === parseInt(m[2], 10)) delete d.pend[i];
+                    devLog(devName(n) + ': command REFUSED — ' + ({ 1: 'older than one it already has', 3: 'that relay is not enabled on the unit', 4: 'command was more than 15 minutes old' }[st] || ('status ' + st)));
+                }
+                devRender();
+                return;
+            }
+            if (ln.startsWith('ADMIN_ERR')) devLog('Connected unit rejected the command: ' + ln);
+            if (ln === 'COMPANYKEY_OK' || ln.startsWith('COMPANYKEY_ERR')) {
+                const el = document.getElementById('dev-key-status');
+                if (el) { el.style.color = ln === 'COMPANYKEY_OK' ? '#22c55e' : '#ef4444'; el.textContent = ln === 'COMPANYKEY_OK' ? 'Key set on the connected unit.' : 'Refused: the passphrase must be 12 characters or more.'; }
+            }
+        }
+
+        function devLabel(n, k) {
+            const p = devPrefs[n], d = devs[n];
+            if (p && p.lbl && p.lbl[k]) return p.lbl[k];
+            if (d && d.info) {
+                if (k === 'in0' && d.info.in[0]) return d.info.in[0];
+                if (k === 'in1' && d.info.in[1]) return d.info.in[1];
+                if (k === 'rl0' && d.info.rl[0]) return d.info.rl[0];
+                if (k === 'rl1' && d.info.rl[1]) return d.info.rl[1];
+            }
+            if (k === 'rl0') return 'Relay 1';
+            if (k === 'rl1') return 'Relay 2';
+            const t = DEV_TILES.find(x => x[0] === k);
+            return t ? t[1] : k;
+        }
+        function devAgo(ms) {
+            const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+            if (s < 60) return 'just now';
+            if (s < 3600) return Math.floor(s / 60) + ' min ago';
+            return Math.floor(s / 3600) + ' h ' + Math.floor((s % 3600) / 60) + ' min ago';
+        }
+        // value + css class for one box, or null if the unit does not have that thing
+        function devTileValue(d, k) {
+            const r = d.rep; if (!r) return null;
+            switch (k) {
+                case 't': return r.bme ? [r.t.toFixed(1) + '°C', ''] : null;
+                case 'h': return r.bme ? [r.h + '%', ''] : null;
+                case 'p': return r.bme ? [r.p + ' hPa', ''] : null;
+                case 'w': return r.wind ? [r.w.toFixed(0) + ' mph', ''] : null;
+                case 'g': return r.wind ? [r.g.toFixed(0) + ' mph', ''] : null;
+                case 'in0': return r.inEn[0] ? [r.in[0] ? 'ACTIVE' : 'OFF', r.in[0] ? 'on' : 'off'] : null;
+                case 'in1': return r.inEn[1] ? [r.in[1] ? 'ACTIVE' : 'OFF', r.in[1] ? 'on' : 'off'] : null;
+                case 'b': return r.mv > 500 ? [(r.mv / 1000).toFixed(2) + ' V', r.bat && r.bat < 20 ? 'alert' : ''] : ['USB', ''];
+                case 'lic': return !r.licensed ? ['NONE', 'alert'] : (r.days === 65535 ? ['OK', 'on'] : [r.days + ' d', r.days < 30 ? 'alert' : 'on']);
+                case 'tam': return r.tampered ? ['TRIPPED', 'alert'] : (r.armed ? ['Armed', 'on'] : ['Off', 'off']);
+                case 'sig': return d.local ? ['USB', 'on'] : [d.rssi + ' dBm', d.rssi > -100 ? 'on' : (d.rssi > -115 ? '' : 'alert')];
+            }
+            return null;
+        }
+        function devRender() {
+            const grid = document.getElementById('dev-grid'); if (!grid) return;
+            if (grid.contains(document.activeElement) && /INPUT/.test(document.activeElement.tagName) && document.activeElement.type === 'text') { devDirty = true; return; }
+            devDirty = false;
+            const ids = Object.keys(devs).sort((a, b) => devName(a).localeCompare(devName(b)));
+            document.getElementById('dev-empty').style.display = ids.length ? 'none' : '';
+            const cnt = document.getElementById('dev-count');
+            cnt.style.display = ids.length ? '' : 'none'; cnt.textContent = ids.length;
+            grid.innerHTML = ids.map(n => {
+                const d = devs[n], p = devPref(n), r = d.rep;
+                const stale = (Date.now() - d.last) > 150 * 60000;
+                let h = '<div class="dev' + (stale ? ' stale' : '') + '"><div class="dev-head"><div style="flex:1;min-width:0">'
+                    + '<input class="dev-name" type="text" maxlength="24" value="' + esc(p.name) + '" placeholder="' + esc((d.info && d.info.dev) || ('Node ' + n)) + '" title="Click to rename" onchange="devRename(\'' + n + '\',this.value)" onblur="devBlur()">'
+                    + '<div class="dev-sub">' + n + (r ? ' &bull; v007.' + r.fw : '') + (d.local ? ' &bull; plugged in here' : (d.hops ? ' &bull; ' + d.hops + ' hop' + (d.hops > 1 ? 's' : '') : ' &bull; direct')) + '</div></div>'
+                    + '<span class="pill2 ' + (stale ? 'warn' : 'ok') + '">' + (stale ? 'quiet &bull; ' : '') + devAgo(d.last) + '</span></div>';
+                if (devOpenCust[n]) {
+                    h += '<div class="cust"><div style="color:#8b949e;margin-bottom:6px;">Boxes to show for this device:</div>';
+                    for (const [k] of DEV_TILES) {
+                        if (r && devTileValue(d, k) === null) continue;
+                        h += '<label><input type="checkbox" ' + (p.hide[k] ? '' : 'checked') + ' onchange="devShow(\'' + n + '\',\'' + k + '\',this.checked)">' + esc(devLabel(n, k)) + '</label>';
+                    }
+                    for (const i of [0, 1]) if (!r || r.rlEn[i]) h += '<label><input type="checkbox" ' + (p.hide['rl' + i] ? '' : 'checked') + ' onchange="devShow(\'' + n + '\',\'rl' + i + '\',this.checked)">' + esc(devLabel(n, 'rl' + i)) + '</label>';
+                    h += '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button class="mini" onclick="devResetNames(\'' + n + '\')">Use the names set on the device</button><button class="mini" onclick="devForget(\'' + n + '\')">Remove from this page</button></div></div>';
+                }
+                if (!r) h += '<div style="color:#8b949e;font-size:13px;margin-bottom:10px;">Heard, waiting for its first readings...</div>';
+                else {
+                    let tiles = '';
+                    for (const [k] of DEV_TILES) {
+                        if (p.hide[k]) continue;
+                        const v = devTileValue(d, k); if (!v) continue;
+                        tiles += '<div class="tile"><div class="v ' + v[1] + '">' + esc(v[0]) + '</div><input class="lbl" type="text" maxlength="14" value="' + esc(devLabel(n, k)) + '" title="Click to rename" onchange="devRelabel(\'' + n + '\',\'' + k + '\',this.value)" onblur="devBlur()"></div>';
+                    }
+                    if (tiles) h += '<div class="tiles">' + tiles + '</div>';
+                    for (const i of [0, 1]) {
+                        if (!r.rlEn[i] || p.hide['rl' + i]) continue;
+                        const pe = d.pend[i], on = pe ? pe.want : r.rl[i];
+                        h += '<div class="rl"><input class="lbl" type="text" maxlength="14" value="' + esc(devLabel(n, 'rl' + i)) + '" title="Click to rename" onchange="devRelabel(\'' + n + '\',\'rl' + i + '\',this.value)" onblur="devBlur()">'
+                            + '<span class="st" style="color:' + (pe ? '#eab308' : (r.rl[i] ? '#22c55e' : '#8b949e')) + '">' + (pe ? 'sent, waiting...' : (r.rl[i] ? 'ON' : 'OFF')) + '</span>'
+                            + '<label class="sw"><input type="checkbox" ' + (on ? 'checked' : '') + (pe ? ' disabled' : '') + ' onchange="devRelay(\'' + n + '\',' + i + ',this.checked)"><span></span></label></div>';
+                    }
+                }
+                h += '<div class="dev-foot"><button class="mini" onclick="devAskReport(\'' + n + '\')">&#8635; Report now</button><button class="mini" onclick="devCust(\'' + n + '\')">&#9881; Customise</button></div></div>';
+                return h;
+            }).join('');
+        }
+        function devBlur() { setTimeout(() => { if (devDirty) devRender(); }, 150); }
+        function devRename(n, v) { devPref(n).name = v.trim().slice(0, 24); devSavePrefs(); devDirty = true; }
+        function devRelabel(n, k, v) {
+            v = v.trim().slice(0, 14);
+            const p = devPref(n);
+            if (v) p.lbl[k] = v; else delete p.lbl[k];
+            devSavePrefs(); devDirty = true;
+        }
+        function devShow(n, k, on) { const p = devPref(n); if (on) delete p.hide[k]; else p.hide[k] = 1; devSavePrefs(); devRender(); }
+        function devCust(n) { devOpenCust[n] = !devOpenCust[n]; devRender(); }
+        function devResetNames(n) { const p = devPref(n); p.name = ''; p.lbl = {}; devSavePrefs(); devRender(); }
+        function devForget(n) {
+            if (!confirm('Remove ' + devName(n) + ' from this page? It will come back the next time it reports. Its saved names are deleted.')) return;
+            delete devs[n]; delete devPrefs[n]; delete devOpenCust[n]; devSavePrefs(); devRender();
+        }
+        function devToggleKey() { const b = document.getElementById('dev-keybox'); b.style.display = b.style.display === 'none' ? '' : 'none'; }
+        async function devSetKey() {
+            const inp = document.getElementById('dev-cokey'), el = document.getElementById('dev-key-status');
+            const k = inp.value.trim();
+            if (k.length < 12) { el.style.color = '#ef4444'; el.textContent = 'Use 12 characters or more.'; return; }
+            if (/[\r\n]/.test(k)) { el.style.color = '#ef4444'; el.textContent = 'No line breaks, please.'; return; }
+            try { el.style.color = '#64748b'; el.textContent = 'Sending to the connected unit...'; await serialSend('COMPANYKEY:' + k); inp.value = ''; }
+            catch (e) { el.style.color = '#ef4444'; el.textContent = e.message + SERIAL_HINT; }
+        }
+
+        // Switch a relay: the server signs a numbered command for that one unit,
+        // the connected unit transmits it, the target answers and then reports.
+        async function devRelay(n, i, on) {
+            const d = devGet(n);
+            if (d.pend[i]) return;
+            try {
+                const data = await adminSign({ cmd: 'relay', relay: i, state: on ? 1 : 0, target: n });
+                d.pend[i] = { want: on, seq: data.seq, at: Date.now() };
+                await serialSend('ADMIN:' + data.hex);
+                devLog(devName(n) + ': switch ' + devLabel(n, 'rl' + i) + ' ' + (on ? 'ON' : 'OFF') + ' — sent (command ' + data.seq + ')');
+                devRender();
+                setTimeout(() => {
+                    if (d.pend[i] && d.pend[i].seq === data.seq) {
+                        delete d.pend[i];
+                        devLog(devName(n) + ': NO ANSWER — ' + devLabel(n, 'rl' + i) + ' may not have switched. Check the next report before trying again.');
+                        devRender();
+                    }
+                }, 25000);
+            } catch (e) {
+                delete d.pend[i];
+                devLog(devName(n) + ': could not send — ' + e.message);
+                devRender();
+            }
+        }
+        async function devAskReport(n) {
+            try {
+                const data = await adminSign({ cmd: 'report', target: n || null });
+                await serialSend('ADMIN:' + data.hex);
+                devLog((n ? devName(n) : 'All company devices') + ': asked to report now');
+            } catch (e) { devLog('Could not ask for a report — ' + e.message); }
         }
 
         function init() {
@@ -1052,6 +1328,8 @@
             // handle automatically the moment its Connect button is clicked.
             document.querySelectorAll('esp-web-install-button').forEach(b => b.addEventListener('click', () => releaseSerialPort(false), true));
 
+            showTab((function(){try{return sessionStorage.getItem('plschat_admin_tab')||'devices';}catch(e){return 'devices';}})());
+            devLoadPrefs(); devRender(); setInterval(devRender, 30000);
             document.getElementById('admin-password').addEventListener('keydown', function(e) { if(e.key==='Enter') checkAdminPassword(); });
             document.getElementById('cp-confirm').addEventListener('keydown', function(e) { if(e.key==='Enter') changeAdminPassword(); });
         }
