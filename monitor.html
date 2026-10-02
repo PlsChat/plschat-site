@@ -112,7 +112,7 @@ body { font-family: 'Inter', system_ui, sans-serif; background: #0a0c1f; color: 
 <div>
 <div class="inline-flex items-center gap-x-2 px-4 py-1.5 rounded-3xl bg-white/5 border border-white/10 text-xs font-medium tracking-[1.5px] mb-3">
 <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-<span>LIVE NETWORK VISUALIZATION</span>
+<span>LIVE NETWORK VISUALISATION</span>
 </div>
 <h1 class="font-display text-5xl tracking-tighter">Network Monitor</h1>
 <p class="text-zinc-400 mt-2 text-lg">Real-time serial & mesh traffic analysis</p>
@@ -215,7 +215,7 @@ Nodes appear when the connected device receives their packets or status over LoR
 <!-- Mesh Visualization / Map -->
 <div class="card p-6 mt-6">
 <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-<h3 class="font-semibold text-lg">Mesh Visualization <span class="text-xs text-zinc-500">— see how repeaters connect</span></h3>
+<h3 class="font-semibold text-lg">Mesh Visualisation <span class="text-xs text-zinc-500">— see how repeaters connect</span></h3>
 <div class="flex items-center gap-2 flex-wrap">
 
 <div class="flex border border-white/10 rounded-xl overflow-hidden mr-1">
@@ -240,7 +240,7 @@ Nodes appear when the connected device receives their packets or status over LoR
 <span id="place-armed-label"></span>
 <button onclick="cancelPlacement()" class="text-cyan-300 hover:text-white ml-1 text-base leading-none">&times;</button>
 </div>
-<button onclick="centerMap()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Center</button>
+<button onclick="centerMap()" class="text-xs px-3 py-1.5 border border-white/10 rounded-xl hover:bg-white/5">Centre</button>
 </div>
 
 <button onclick="clearDiscoveredNodes()" title="Remove old nodes from the mesh view and Discovered Nodes" class="text-xs px-3 py-1.5 border border-red-400/30 text-red-300 rounded-xl hover:bg-red-400/10">Clear</button>
@@ -1955,7 +1955,7 @@ function resetKnownRepeaters() {
 // Removes old/remembered nodes from this browser. Your USB-connected device stays.
 // Repeaters on the public Coverage Map stay hidden here until they report again.
 function clearDiscoveredNodes() {
-  if (!confirm('Clear all nodes from Discovered Nodes and the Mesh Visualization?\n\n' +
+  if (!confirm('Clear all nodes from Discovered Nodes and the Mesh Visualisation?\n\n' +
     '\u2022 Saved labels and map placements for these nodes (in this browser) are forgotten.\n' +
     '\u2022 Repeaters on the public Coverage Map are hidden here until they report again.\n' +
     '\u2022 Your USB-connected device stays listed.\n\nThis does not remove anything from the public map.')) return;

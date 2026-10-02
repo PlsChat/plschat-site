@@ -1,6 +1,6 @@
 # PLSChat
 
-**Decentralized LoRa Mesh Communication**  
+**Decentralised LoRa Mesh Communication**  
 **Persistent Group Chat • Room Servers • Fully Off-Grid**
 
 Secure. Private. No internet required.  
@@ -24,7 +24,7 @@ Perfect for communities, events, emergency response, remote teams, and preppers.
 - **Store & Forward Messaging** — Automatic delivery when users reconnect
 - **End-to-End Encryption** — Diffie-Hellman key exchange
 - **Hardware Compatible** — Works with T-Deck, LilyGo, Heltec, RAK, and most ESP32 LoRa boards
-- **Premium Features** — Unlocked via PLSC token (device-bound licenses)
+- **Premium Features** — Unlocked via PLSC token (device-bound licences)
 - **Open Protocol** — Core is open, premium enhancements are licensed
 
 ---
@@ -34,7 +34,7 @@ Perfect for communities, events, emergency response, remote teams, and preppers.
 1. Get compatible LoRa hardware
 2. Flash the base firmware using the [Web Flasher](https://www.plschat.net/flasher)
 3. Buy PLSC tokens
-4. Activate your device license
+4. Activate your device licence
 5. Join or create a Room Server
 
 ---
