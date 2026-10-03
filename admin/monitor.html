@@ -380,28 +380,28 @@
                 Delete any saved passwords for 192.168.4.1 on your phone first &mdash; an autofilled old PIN counts as a wrong attempt.
             </p>
             <div class="config-section" style="margin-bottom:14px;">
-                <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:#67e8f9;margin-bottom:12px;">Customer devices &mdash; v2.76 (test): common status block, honest battery</div>
+                <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:#67e8f9;margin-bottom:12px;">Customer devices &mdash; v2.77 (test): as v2.76, Heltec shows a full battery correctly</div>
                 <div style="display:flex;gap:24px;flex-wrap:wrap;">
                     <div style="flex:1;min-width:240px;">
                         <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
-                        <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=276a"></esp-web-install-button>
+                        <esp-web-install-button manifest="/admin/bench/manifest-heltec.json?v=277a"></esp-web-install-button>
                     </div>
                     <div style="flex:1;min-width:240px;">
                         <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">XIAO ESP32-S3 key fob</div>
-                        <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=276a"></esp-web-install-button>
+                        <esp-web-install-button manifest="/admin/bench/manifest-xiao.json?v=277a"></esp-web-install-button>
                     </div>
                 </div>
             </div>
             <div class="config-section" style="margin-bottom:14px;border-color:#a16207;">
-                <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:#fbbf24;margin-bottom:12px;">Company devices &mdash; v007.21 (test): common status block, honest battery &bull; admin use only</div>
+                <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:#fbbf24;margin-bottom:12px;">Company devices &mdash; v007.22 (test): as v007.21, plus the fob pin layout on the XIAO &bull; admin use only</div>
                 <div style="display:flex;gap:24px;flex-wrap:wrap;">
                     <div style="flex:1;min-width:240px;">
                         <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
-                        <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=21a"></esp-web-install-button>
+                        <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=22a"></esp-web-install-button>
                     </div>
                     <div style="flex:1;min-width:240px;">
-                        <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">XIAO ESP32-S3 (B2B radio kit) &mdash; v007.21: as v007.20 (power steps 10&ndash;22, reset-loop guard) plus the common status block</div>
-                        <esp-web-install-button manifest="/admin/fw/manifest-v007-xiao-test.json?v=21a"></esp-web-install-button>
+                        <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">XIAO ESP32-S3 (B2B radio kit) &mdash; v007.22: power steps 10&ndash;22, reset-loop guard, common status block, and LAYOUT:FOB for the fob board (louder buzzer, lid switch on D4)</div>
+                        <esp-web-install-button manifest="/admin/fw/manifest-v007-xiao-test.json?v=22a"></esp-web-install-button>
                     </div>
                 </div>
                 <p style="color:#8b949e;font-size:13px;margin-top:10px;">
@@ -454,6 +454,7 @@
             </div>
             <div style="overflow:auto;"><table id="mb-table" style="width:100%;border-collapse:collapse;font-size:13px;"></table></div>
             <div id="mb-links" style="overflow:auto;margin-top:14px;"></div>
+            <div id="mb-hist"></div>
             <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center;">
                 <select id="mb-target" style="padding:8px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:13px;"><option value="all">All units</option></select>
                 <input id="mb-cmd" type="text" autocomplete="off" spellcheck="false" placeholder="Command for the chosen unit(s), e.g. STATUS or POWER:14" style="flex:1;min-width:220px;padding:9px 11px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-family:ui-monospace,Consolas,monospace;font-size:13px;">
@@ -1213,7 +1214,7 @@
             t.appendChild(hr);
             mbUnits.forEach((u, i) => {
                 const r = document.createElement('tr'); const iss = mbIssues(u);
-                [i + 1, u.st.NODE_ID || '?', mbBoard(u), mbFw(u), mbKind(u), u.st.LICENSED || '?', u.st.LORA_READY || '?', mbPower(u), mbBat(u), u.st.RESET_REASON || '-'].forEach(v => r.appendChild(cell(v)));
+                [i + 1, u.st.NODE_ID || '?', mbBoard(u) + (u.st.LAYOUT === 'FOB' ? ' (fob layout)' : ''), mbFw(u), mbKind(u), u.st.LICENSED || '?', u.st.LORA_READY || '?', mbPower(u), mbBat(u), u.st.RESET_REASON || '-'].forEach(v => r.appendChild(cell(v)));
                 const n = cell(iss.length ? iss.join('; ') : 'ok'); n.style.whiteSpace = 'normal'; n.style.color = iss.length ? '#f87171' : '#4ade80'; r.appendChild(n);
                 t.appendChild(r);
             });
@@ -1277,9 +1278,40 @@
             const cell = (v, col) => { const d = document.createElement('td'); d.textContent = v; d.style.cssText = 'padding:5px 8px;border:1px solid #1f2937;text-align:center;' + (col ? 'color:' + col + ';' : ''); return d; };
             const h = document.createElement('tr'); h.appendChild(cell('TX \\ RX', '#8b949e')); us.forEach(b => h.appendChild(cell(b.st.NODE_ID, '#8b949e'))); t.appendChild(h);
             us.forEach(a => { const r = document.createElement('tr'); r.appendChild(cell(a.st.NODE_ID, '#8b949e'));
-                us.forEach(b => { if (a === b) r.appendChild(cell('', null)); else { const x = b.heard[a.st.NODE_ID]; r.appendChild(cell(x ? String(x.rssi) : '-', x ? '#4ade80' : '#f87171')); } });
+                us.forEach(b => { if (a === b) r.appendChild(cell('', null)); else { const x = b.heard[a.st.NODE_ID]; const c = cell(x ? String(x.rssi) : '-', x ? '#e6edf3' : '#f87171');
+                    if (x) { const q = Math.max(0, Math.min(1, (x.rssi + 120) / 90)); c.style.background = 'hsl(' + Math.round(q * 125) + ' 60% ' + (16 + Math.round(q * 10)) + '%)'; c.title = a.st.NODE_ID + ' heard by ' + b.st.NODE_ID + ': ' + x.rssi + ' dBm, SNR ' + x.snr; }
+                    else { c.style.background = '#3b1219'; c.title = a.st.NODE_ID + ' was NOT heard by ' + b.st.NODE_ID; }
+                    r.appendChild(c); } });
                 t.appendChild(r); });
             box.appendChild(t);
+            const key = document.createElement('div'); key.style.cssText = 'font-size:12px;color:#8b949e;margin-top:6px;';
+            key.textContent = 'Colour: green = strong, amber = weak, red = not heard. Units side by side on a desk all read strong; it shows the links work, not how far they reach.';
+            box.appendChild(key);
+            mbHistAdd(us);
+        }
+        // Keeps the last 12 link-test runs in this browser so one run can be compared with the next.
+        function mbHistLoad() { try { return JSON.parse(localStorage.getItem('plschat_bench_hist') || '[]'); } catch (e) { return []; } }
+        function mbHistAdd(us) {
+            const links = {}; let heard = 0, total = 0;
+            us.forEach(a => us.forEach(b => { if (a !== b) { total++; const x = b.heard[a.st.NODE_ID]; if (x) { heard++; links[a.st.NODE_ID + '>' + b.st.NODE_ID] = x.rssi; } } }));
+            const run = { at: Date.now(), units: us.map(u => u.st.NODE_ID + ' ' + mbFw(u)), heard, total, links };
+            const h = mbHistLoad(); h.unshift(run); while (h.length > 12) h.pop();
+            try { localStorage.setItem('plschat_bench_hist', JSON.stringify(h)); } catch (e) {}
+            mbHistRender(h);
+        }
+        function mbHistRender(h) {
+            const box = document.getElementById('mb-hist'); if (!box) return; h = h || mbHistLoad(); box.textContent = '';
+            if (!h.length) return;
+            const cap = document.createElement('div'); cap.textContent = 'Earlier link tests on this computer (newest first):'; cap.style.cssText = 'font-size:13px;color:#8b949e;margin:12px 0 6px;'; box.appendChild(cap);
+            h.forEach((r, i) => {
+                const d = document.createElement('div'); d.style.cssText = 'font-size:12.5px;font-family:ui-monospace,Consolas,monospace;padding:3px 0;color:' + (r.heard === r.total ? '#4ade80' : '#fbbf24') + ';';
+                let txt = new Date(r.at).toLocaleString() + '  ' + r.units.length + ' units  ' + r.heard + '/' + r.total + ' links';
+                const p = h[i + 1];
+                if (p) { const lost = Object.keys(p.links).filter(k => !(k in r.links)), gained = Object.keys(r.links).filter(k => !(k in p.links));
+                    let sum = 0, n = 0; Object.keys(r.links).forEach(k => { if (k in p.links) { sum += r.links[k] - p.links[k]; n++; } });
+                    txt += '   vs previous: ' + (lost.length ? lost.length + ' lost (' + lost.slice(0, 4).join(', ') + (lost.length > 4 ? ', ...' : '') + ')' : 'none lost') + ', ' + gained.length + ' new' + (n ? ', average ' + (sum / n >= 0 ? '+' : '') + (sum / n).toFixed(1) + ' dB' : ''); }
+                d.textContent = txt; box.appendChild(d);
+            });
         }
         function mbReport() {
             const us = mbUnits, L = [];
@@ -1517,6 +1549,7 @@
             // The installer needs the USB device to itself: let go of it on the Firmware tab,
             // and pick it up again (same unit, no prompt) when leaving.
             if (t === 'firmware') {
+                try { mbHistRender(); } catch (e) {}
                 if (licSerialPort) { serialAutoReleased = true; releaseSerialPort(false); }
             } else if (serialAutoReleased && lastSerialPort) {
                 serialAutoReleased = false;
