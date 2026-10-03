@@ -434,6 +434,40 @@
             </details>
         </div>
 
+        <div class="card" id="console-card" data-tab="firmware" style="display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+                <h3>&#128187; Serial console</h3>
+                <span style="font-size:13px;color:#64748b;">Talks to the unit plugged into this computer &bull; USB only</span>
+            </div>
+            <p style="color:#8b949e;font-size:14px;margin-bottom:12px;">
+                Shows what the plugged-in unit prints and lets you type commands to it. The console lets go of the USB device by itself when you press an Install button.
+            </p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+                <button data-tip="Connects to the unit on USB and starts showing its output." class="btn btn-secondary" onclick="conConnect()">&#128268; Connect</button>
+                <button data-tip="Stops the console and frees the USB device." class="btn btn-secondary" onclick="releaseSerialPort(false).then(()=>conAdd('--- disconnected ---','sys'))">Disconnect</button>
+                <button data-tip="Empties the console window. Nothing on the unit changes." class="btn btn-secondary" onclick="conClear()">Clear</button>
+                <button data-tip="Copies everything in the console window so you can paste it elsewhere." class="btn btn-secondary" onclick="conCopy(this)">Copy</button>
+                <label data-tip="The unit prints a long status block every few seconds. Tick this to leave those out so other lines are easy to see." style="font-size:13px;color:#8b949e;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="con-hide" checked> Hide status blocks</label>
+                <label style="font-size:13px;color:#8b949e;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="con-scroll" checked> Follow output</label>
+            </div>
+            <div id="con-out" style="height:340px;overflow:auto;background:#05080d;border:1px solid #1f2937;border-radius:8px;padding:10px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.45;color:#c9d1d9;white-space:pre-wrap;word-break:break-all;"></div>
+            <div style="display:flex;gap:8px;margin-top:10px;">
+                <input id="con-in" type="text" autocomplete="off" spellcheck="false" placeholder="Type a command, e.g. POWER:17 or STATUS, then Enter" style="flex:1;padding:9px 11px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-family:ui-monospace,Consolas,monospace;font-size:13px;">
+                <button class="btn" onclick="conSendInput()">Send</button>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center;">
+                <span style="font-size:12px;color:#64748b;">Quick:</span>
+                <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="conSend('STATUS')">STATUS</button>
+                <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="conSend('IO:STATUS')">IO:STATUS</button>
+                <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="conSend('POWER:10')">POWER:10</button>
+                <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="conSend('POWER:14')">POWER:14</button>
+                <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="conSend('POWER:17')">POWER:17</button>
+                <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="conSend('POWER:20')">POWER:20</button>
+                <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="conSend('POWER:22')">POWER:22</button>
+            </div>
+            <p style="color:#64748b;font-size:12px;margin-top:10px;">Up and down arrows recall earlier commands. Power commands work on company firmware only; the steps between 10, 14 and 22 need v007.19 or later.</p>
+        </div>
+
         <!-- ═══════════════════════════════════════════════════════════
              COMPANY MODE / TAMPER ACTIVATION
         ═══════════════════════════════════════════════════════════ -->
@@ -1049,6 +1083,74 @@
             const p = document.getElementById('dev-wk-pill');
             if (p) { const on = from.value.trim().length > 0; p.textContent = on ? 'entered' : 'not entered'; p.className = 'pill2' + (on ? ' ok' : ''); }
         }
+        // ── Serial console (Firmware tab) ───────────────────────
+        // Raw view of the shared USB connection, plus a box to type commands. Device output is
+        // only ever added as text (never as HTML), and a typed secret is not echoed back.
+        let conInStatus = false, conSubOn = false;
+        const conHist = []; let conHistAt = 0;
+        function conAdd(text, kind) {
+            const o = document.getElementById('con-out'); if (!o) return;
+            const d = document.createElement('div');
+            const t = new Date().toTimeString().slice(0, 8);
+            d.textContent = '[' + t + '] ' + text;
+            if (kind === 'tx') d.style.color = '#67e8f9';
+            else if (kind === 'sys') d.style.color = '#8b949e';
+            else if (/RESET LOOP|ERR|Brownout|rst:|Guru Meditation/i.test(text)) d.style.color = '#f87171';
+            else if (/_OK|Ready!/.test(text)) d.style.color = '#4ade80';
+            o.appendChild(d);
+            while (o.childNodes.length > 1500) o.removeChild(o.firstChild);
+            const f = document.getElementById('con-scroll');
+            if (!f || f.checked) o.scrollTop = o.scrollHeight;
+        }
+        function conLine(ln) {
+            const hide = (document.getElementById('con-hide') || {}).checked;
+            if (ln.indexOf('=== PLSCHAT_STATUS ===') >= 0) { conInStatus = true; if (hide) return; }
+            if (ln.indexOf('=== END_STATUS ===') >= 0) { conInStatus = false; if (hide) return; }
+            if (conInStatus && hide) return;
+            conAdd(ln);
+        }
+        function conHook() { if (!conSubOn) { serialSubs.add(conLine); conSubOn = true; } }
+        async function conConnect() {
+            conHook();
+            try { await serialEnsure(); serialAutoReleased = false; conAdd('--- connected ---', 'sys'); }
+            catch (e) { conAdd('USB: ' + e.message, 'sys'); }
+        }
+        async function conSend(cmd) {
+            cmd = (cmd || '').trim(); if (!cmd) return;
+            conHook();
+            const shown = cmd.replace(/^(COMPANYKEY:|LICSEND:|ADMIN:)(.{0,6}).*$/i, '$1$2… (hidden)');
+            try {
+                if (/^STATUS$/i.test(cmd)) conInStatus = false;
+                const hideEl = document.getElementById('con-hide');
+                if (/^STATUS$/i.test(cmd) && hideEl && hideEl.checked) { hideEl.checked = false; setTimeout(() => { hideEl.checked = true; }, 2500); }
+                await serialSend(cmd); serialAutoReleased = false;
+                conAdd('> ' + shown, 'tx');
+            } catch (e) { conAdd('Not sent: ' + e.message, 'sys'); }
+        }
+        function conSendInput() {
+            const i = document.getElementById('con-in'); const v = i.value.trim(); if (!v) return;
+            if (!/^(COMPANYKEY:|LICSEND:|ADMIN:)/i.test(v)) { conHist.push(v); if (conHist.length > 50) conHist.shift(); }
+            conHistAt = conHist.length; i.value = ''; conSend(v);
+        }
+        function conClear() { const o = document.getElementById('con-out'); if (o) o.textContent = ''; }
+        function conCopy(b) {
+            const o = document.getElementById('con-out'); if (!o) return;
+            navigator.clipboard.writeText(Array.from(o.childNodes).map(n => n.textContent).join('\n')).then(() => {
+                const t = b.innerHTML; b.innerHTML = '&#10003; Copied'; setTimeout(() => { b.innerHTML = t; }, 1200);
+            }).catch(() => {});
+        }
+        document.addEventListener('keydown', e => {
+            if (!e.target || e.target.id !== 'con-in') return;
+            if (e.key === 'Enter') { e.preventDefault(); conSendInput(); }
+            else if (e.key === 'ArrowUp' && conHistAt > 0) { e.preventDefault(); e.target.value = conHist[--conHistAt]; }
+            else if (e.key === 'ArrowDown') { e.preventDefault(); conHistAt = Math.min(conHist.length, conHistAt + 1); e.target.value = conHist[conHistAt] || ''; }
+        });
+        // The installer needs the USB device to itself: let go of it as an Install button is pressed.
+        document.addEventListener('click', e => {
+            const b = e.target && e.target.closest && e.target.closest('esp-web-install-button');
+            if (b && licSerialPort) { conAdd('--- released for the installer ---', 'sys'); releaseSerialPort(false); }
+        }, true);
+
         // ── Tabs ────────────────────────────────────────────────
         function showTab(t) {
             if (!document.querySelector('.tab[data-t="' + t + '"]')) t = 'devices';
