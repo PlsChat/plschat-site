@@ -1182,12 +1182,13 @@
                 u.subs.add(fn);
             });
         }
-        function mbBoard(u) { return u.st.LORA_PINS ? 'XIAO' : (u.st.FW ? 'Heltec V4' : '?'); }
-        function mbKind(u) { return /^v007/.test(u.st.FW || '') ? 'company' : (u.st.FW ? 'customer' : '?'); }
+        function mbBoard(u) { return u.st.LORA_PINS ? 'XIAO' : (u.st.NODE_ID ? 'Heltec V4' : '?'); }
+        function mbFw(u) { return u.st.FW || (u.st.NODE_ID ? 'not reported' : '?'); }   // Heltec builds up to v2.75 / v007.18 leave the version out of STATUS
+        function mbKind(u) { return (u.st.COMPANY === 'YES' || /^v007/.test(u.st.FW || '')) ? 'company' : (u.st.NODE_ID ? (u.st.COMPANY ? 'company fw, mode off' : 'customer') : '?'); }
         function mbIssues(u) {
             const p = [];
             if (!u.alive) p.push('unplugged or reset');
-            if (!u.st.FW) { p.push('no reply to STATUS'); return p; }
+            if (!u.st.NODE_ID) { p.push('no reply to STATUS'); return p; }
             if (u.st.LORA_READY && u.st.LORA_READY !== 'YES') p.push('RADIO NOT READY' + (u.st.LORA_PROBE ? ' (' + u.st.LORA_PROBE + ')' : ''));
             if (u.st.LICENSED && u.st.LICENSED !== 'YES') p.push('not licensed');
             if (u.st.TX_AUTO_DROP && u.st.TX_AUTO_DROP !== '0') p.push('power stepped down from ' + u.st.TX_AUTO_DROP);
@@ -1205,7 +1206,7 @@
             t.appendChild(hr);
             mbUnits.forEach((u, i) => {
                 const r = document.createElement('tr'); const iss = mbIssues(u);
-                [i + 1, u.st.NODE_ID || '?', mbBoard(u), u.st.FW || '?', mbKind(u), u.st.LICENSED || '?', u.st.LORA_READY || '?', u.st.TX_POWER ? u.st.TX_POWER + ' dBm' : (u.st.FW ? 'fixed' : '?'), u.st.BAT || '?', u.st.RESET_REASON || '-'].forEach(v => r.appendChild(cell(v)));
+                [i + 1, u.st.NODE_ID || '?', mbBoard(u), mbFw(u), mbKind(u), u.st.LICENSED || '?', u.st.LORA_READY || '?', u.st.TX_POWER ? u.st.TX_POWER + ' dBm' : (u.st.NODE_ID ? 'fixed' : '?'), u.st.BAT || '?', u.st.RESET_REASON || '-'].forEach(v => r.appendChild(cell(v)));
                 const n = cell(iss.length ? iss.join('; ') : 'ok'); n.style.whiteSpace = 'normal'; n.style.color = iss.length ? '#f87171' : '#4ade80'; r.appendChild(n);
                 t.appendChild(r);
             });
@@ -1276,7 +1277,7 @@
         function mbReport() {
             const us = mbUnits, L = [];
             L.push('PLSChat bench report  ' + new Date().toISOString().slice(0, 19).replace('T', ' ') + ' UTC  -  ' + us.length + ' unit(s)');
-            us.forEach((u, i) => { L.push((i + 1) + '. ' + (u.st.NODE_ID || '?') + ' | ' + mbBoard(u) + ' | ' + (u.st.FW || '?') + ' ' + mbKind(u) + ' | licence ' + (u.st.LICENSED || '?') + (u.st.TIER ? ' ' + u.st.TIER : '') + ' | radio ' + (u.st.LORA_READY || '?') + ' | power ' + (u.st.TX_POWER || 'fixed') + ' | battery ' + (u.st.BAT || '?') + ' | restart ' + (u.st.RESET_REASON || '-') + ' | ' + (mbIssues(u).join('; ') || 'ok')); });
+            us.forEach((u, i) => { L.push((i + 1) + '. ' + (u.st.NODE_ID || '?') + ' | ' + mbBoard(u) + ' | ' + mbFw(u) + ' | ' + mbKind(u) + ' | licence ' + (u.st.LICENSED || '?') + (u.st.TIER ? ' ' + u.st.TIER : '') + ' | radio ' + (u.st.LORA_READY || '?') + ' | power ' + (u.st.TX_POWER || 'fixed') + ' | battery ' + (u.st.BAT || '?') + ' | restart ' + (u.st.RESET_REASON || '-') + ' | ' + (mbIssues(u).join('; ') || 'ok')); });
             const ids = us.filter(u => u.st.NODE_ID);
             if (ids.some(u => Object.keys(u.heard).length)) {
                 L.push('Radio links (TX -> RX: dBm, SNR):');
@@ -1306,7 +1307,7 @@
         // Company units: find the highest transmit power the unit survives, then put the power back.
         async function mbSweep() {
             const ts = mbTargets(); if (ts.length !== 1) { mbLog('Power sweep: choose one unit in the list first.'); return; }
-            const u = ts[0]; if (mbKind(u) !== 'company') { mbLog('Power sweep: ' + mbName(u) + ' is not on company firmware.'); return; }
+            const u = ts[0]; if (!u.st.TX_POWER) { mbLog('Power sweep: ' + mbName(u) + ' is not on company firmware.'); return; }
             if (mbBusy) return; mbBusy = true; mbStop = false;
             const orig = parseInt(u.st.TX_POWER, 10) || 14; let best = null, failAt = null;
             mbLog('Power sweep on ' + mbName(u) + ' (was ' + orig + ' dBm)');
