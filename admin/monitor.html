@@ -393,15 +393,15 @@
                 </div>
             </div>
             <div class="config-section" style="margin-bottom:14px;border-color:#a16207;">
-                <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:#fbbf24;margin-bottom:12px;">Company devices &mdash; Heltec v007.18, XIAO v007.19 power test &bull; admin use only</div>
+                <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:#fbbf24;margin-bottom:12px;">Company devices &mdash; Heltec v007.18, XIAO v007.20 power test &bull; admin use only</div>
                 <div style="display:flex;gap:24px;flex-wrap:wrap;">
                     <div style="flex:1;min-width:240px;">
                         <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">Heltec WiFi LoRa 32 V4</div>
                         <esp-web-install-button manifest="/admin/fw/manifest-v007-test.json?v=18a"></esp-web-install-button>
                     </div>
                     <div style="flex:1;min-width:240px;">
-                        <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">XIAO ESP32-S3 (B2B radio kit) &mdash; v007.19: power steps 10&ndash;22, softer transmit ramp, reset-loop guard</div>
-                        <esp-web-install-button manifest="/admin/fw/manifest-v007-xiao-test.json?v=19a"></esp-web-install-button>
+                        <div style="font-size:13px;color:#c9d1d9;margin-bottom:8px;">XIAO ESP32-S3 (B2B radio kit) &mdash; v007.20: power steps 10&ndash;22, softer transmit ramp, reset-loop guard, reports why it last restarted</div>
+                        <esp-web-install-button manifest="/admin/fw/manifest-v007-xiao-test.json?v=20a"></esp-web-install-button>
                     </div>
                 </div>
                 <p style="color:#8b949e;font-size:13px;margin-top:10px;">
@@ -1114,7 +1114,7 @@
             if (kind === 'tx') d.style.color = '#67e8f9';
             else if (kind === 'sys') d.style.color = '#8b949e';
             else if (kind === 'st') d.style.color = '#fbbf24';
-            else if (/RESET LOOP|ERR|Brownout|rst:|Guru Meditation/i.test(text)) d.style.color = '#f87171';
+            else if (/RESET LOOP|ERR|Brownout|rst:|Guru Meditation|^RESET_REASON:(?!SW|USB)/i.test(text)) d.style.color = '#f87171';
             else if (/_OK|Ready!/.test(text)) d.style.color = '#4ade80';
             o.appendChild(d);
             while (o.childNodes.length > 1500) o.removeChild(o.firstChild);
@@ -1135,6 +1135,7 @@
                     if (g('TX_AUTO_DROP') && g('TX_AUTO_DROP') !== '0') parts.push('stepped down from ' + g('TX_AUTO_DROP'));
                     if (g('UPTIME')) parts.push('up ' + g('UPTIME'));
                     if (g('BAT')) parts.push('battery ' + g('BAT'));
+                    if (g('RESET_REASON')) parts.push('last restart ' + g('RESET_REASON'));
                     if (g('LORA_READY')) parts.push('radio ' + (g('LORA_READY') === 'YES' ? 'ok' : 'NOT READY'));
                     conAdd('status: ' + (parts.join(' · ') || 'received'), 'st');
                     return;
