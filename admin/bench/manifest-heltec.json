@@ -8,19 +8,19 @@
       "chipFamily": "ESP32-S3",
       "parts": [
         {
-          "path": "/flasher/bootloader.bin?v=276a",
+          "path": "/flasher/bootloader.bin?v=276b",
           "offset": 0
         },
         {
-          "path": "/flasher/partitions.bin?v=276a",
+          "path": "/flasher/partitions.bin?v=276b",
           "offset": 32768
         },
         {
-          "path": "/flasher/boot_app0.bin?v=276a",
+          "path": "/flasher/boot_app0.bin?v=276b",
           "offset": 57344
         },
         {
-          "path": "/PLSChat_v2_76.ino.bin?v=276a",
+          "path": "/PLSChat_v2_76.ino.bin?v=276b",
           "offset": 65536
         }
       ]

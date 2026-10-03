@@ -458,6 +458,7 @@
                 <select id="mb-target" style="padding:8px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:13px;"><option value="all">All units</option></select>
                 <input id="mb-cmd" type="text" autocomplete="off" spellcheck="false" placeholder="Command for the chosen unit(s), e.g. STATUS or POWER:14" style="flex:1;min-width:220px;padding:9px 11px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-family:ui-monospace,Consolas,monospace;font-size:13px;">
                 <button class="btn" onclick="mbSendCmd()">Send</button>
+                <button data-tip="Installs the bench test firmware that matches the chosen unit's board and type (customer or company), keeping its settings and licence. Choose one unit, or All units to do them one after another. No port list to pick from: it uses the unit you chose." class="btn btn-secondary" onclick="mbFlash()">Update firmware</button>
                 <button data-tip="Company units only. Steps the chosen unit's transmit power up from 14 and finds the highest level it survives, then puts the power back. Choose one unit first." class="btn btn-secondary" onclick="mbSweep()">Power sweep</button>
             </div>
             <pre id="mb-report" style="margin-top:14px;max-height:340px;overflow:auto;background:#05080d;border:1px solid #1f2937;border-radius:8px;padding:10px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.45;color:#c9d1d9;white-space:pre-wrap;"></pre>
@@ -531,7 +532,7 @@
             </div>
             <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
                 <button data-tip="Marks the plugged-in unit as a company unit and arms its tamper watch. Only for units you own and deploy." class="tip-r btn" onclick="setCompanyMode(true)">&#128274; Enable Company Mode (COMPANY:ON)</button>
-                <button data-tip="Turns company mode and the tamper watch off on the plugged-in unit."  class="btn btn-secondary" onclick="setCompanyMode(false)">Disable (COMPANY:OFF)</button>
+                <button data-tip="Turns company mode and the tamper watch off on the plugged-in unit. From v007.21 the unit must first be unlocked with its PIN on its own page."  class="btn btn-secondary" onclick="setCompanyMode(false)">Disable (COMPANY:OFF)</button>
             </div>
             <div id="company-status" style="font-size:14px;color:#64748b;margin-top:12px;font-family:monospace;min-height:18px;word-break:break-all;"></div>
             <p style="color:#64748b;font-size:12px;margin-top:12px;">
@@ -1339,6 +1340,84 @@
         function mbCopy(b) { navigator.clipboard.writeText(mbReport() + '\n\n' + (document.getElementById('mb-report').textContent || '')).then(() => { const t = b.innerHTML; b.innerHTML = '&#10003; Copied'; setTimeout(() => { b.innerHTML = t; }, 1200); }).catch(() => {}); }
         document.addEventListener('keydown', e => { if (e.target && e.target.id === 'mb-cmd' && e.key === 'Enter') { e.preventDefault(); mbSendCmd(); } });
 
+        // ── Bench: install firmware on the chosen unit(s) through the connection already approved ──
+        // Uses a pinned, self-hosted copy of Espressif's esptool-js. The firmware is chosen from the
+        // unit's own status (board + customer/company), so the wrong build cannot be picked by hand.
+        const MB_FW = { 'Heltec V4|customer': '/admin/bench/manifest-heltec.json', 'XIAO|customer': '/admin/bench/manifest-xiao.json',
+                        'Heltec V4|company': '/admin/fw/manifest-v007-test.json', 'XIAO|company': '/admin/fw/manifest-v007-xiao-test.json' };
+        function mbMd5(str) {   // MD5 of a binary string (one char per byte): lets the loader verify what it wrote
+            function rl(n, c) { return (n << c) | (n >>> (32 - c)); }
+            function ad(x, y) { const l = (x & 0xFFFF) + (y & 0xFFFF); return (((x >> 16) + (y >> 16) + (l >> 16)) << 16) | (l & 0xFFFF); }
+            function cm(q, a, b, x, s, t) { return ad(rl(ad(ad(a, q), ad(x, t)), s), b); }
+            const n = str.length, w = new Array((((n + 8) >> 6) + 1) * 16).fill(0);
+            for (let i = 0; i < n; i++) w[i >> 2] |= (str.charCodeAt(i) & 0xFF) << ((i % 4) * 8);
+            w[n >> 2] |= 0x80 << ((n % 4) * 8); w[w.length - 2] = (n * 8) >>> 0; w[w.length - 1] = Math.floor(n / 536870912);
+            let a = 1732584193, b = -271733879, c = -1732584194, d = 271733878;
+            const S = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21], K = [];
+            for (let i = 0; i < 64; i++) K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296) | 0;
+            for (let i = 0; i < w.length; i += 16) {
+                const oa = a, ob = b, oc = c, od = d;
+                for (let j = 0; j < 64; j++) {
+                    let f, g; const r = j >> 4;
+                    if (r === 0) { f = (b & c) | (~b & d); g = j; } else if (r === 1) { f = (d & b) | (~d & c); g = (5 * j + 1) % 16; }
+                    else if (r === 2) { f = b ^ c ^ d; g = (3 * j + 5) % 16; } else { f = c ^ (b | ~d); g = (7 * j) % 16; }
+                    const t = d; d = c; c = b; b = cm(f, a, b, w[i + g], S[r * 4 + (j % 4)], K[j]); a = t;
+                }
+                a = ad(a, oa); b = ad(b, ob); c = ad(c, oc); d = ad(d, od);
+            }
+            return [a, b, c, d].map(v => { let h = ''; for (let i = 0; i < 4; i++) h += ('0' + ((v >> (i * 8)) & 0xFF).toString(16)).slice(-2); return h; }).join('');
+        }
+        async function mbFlashOne(u) {
+            const node = u.st.NODE_ID, board = mbBoard(u), kind = mbKind(u).startsWith('company') ? 'company' : mbKind(u);
+            const murl = MB_FW[board + '|' + kind];
+            if (!node || !u.st.LICENSED || !murl) { mbLog('Update skipped: ' + mbName(u) + ' has not given a complete status (board ' + board + ', type ' + kind + ').'); return false; }
+            const man = await (await fetch(murl + '?x=' + Date.now(), { cache: 'no-store' })).json();
+            const parts = man.builds[0].parts, files = [];
+            for (const p of parts) {
+                const r = await fetch(new URL(p.path, new URL(murl, location.href)), { cache: 'no-store' });
+                if (!r.ok) throw new Error('could not fetch ' + p.path + ' (' + r.status + ')');
+                const b = new Uint8Array(await r.arrayBuffer()); let str = '';
+                for (let i = 0; i < b.length; i += 0x8000) str += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+                files.push({ data: str, address: p.offset });
+            }
+            mbLog('Updating ' + node + ' (' + board + ', ' + kind + ', was ' + mbFw(u) + ') to "' + man.name + '" ' + man.version + ' ...');
+            const port = u.port;
+            try { if (u.reader) await u.reader.cancel(); } catch (e) {}
+            for (let i = 0; i < 30 && u.alive; i++) await mbSleep(100);
+            const ix = mbUnits.indexOf(u); if (ix >= 0) mbUnits.splice(ix, 1); mbRender();
+            const { ESPLoader, Transport } = await import('/admin/vendor/esptool-js-0.5.4.js');
+            const transport = new Transport(port, false);
+            let ok = false, lastPct = -1;
+            try {
+                const loader = new ESPLoader({ transport, baudrate: 460800, romBaudrate: 115200, terminal: { clean() {}, writeLine() {}, write() {} } });
+                const chip = await loader.main();
+                if (!/ESP32-S3/i.test(chip)) throw new Error('unexpected chip: ' + chip);
+                await loader.writeFlash({ fileArray: files, flashSize: 'keep', flashMode: 'keep', flashFreq: 'keep', eraseAll: false, compress: true,
+                    calculateMD5Hash: mbMd5,
+                    reportProgress: (fi, wr, tot) => { if (fi === files.length - 1) { const pc = Math.floor(wr * 10 / tot) * 10; if (pc !== lastPct) { lastPct = pc; mbState('Updating ' + node + ': ' + pc + '%'); } } } });
+                await loader.after('hard_reset');
+                ok = true;
+            } catch (e) { mbLog('  ' + node + ': UPDATE FAILED - ' + (e && e.message ? e.message : e)); }
+            try { await transport.disconnect(); } catch (e) {}
+            await mbSleep(ok ? 9000 : 2500);                      // let it boot
+            let nu = null;
+            for (let k = 0; k < 6 && !nu; k++) {                    // the unit may come back as a new port object after its restart
+                const ports = await navigator.serial.getPorts();
+                for (const p of ports) { if (!mbUnits.some(x => x.port === p)) { try { const c = await mbOpen(p); if (c) { await mbSleep(500); await mbIdentify([c]); if (c.st.NODE_ID === node) { nu = c; break; } } } catch (e) {} } }
+                if (!nu) await mbSleep(2000);
+            }
+            if (!nu) { mbLog('  ' + node + ': ' + (ok ? 'written, but the unit did not answer afterwards' : 'no answer after the failed update') + '. Unplug and replug it, then Connect all.'); return false; }
+            const good = ok && nu.st.FW === ('v' + String(man.version).replace(/-test$/, '')) ;
+            mbLog('  ' + node + ': ' + (good ? 'now on ' + nu.st.FW : (ok ? 'restarted but reports ' + mbFw(nu) : 'still on ' + mbFw(nu))) + ', board ' + mbBoard(nu) + ', radio ' + (nu.st.LORA_READY || '?') + ', licence ' + (nu.st.LICENSED || '?'));
+            return good;
+        }
+        async function mbFlash() {
+            if (mbBusy) return; const ts = mbTargets(); if (!ts.length) { mbLog('Update firmware: no unit chosen or connected.'); return; }
+            mbBusy = true; mbStop = false; let done = 0;
+            try { for (const u of ts) { if (mbStop) break; try { if (await mbFlashOne(u)) done++; } catch (e) { mbLog('  ' + mbName(u) + ': ' + (e && e.message ? e.message : e)); } } }
+            finally { mbBusy = false; mbRender(); mbLog('Update firmware: ' + done + ' of ' + ts.length + ' unit(s) updated and confirmed.'); mbState(mbUnits.filter(x => x.alive).length + ' unit(s) connected'); }
+        }
+
         // ── Serial console (Firmware tab) ───────────────────────
         // Raw view of the shared USB connection, plus a box to type commands. Device output is
         // only ever added as text (never as HTML), and a typed secret is not echoed back.
@@ -1540,10 +1619,11 @@
             try {
                 el.style.color = '#64748b';
                 el.textContent = 'Sending ' + cmd + ' ...';
-                const wait = serialWait(ln => ln.includes('COMPANY_OK'), 5000);
+                const wait = serialWait(ln => ln.includes('COMPANY_OK') || ln.startsWith('LOCKED'), 5000);
                 await serialSend(cmd);
                 const r = await wait;
-                if (r) { el.style.color = '#22c55e'; el.textContent = enable ? 'Company mode ENABLED — tamper armed (COMPANY_OK). Set tamper policy next if needed.' : 'Company mode DISABLED (COMPANY_OK).'; }
+                if (r && r.startsWith('LOCKED')) { el.style.color = '#eab308'; el.textContent = 'Refused: from v007.21 a unit must be unlocked with its PIN (on its own page at 192.168.4.1) before company mode can be turned off.'; }
+                else if (r) { el.style.color = '#22c55e'; el.textContent = enable ? 'Company mode ENABLED — tamper armed (COMPANY_OK). Set tamper policy next if needed.' : 'Company mode DISABLED (COMPANY_OK).'; }
                 else { el.style.color = '#eab308'; el.textContent = 'No answer from the device.'; }
             } catch (e) {
                 el.style.color = '#ef4444';
