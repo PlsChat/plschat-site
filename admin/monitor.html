@@ -1399,6 +1399,9 @@
                 ok = true;
             } catch (e) { mbLog('  ' + node + ': UPDATE FAILED - ' + (e && e.message ? e.message : e)); }
             try { await transport.disconnect(); } catch (e) {}
+            // The loader's own restart leaves an ESP32-S3 on its built-in USB waiting in download mode:
+            // pulse the reset line through the port so it boots the new firmware.
+            try { await port.open({ baudRate: 115200 }); await port.setSignals({ dataTerminalReady: false, requestToSend: true }); await mbSleep(150); await port.setSignals({ dataTerminalReady: false, requestToSend: false }); await mbSleep(200); await port.close(); } catch (e) { try { await port.close(); } catch (_) {} }
             await mbSleep(ok ? 9000 : 2500);                      // let it boot
             let nu = null;
             for (let k = 0; k < 6 && !nu; k++) {                    // the unit may come back as a new port object after its restart

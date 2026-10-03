@@ -1,16 +1,16 @@
 {
   "name": "PLSChat Firmware",
-  "version": "2.75",
+  "version": "2.76",
   "new_install_prompt_erase": true,
   "reset-on-install": true,
   "builds": [
     {
       "chipFamily": "ESP32-S3",
       "parts": [
-        { "path": "bootloader.bin?v=275", "offset": 0 },
-        { "path": "partitions.bin?v=275", "offset": 32768 },
-        { "path": "boot_app0.bin?v=275", "offset": 57344 },
-        { "path": "/PLSChat_v2_75.ino.bin?v=275", "offset": 65536 }
+        { "path": "bootloader.bin?v=276", "offset": 0 },
+        { "path": "partitions.bin?v=276", "offset": 32768 },
+        { "path": "boot_app0.bin?v=276", "offset": 57344 },
+        { "path": "/PLSChat_v2_76.ino.bin?v=276", "offset": 65536 }
       ]
     }
   ]
