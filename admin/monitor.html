@@ -434,6 +434,35 @@
             </details>
         </div>
 
+        <div class="card" id="multibench-card" data-tab="firmware" style="display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+                <h3>&#129514; Bench test &mdash; all plugged-in units</h3>
+                <span id="mb-state" style="font-size:13px;color:#64748b;">Not connected</span>
+            </div>
+            <p style="color:#8b949e;font-size:14px;margin-bottom:12px;">
+                Connects to every unit on USB at once, shows which is which, and tests them together. Approve each unit once with <strong>Add a unit</strong>; after that <strong>Connect all</strong> finds them again without asking.
+            </p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+                <button data-tip="Opens the browser's device list so you can approve one more unit. Needed once per unit." class="btn btn-secondary" onclick="mbAdd()">&#10133; Add a unit</button>
+                <button data-tip="Connects to every unit you have already approved and asks each for its status." class="btn" onclick="mbConnectAll()">&#128268; Connect all</button>
+                <button data-tip="Asks every connected unit for its status again." class="btn btn-secondary" onclick="mbIdentify()">Refresh status</button>
+                <button data-tip="Each unit transmits in turn while the others record how strongly they heard it. Takes about 5 seconds per unit." class="btn btn-secondary" onclick="mbLinkTest()">Radio link test</button>
+                <button data-tip="Runs status and the radio link test, then writes the report." class="btn btn-secondary" onclick="mbRunAll()">Run all</button>
+                <button data-tip="Stops the test that is running." class="btn btn-secondary" onclick="mbStop=true">Stop</button>
+                <button data-tip="Lets go of every unit so the installer or another program can use them." class="btn btn-secondary" onclick="mbDisconnect()">Disconnect all</button>
+                <button data-tip="Copies the report below." class="btn btn-secondary" onclick="mbCopy(this)">Copy report</button>
+            </div>
+            <div style="overflow:auto;"><table id="mb-table" style="width:100%;border-collapse:collapse;font-size:13px;"></table></div>
+            <div id="mb-links" style="overflow:auto;margin-top:14px;"></div>
+            <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center;">
+                <select id="mb-target" style="padding:8px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:13px;"><option value="all">All units</option></select>
+                <input id="mb-cmd" type="text" autocomplete="off" spellcheck="false" placeholder="Command for the chosen unit(s), e.g. STATUS or POWER:14" style="flex:1;min-width:220px;padding:9px 11px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-family:ui-monospace,Consolas,monospace;font-size:13px;">
+                <button class="btn" onclick="mbSendCmd()">Send</button>
+                <button data-tip="Company units only. Steps the chosen unit's transmit power up from 14 and finds the highest level it survives, then puts the power back. Choose one unit first." class="btn btn-secondary" onclick="mbSweep()">Power sweep</button>
+            </div>
+            <pre id="mb-report" style="margin-top:14px;max-height:340px;overflow:auto;background:#05080d;border:1px solid #1f2937;border-radius:8px;padding:10px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.45;color:#c9d1d9;white-space:pre-wrap;"></pre>
+        </div>
+
         <div class="card" id="console-card" data-tab="firmware" style="display:none">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
                 <h3>&#128187; Serial console</h3>
@@ -1101,6 +1130,208 @@
             const p = document.getElementById('dev-wk-pill');
             if (p) { const on = from.value.trim().length > 0; p.textContent = on ? 'entered' : 'not entered'; p.className = 'pill2' + (on ? ' ok' : ''); }
         }
+        // ── Bench test: every plugged-in unit at once (Firmware tab) ─────────
+        // Each unit has its own connection here, separate from the single shared one used by the
+        // rest of the page. Device output is only ever shown as text.
+        const mbUnits = []; let mbStop = false, mbBusy = false;
+        const mbSleep = ms => new Promise(r => setTimeout(r, ms));
+        function mbLog(t) { const r = document.getElementById('mb-report'); if (!r) return; r.textContent += t + '\n'; r.scrollTop = r.scrollHeight; }
+        function mbState(t) { const e = document.getElementById('mb-state'); if (e) e.textContent = t; }
+        function mbName(u) { return u.st.NODE_ID || ('unit ' + (mbUnits.indexOf(u) + 1)); }
+        async function mbOpen(port) {
+            if (mbUnits.some(u => u.port === port)) return null;
+            await serialOpen(port);
+            const u = { port, st: {}, subs: new Set(), alive: true, inSt: false, heard: {}, note: '' };
+            mbUnits.push(u);
+            (async () => {
+                let reader = null, buf = ''; const dec = new TextDecoder();
+                try {
+                    reader = port.readable.getReader(); u.reader = reader;
+                    for (;;) {
+                        const { value, done } = await reader.read(); if (done) break;
+                        buf += dec.decode(value, { stream: true });
+                        let nl;
+                        while ((nl = buf.indexOf('\n')) >= 0) {
+                            const ln = buf.slice(0, nl).replace(/\r/g, '').trim(); buf = buf.slice(nl + 1);
+                            if (ln) mbLine(u, ln);
+                        }
+                        if (buf.length > 16384) buf = '';
+                    }
+                } catch (e) {} finally {
+                    if (reader) { try { reader.releaseLock(); } catch (_) {} }
+                    try { await port.close(); } catch (_) {}
+                    u.alive = false; mbRender();
+                }
+            })();
+            return u;
+        }
+        function mbLine(u, ln) {
+            if (ln.indexOf('=== PLSCHAT_STATUS ===') >= 0) { u.inSt = true; u.tmp = {}; }
+            else if (ln.indexOf('=== END_STATUS ===') >= 0) { u.inSt = false; u.st = u.tmp || {}; u.stAt = Date.now(); mbRender(); }
+            else if (u.inSt) { const c = ln.indexOf(':'); if (c > 0) u.tmp[ln.slice(0, c)] = ln.slice(c + 1); }
+            u.subs.forEach(fn => { try { fn(ln); } catch (e) {} });
+        }
+        async function mbSend(u, text) {
+            const w = u.port.writable.getWriter();
+            try { await w.write(new TextEncoder().encode(text + '\n')); } finally { w.releaseLock(); }
+        }
+        function mbWait(u, test, ms) {
+            return new Promise(res => {
+                const fn = ln => { if (test(ln)) { clearTimeout(t); u.subs.delete(fn); res(ln); } };
+                const t = setTimeout(() => { u.subs.delete(fn); res(null); }, ms);
+                u.subs.add(fn);
+            });
+        }
+        function mbBoard(u) { return u.st.LORA_PINS ? 'XIAO' : (u.st.FW ? 'Heltec V4' : '?'); }
+        function mbKind(u) { return /^v007/.test(u.st.FW || '') ? 'company' : (u.st.FW ? 'customer' : '?'); }
+        function mbIssues(u) {
+            const p = [];
+            if (!u.alive) p.push('unplugged or reset');
+            if (!u.st.FW) { p.push('no reply to STATUS'); return p; }
+            if (u.st.LORA_READY && u.st.LORA_READY !== 'YES') p.push('RADIO NOT READY' + (u.st.LORA_PROBE ? ' (' + u.st.LORA_PROBE + ')' : ''));
+            if (u.st.LICENSED && u.st.LICENSED !== 'YES') p.push('not licensed');
+            if (u.st.TX_AUTO_DROP && u.st.TX_AUTO_DROP !== '0') p.push('power stepped down from ' + u.st.TX_AUTO_DROP);
+            if (u.st.RESET_REASON && !/^(SW|USB|POWERON)$/.test(u.st.RESET_REASON)) p.push('last restart ' + u.st.RESET_REASON);
+            if (u.st.TAMPER_LATCHED === 'YES') p.push('tamper latched');
+            if (u.note) p.push(u.note);
+            return p;
+        }
+        function mbRender() {
+            const t = document.getElementById('mb-table'); if (!t) return;
+            const cell = (v, c) => { const d = document.createElement(c || 'td'); d.textContent = v == null ? '' : v; d.style.cssText = 'padding:6px 8px;border-bottom:1px solid #1f2937;text-align:left;white-space:nowrap;'; return d; };
+            t.textContent = '';
+            const hr = document.createElement('tr');
+            ['#', 'Node', 'Board', 'Firmware', 'Type', 'Licence', 'Radio', 'Power', 'Battery', 'Last restart', 'Notes'].forEach(h => { const c = cell(h, 'th'); c.style.color = '#8b949e'; hr.appendChild(c); });
+            t.appendChild(hr);
+            mbUnits.forEach((u, i) => {
+                const r = document.createElement('tr'); const iss = mbIssues(u);
+                [i + 1, u.st.NODE_ID || '?', mbBoard(u), u.st.FW || '?', mbKind(u), u.st.LICENSED || '?', u.st.LORA_READY || '?', u.st.TX_POWER ? u.st.TX_POWER + ' dBm' : (u.st.FW ? 'fixed' : '?'), u.st.BAT || '?', u.st.RESET_REASON || '-'].forEach(v => r.appendChild(cell(v)));
+                const n = cell(iss.length ? iss.join('; ') : 'ok'); n.style.whiteSpace = 'normal'; n.style.color = iss.length ? '#f87171' : '#4ade80'; r.appendChild(n);
+                t.appendChild(r);
+            });
+            const sel = document.getElementById('mb-target');
+            if (sel) { const cur = sel.value; sel.textContent = ''; const a = document.createElement('option'); a.value = 'all'; a.textContent = 'All units'; sel.appendChild(a);
+                mbUnits.forEach((u, i) => { const o = document.createElement('option'); o.value = String(i); o.textContent = (i + 1) + ': ' + mbName(u) + ' (' + mbBoard(u) + ')'; sel.appendChild(o); });
+                if ([...sel.options].some(o => o.value === cur)) sel.value = cur; }
+            mbState(mbUnits.length ? mbUnits.filter(u => u.alive).length + ' unit(s) connected' : 'Not connected');
+        }
+        async function mbAdd() {
+            try { await releaseSerialPort(false); const p = await navigator.serial.requestPort(); const u = await mbOpen(p); if (u) { await mbSleep(300); await mbIdentify([u]); } }
+            catch (e) { mbLog('Add a unit: ' + e.message); }
+        }
+        async function mbConnectAll() {
+            try {
+                await releaseSerialPort(false);
+                const ports = await navigator.serial.getPorts(); let n = 0;
+                for (const p of ports) { try { if (await mbOpen(p)) n++; } catch (e) { mbLog('A unit could not be opened: ' + e.message); } }
+                mbLog('Connected to ' + n + ' new unit(s); ' + mbUnits.length + ' in total. ' + (ports.length ? '' : 'None approved yet: use "Add a unit" for each one.'));
+                await mbSleep(400); await mbIdentify();
+            } catch (e) { mbLog('Connect all: ' + e.message); }
+        }
+        async function mbIdentify(list) {
+            const us = (list || mbUnits).filter(u => u.alive);
+            await Promise.all(us.map(async u => {
+                for (let k = 0; k < 2; k++) {
+                    const w = mbWait(u, ln => ln.indexOf('=== END_STATUS ===') >= 0, 4000);
+                    try { await mbSend(u, 'STATUS'); } catch (e) { break; }
+                    if (await w) break;
+                }
+            }));
+            await mbSleep(100); mbRender();
+        }
+        async function mbDisconnect() {
+            for (const u of mbUnits) { try { if (u.reader) await u.reader.cancel(); } catch (e) {} }
+            await mbSleep(200); mbUnits.length = 0; mbRender();
+            const l = document.getElementById('mb-links'); if (l) l.textContent = '';
+        }
+        // Each unit sends its hello in turn; every other unit reports how strongly it heard it.
+        async function mbLinkTest() {
+            if (mbBusy) return; mbBusy = true; mbStop = false;
+            try {
+                const us = mbUnits.filter(u => u.alive && u.st.NODE_ID);
+                us.forEach(u => { u.heard = {}; });
+                const re = /^\[LoRa\] RX \d+b from:([0-9A-F]{8}) to:[0-9A-F]{8} RSSI:(-?\d+) SNR:(-?[\d.]+) type:0x03/;
+                for (const a of us) {
+                    if (mbStop) break;
+                    mbState('Radio link test: ' + mbName(a) + ' transmitting');
+                    const subs = us.filter(b => b !== a).map(b => { const fn = ln => { const m = re.exec(ln); if (m && m[1] === a.st.NODE_ID && !(a.st.NODE_ID in b.heard)) b.heard[a.st.NODE_ID] = { rssi: +m[2], snr: +m[3] }; }; b.subs.add(fn); return [b, fn]; });
+                    try { await mbSend(a, 'HELLO'); } catch (e) {}
+                    await mbSleep(4500);
+                    subs.forEach(([b, fn]) => b.subs.delete(fn));
+                }
+                mbLinks(us);
+            } finally { mbBusy = false; mbRender(); }
+        }
+        function mbLinks(us) {
+            const box = document.getElementById('mb-links'); if (!box) return; box.textContent = '';
+            const cap = document.createElement('div'); cap.textContent = 'Radio links: each row is the unit that transmitted, each column the unit that listened (signal in dBm; "-" = not heard).'; cap.style.cssText = 'font-size:13px;color:#8b949e;margin-bottom:6px;'; box.appendChild(cap);
+            const t = document.createElement('table'); t.style.cssText = 'border-collapse:collapse;font-size:12.5px;font-family:ui-monospace,Consolas,monospace;';
+            const cell = (v, col) => { const d = document.createElement('td'); d.textContent = v; d.style.cssText = 'padding:5px 8px;border:1px solid #1f2937;text-align:center;' + (col ? 'color:' + col + ';' : ''); return d; };
+            const h = document.createElement('tr'); h.appendChild(cell('TX \\ RX', '#8b949e')); us.forEach(b => h.appendChild(cell(b.st.NODE_ID, '#8b949e'))); t.appendChild(h);
+            us.forEach(a => { const r = document.createElement('tr'); r.appendChild(cell(a.st.NODE_ID, '#8b949e'));
+                us.forEach(b => { if (a === b) r.appendChild(cell('', null)); else { const x = b.heard[a.st.NODE_ID]; r.appendChild(cell(x ? String(x.rssi) : '-', x ? '#4ade80' : '#f87171')); } });
+                t.appendChild(r); });
+            box.appendChild(t);
+        }
+        function mbReport() {
+            const us = mbUnits, L = [];
+            L.push('PLSChat bench report  ' + new Date().toISOString().slice(0, 19).replace('T', ' ') + ' UTC  -  ' + us.length + ' unit(s)');
+            us.forEach((u, i) => { L.push((i + 1) + '. ' + (u.st.NODE_ID || '?') + ' | ' + mbBoard(u) + ' | ' + (u.st.FW || '?') + ' ' + mbKind(u) + ' | licence ' + (u.st.LICENSED || '?') + (u.st.TIER ? ' ' + u.st.TIER : '') + ' | radio ' + (u.st.LORA_READY || '?') + ' | power ' + (u.st.TX_POWER || 'fixed') + ' | battery ' + (u.st.BAT || '?') + ' | restart ' + (u.st.RESET_REASON || '-') + ' | ' + (mbIssues(u).join('; ') || 'ok')); });
+            const ids = us.filter(u => u.st.NODE_ID);
+            if (ids.some(u => Object.keys(u.heard).length)) {
+                L.push('Radio links (TX -> RX: dBm, SNR):');
+                ids.forEach(a => { L.push('  ' + a.st.NODE_ID + ' -> ' + ids.filter(b => b !== a).map(b => { const x = b.heard[a.st.NODE_ID]; return b.st.NODE_ID + ':' + (x ? x.rssi + '/' + x.snr : 'NOT HEARD'); }).join('  ')); });
+            }
+            return L.join('\n');
+        }
+        async function mbRunAll() {
+            if (!mbUnits.length) await mbConnectAll(); else await mbIdentify();
+            await mbLinkTest(); await mbIdentify();
+            mbLog('\n' + mbReport()); mbState('Finished: ' + mbUnits.length + ' unit(s) tested');
+        }
+        function mbTargets() { const v = (document.getElementById('mb-target') || {}).value; return v === 'all' || v == null ? mbUnits.filter(u => u.alive) : [mbUnits[+v]].filter(u => u && u.alive); }
+        async function mbSendCmd() {
+            const i = document.getElementById('mb-cmd'); const cmd = i.value.trim(); if (!cmd) return;
+            const shown = cmd.replace(/^(COMPANYKEY:|LICSEND:|ADMIN:|LICEN[CS]E:)(.{0,6}).*$/i, '$1$2… (hidden)');
+            for (const u of mbTargets()) {
+                const got = []; const fn = ln => { if (!u.inSt && ln.indexOf('PLSCHAT_STATUS') < 0 && ln.indexOf('END_STATUS') < 0 && !/^\[LoRa\] RX/.test(ln)) got.push(ln); };
+                u.subs.add(fn);
+                try { await mbSend(u, cmd); } catch (e) { got.push('not sent: ' + e.message); }
+                await mbSleep(1200); u.subs.delete(fn);
+                mbLog(mbName(u) + ' > ' + shown + (got.length ? '\n   ' + got.slice(0, 12).join('\n   ') : '   (no reply)'));
+            }
+            if (/^(COMPANYKEY:|LICSEND:|ADMIN:|LICEN[CS]E:)/i.test(cmd)) i.value = '';
+            await mbIdentify();
+        }
+        // Company units: find the highest transmit power the unit survives, then put the power back.
+        async function mbSweep() {
+            const ts = mbTargets(); if (ts.length !== 1) { mbLog('Power sweep: choose one unit in the list first.'); return; }
+            const u = ts[0]; if (mbKind(u) !== 'company') { mbLog('Power sweep: ' + mbName(u) + ' is not on company firmware.'); return; }
+            if (mbBusy) return; mbBusy = true; mbStop = false;
+            const orig = parseInt(u.st.TX_POWER, 10) || 14; let best = null, failAt = null;
+            mbLog('Power sweep on ' + mbName(u) + ' (was ' + orig + ' dBm)');
+            try {
+                for (let p = 14; p <= 22 && !mbStop; p++) {
+                    const ok = mbWait(u, ln => /^POWER_(OK|ERR)/.test(ln), 2500);
+                    await mbSend(u, 'POWER:' + p); const r = await ok;
+                    if (!r) { mbLog('  ' + p + ' dBm: no answer'); break; }
+                    if (/ERR/.test(r)) { mbLog('  ' + p + ' dBm: not offered by this firmware'); continue; }
+                    let reset = false; const fn = ln => { if (ln.indexOf('Ready! Serial commands') >= 0 || /^RESET_REASON:/.test(ln)) reset = true; }; u.subs.add(fn);
+                    for (let k = 0; k < 3 && !reset; k++) { try { await mbSend(u, 'HELLO'); } catch (e) { reset = true; } await mbSleep(2500); }
+                    u.subs.delete(fn);
+                    if (reset || !u.alive) { failAt = p; mbLog('  ' + p + ' dBm: RESET'); break; }
+                    best = p; mbLog('  ' + p + ' dBm: ok (3 transmissions)');
+                }
+            } catch (e) { mbLog('  stopped: ' + e.message); }
+            const back = failAt ? Math.min(orig, best || 14) : orig;
+            for (let k = 0; k < 6 && u.alive; k++) { const ok = mbWait(u, ln => /^POWER_OK/.test(ln), 2000); try { await mbSend(u, 'POWER:' + back); } catch (e) {} if (await ok) break; await mbSleep(1500); }
+            u.note = failAt ? 'power sweep: resets at ' + failAt + ', highest ok ' + (best || 'below 14') : (best ? 'power sweep: ok up to ' + best : '');
+            mbLog('  result: ' + (failAt ? 'resets at ' + failAt + ' dBm, highest ok ' + (best || 'below 14') : 'no reset up to ' + best + ' dBm') + '; power set back to ' + back + ' dBm');
+            mbBusy = false; await mbSleep(500); await mbIdentify([u]);
+        }
+        function mbCopy(b) { navigator.clipboard.writeText(mbReport() + '\n\n' + (document.getElementById('mb-report').textContent || '')).then(() => { const t = b.innerHTML; b.innerHTML = '&#10003; Copied'; setTimeout(() => { b.innerHTML = t; }, 1200); }).catch(() => {}); }
+        document.addEventListener('keydown', e => { if (e.target && e.target.id === 'mb-cmd' && e.key === 'Enter') { e.preventDefault(); mbSendCmd(); } });
+
         // ── Serial console (Firmware tab) ───────────────────────
         // Raw view of the shared USB connection, plus a box to type commands. Device output is
         // only ever added as text (never as HTML), and a typed secret is not echoed back.
@@ -1146,6 +1377,7 @@
         }
         function conHook() { if (!conSubOn) { serialSubs.add(conLine); conSubOn = true; } }
         async function conConnect() {
+            if (mbUnits.length) await mbDisconnect();
             conHook();
             try { await serialEnsure(); serialAutoReleased = false; conAdd('--- connected ---', 'sys'); setTimeout(() => { serialSend('STATUS').catch(() => {}); }, 400); }
             catch (e) { conAdd('USB: ' + e.message, 'sys'); }
@@ -1181,6 +1413,7 @@
         document.addEventListener('click', e => {
             const b = e.target && e.target.closest && e.target.closest('esp-web-install-button');
             if (b && licSerialPort) { conAdd('--- released for the installer ---', 'sys'); releaseSerialPort(false); }
+            if (b && mbUnits.length) mbDisconnect();
         }, true);
 
         // ── Tabs ────────────────────────────────────────────────
